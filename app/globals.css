@@ -4,41 +4,32 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #FFF5F7;
-  --foreground: #7D2B4A;
-  --card: rgba(255, 255, 255, 0.6);
-  --card-foreground: #7D2B4A;
-  --popover: rgba(255, 255, 255, 0.8);
-  --popover-foreground: #7D2B4A;
-  --primary: #C2547A;
-  --primary-foreground: #fff5f7;
-  --secondary: #F8D7E3;
-  --secondary-foreground: #7D2B4A;
-  --muted: #FCE8EF;
-  --muted-foreground: #B0708A;
-  --accent: #E8A0BB;
-  --accent-foreground: #7D2B4A;
+  --background: #FFFFFF;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --primary: #0F172A;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1F5F9;
+  --secondary-foreground: #0F172A;
+  --muted: #F8FAFC;
+  --muted-foreground: #64748B;
+  --accent: #F1F5F9;
+  --accent-foreground: #0F172A;
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: #F2B8CF;
-  --input: #F8D7E3;
-  --ring: #C2547A;
-  --radius: 1rem;
-
-  /* Pink scale */
-  --pink-50: #FFF5F7;
-  --pink-100: #FCE8EF;
-  --pink-200: #F8D7E3;
-  --pink-300: #F2B8CF;
-  --pink-400: #E8A0BB;
-  --pink-500: #C2547A;
-  --pink-600: #A03860;
-  --pink-700: #7D2B4A;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
+  --ring: #0F172A;
+  --radius: 0.75rem;
 }
 
 @theme inline {
-  --font-sans: var(--font-lato), 'Lato', sans-serif;
-  --font-serif: var(--font-playfair), 'Playfair Display', serif;
+  --font-roboto-slab: var(--font-roboto-slab), 'Roboto Slab', serif;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: var(--font-roboto-slab), var(--font-playfair), 'Roboto Slab', serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -56,20 +47,6 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 8px);
-
-  /* Expose pink scale as Tailwind colors */
-  --color-pink-50: var(--pink-50);
-  --color-pink-100: var(--pink-100);
-  --color-pink-200: var(--pink-200);
-  --color-pink-300: var(--pink-300);
-  --color-pink-400: var(--pink-400);
-  --color-pink-500: var(--pink-500);
-  --color-pink-600: var(--pink-600);
-  --color-pink-700: var(--pink-700);
 }
 
 @layer base {
@@ -79,13 +56,4 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-/* Scatter plot background pattern */
-.scatter-bg {
-  background-image: radial-gradient(circle, #E8A0BB 1px, transparent 1px),
-    radial-gradient(circle, #F2B8CF 1.5px, transparent 1.5px),
-    radial-gradient(circle, #C2547A55 1px, transparent 1px);
-  background-size: 60px 60px, 90px 90px, 120px 120px;
-  background-position: 0 0, 30px 30px, 15px 55px;
 }

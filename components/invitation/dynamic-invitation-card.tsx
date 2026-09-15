@@ -8,7 +8,6 @@ import { BackgroundEffects } from './background-effects'
 import { construirUrlWhatsApp } from '@/lib/event-utils'
 import { generarSeccionesPorDefecto } from '@/lib/modular-defaults'
 import { IconoDinamico } from '@/components/ui/icono-dinamico'
-import { AdBanner } from '@/components/ads/ad-banner'
 import {
   Calendar,
   Clock,
@@ -906,25 +905,10 @@ export function DynamicInvitationCard({
               return (
                 <Fragment key={seccion.id}>
                   {renderizarBloque()}
-                  {/* Banner publicitario intermedio exclusivo para cuentas gratuitas */}
-                  {index === 2 && !evento.esPremium && (
-                    <div className="px-6 py-2 border-b border-black/[0.04]">
-                      <AdBanner
-                        esPremium={evento.esPremium}
-                        slotId="card-inline-slot"
-                        formato="inline"
-                      />
-                    </div>
-                  )}
                 </Fragment>
               )
             })}
           </div>
-
-            {/* Banner publicitario sobrio para cuentas libres */}
-            <div className="px-6 sm:px-8 pb-4">
-              <AdBanner esPremium={evento.esPremium} slotId="corporate-card-slot" />
-            </div>
 
             {/* Pie de página institucional */}
             <div className="pb-6 text-center opacity-40 hover:opacity-80 transition-opacity">

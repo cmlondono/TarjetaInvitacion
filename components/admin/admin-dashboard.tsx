@@ -9,7 +9,6 @@ import {
 } from '@/types/invitation'
 import { InvitadoRepositorio, EventoRepositorio } from '@/lib/storage'
 import { ModalPago } from '@/components/checkout/modal-pago'
-import { AdBanner } from '@/components/ads/ad-banner'
 import { construirMensajeCompartir } from '@/lib/event-utils'
 import {
   Copy,
@@ -254,15 +253,6 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
             </div>
           </div>
         )}
-
-        {/* Banner publicitario sobrio para anfitriones en plan gratuito */}
-        <AdBanner
-          esPremium={evento.esPremium}
-          slotId="host-dashboard-banner"
-          formato="horizontal"
-          mostrarBotonQuitar={true}
-          onUpgradeClick={() => setMostrarModalUpgrade(true)}
-        />
 
         {/* Formulario Formal de Generación de Pases */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs">

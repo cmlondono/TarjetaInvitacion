@@ -21,7 +21,6 @@ import {
 } from '@/lib/modular-defaults'
 import { DynamicInvitationCard } from '@/components/invitation/dynamic-invitation-card'
 import { ModalPago } from '@/components/checkout/modal-pago'
-import { AdBanner } from '@/components/ads/ad-banner'
 import { SeccionItemEditor } from './seccion-item-editor'
 import { IconoDinamico } from '@/components/ui/icono-dinamico'
 import {
@@ -766,17 +765,6 @@ export function VisualCustomizer({
               </div>
             </div>
           )}
-
-          {/* Banner Publicitario en Barra Lateral para Creadores Libres */}
-          <div className="mt-8 pt-4 border-t border-slate-100">
-            <AdBanner
-              esPremium={evento.esPremium}
-              slotId="customizer-sidebar-slot"
-              formato="sidebar"
-              mostrarBotonQuitar={true}
-              onUpgradeClick={() => setMostrarModalPago(true)}
-            />
-          </div>
         </div>
 
         {/* ════════════════ VISTA PREVIA EN TIEMPO REAL ════════════════ */}
@@ -831,17 +819,6 @@ export function VisualCustomizer({
                 esModoVistaPrevia={true}
               />
             </div>
-          </div>
-
-          {/* Banner Publicitario Inferior en Área de Vista Previa */}
-          <div className="w-full max-w-xl mt-6">
-            <AdBanner
-              esPremium={evento.esPremium}
-              slotId="customizer-preview-bottom-slot"
-              formato="horizontal"
-              mostrarBotonQuitar={true}
-              onUpgradeClick={() => setMostrarModalPago(true)}
-            />
           </div>
         </div>
       </div>

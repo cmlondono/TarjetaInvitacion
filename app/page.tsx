@@ -15,7 +15,6 @@ import {
   MapPin,
   Clock,
 } from 'lucide-react'
-import { AdBanner } from '@/components/ads/ad-banner'
 import { LandingAnnouncementBanner } from '@/components/landing/anuncio-banner'
 
 export const metadata: Metadata = {
@@ -155,11 +154,6 @@ export default function PaginaInicio() {
           </div>
         </div>
       </section>
-
-      {/* Espacio Publicitario Discreto */}
-      <div className="max-w-4xl mx-auto w-full px-6 mb-12">
-        <AdBanner slotId="landing-corporate-banner" />
-      </div>
 
       {/* Sección Arquitectura de la Solución (3 Pasos) */}
       <section id="solucion" className="py-20 bg-slate-50 border-y border-slate-200">
@@ -386,11 +380,6 @@ export default function PaginaInicio() {
           </div>
         </div>
       </section>
-
-      {/* Banner Publicitario Inferior en Landing */}
-      <div className="max-w-4xl mx-auto w-full px-6 my-10">
-        <AdBanner slotId="landing-bottom-banner" formato="horizontal" />
-      </div>
 
       {/* Pie de Página Formal */}
       <footer className="w-full bg-white text-slate-500 text-xs py-14 px-6 sm:px-12 border-t border-slate-200 mt-auto">

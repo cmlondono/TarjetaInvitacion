@@ -179,6 +179,112 @@ export const InvitadoRepositorio = {
     return { exito: true, invitado: nuevoInvitado }
   },
 
+  obtenerPorCodigoAcceso(eventoId: string, codigoAcceso: string): Invitado | null {
+    const list = this.obtenerPorEvento(eventoId)
+    return list.find((i) => i.codigoAcceso === codigoAcceso) || null
+  },
+
+  obtenerPorNombre(eventoId: string, nombre: string): Invitado | null {
+    const list = this.obtenerPorEvento(eventoId)
+    const normalized = nombre.trim().toLowerCase()
+    return list.find((i) => i.nombre.trim().toLowerCase() === normalized) || null
+  },
+
+  actualizarConfirmacion(
+    eventoId: string,
+    identificador: { id?: string; codigoAcceso?: string; nombre?: string },
+    datos: {
+      estadoConfirmacion: 'confirmado' | 'no_asiste'
+      cuposConfirmados?: number
+      mensajeConfirmacion?: string
+    }
+  ): { exito: boolean; invitado?: Invitado } {
+    const todos = this.obtenerTodos()
+    let index = -1
+
+    if (identificador.codigoAcceso) {
+      index = todos.findIndex(
+        (i) => i.eventoId === eventoId && i.codigoAcceso === identificador.codigoAcceso
+      )
+    }
+    if (index === -1 && identificador.id) {
+      index = todos.findIndex((i) => i.id === identificador.id)
+    }
+    if (index === -1 && identificador.nombre) {
+      const norm = identificador.nombre.trim().toLowerCase()
+      index = todos.findIndex(
+        (i) => i.eventoId === eventoId && i.nombre.trim().toLowerCase() === norm
+      )
+    }
+
+    const ahora = new Date().toISOString()
+    let invitadoActualizado: Invitado
+
+    if (index !== -1) {
+      const anterior = todos[index]
+      invitadoActualizado = {
+        ...anterior,
+        confirmado: datos.estadoConfirmacion === 'confirmado',
+        estadoConfirmacion: datos.estadoConfirmacion,
+        cuposConfirmados:
+          datos.cuposConfirmados !== undefined
+            ? datos.cuposConfirmados
+            : datos.estadoConfirmacion === 'confirmado'
+            ? anterior.pases
+            : 0,
+        mensajeConfirmacion: datos.mensajeConfirmacion || anterior.mensajeConfirmacion,
+        fechaConfirmacion: ahora,
+      }
+      todos[index] = invitadoActualizado
+    } else {
+      // Si el invitado confirma por enlace público abierto sin pase precargado
+      invitadoActualizado = {
+        id:
+          typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : Math.random().toString(36).substring(2),
+        eventoId,
+        nombre: identificador.nombre || 'Invitado Confirmado',
+        pases: datos.cuposConfirmados || 1,
+        cuposConfirmados: datos.cuposConfirmados || 1,
+        esPlural: (datos.cuposConfirmados || 1) > 1,
+        codigoAcceso: Math.random().toString(36).substring(2, 8),
+        confirmado: datos.estadoConfirmacion === 'confirmado',
+        estadoConfirmacion: datos.estadoConfirmacion,
+        mensajeConfirmacion: datos.mensajeConfirmacion,
+        fechaConfirmacion: ahora,
+      }
+      todos.push(invitadoActualizado)
+    }
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LOCAL_STORAGE_KEY_INVITADOS, JSON.stringify(todos))
+    }
+
+    // Sincronizar con Supabase si está disponible
+    try {
+      const supabase = obtenerClienteSupabase()
+      if (supabase) {
+        supabase
+          .from('invitados')
+          .upsert({
+            id: invitadoActualizado.id,
+            evento_id: invitadoActualizado.eventoId,
+            nombre: invitadoActualizado.nombre,
+            pases: invitadoActualizado.pases,
+            es_plural: invitadoActualizado.esPlural,
+            telefono: invitadoActualizado.telefono,
+            codigo_acceso: invitadoActualizado.codigoAcceso,
+            confirmado: invitadoActualizado.confirmado,
+            fecha_confirmacion: invitadoActualizado.fechaConfirmacion,
+          })
+          .then()
+      }
+    } catch {}
+
+    return { exito: true, invitado: invitadoActualizado }
+  },
+
   eliminar(id: string): void {
     if (typeof window !== 'undefined') {
       const todos = this.obtenerTodos().filter((i) => i.id !== id)

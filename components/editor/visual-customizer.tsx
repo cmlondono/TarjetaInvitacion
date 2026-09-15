@@ -10,6 +10,7 @@ import {
   EfectoFondo,
   SeccionModular,
   TipoSeccion,
+  MetodoConfirmacion,
 } from '@/types/invitation'
 import { PLANTILLAS_TEMAS, TEMA_POR_DEFECTO } from '@/lib/theme-presets'
 import { generarTokenAdmin, generarSlug } from '@/lib/event-utils'
@@ -96,6 +97,7 @@ export function VisualCustomizer({
         tipoCuenta: 'Corriente',
       },
       esPremium: false,
+      metodoConfirmacion: eventoInicial?.metodoConfirmacion || 'tarjeton',
       creadoEn: new Date().toISOString(),
       expiraEn: new Date(Date.now() + 37 * 24 * 60 * 60 * 1000).toISOString(),
     }
@@ -169,6 +171,17 @@ export function VisualCustomizer({
         }
       })
     )
+    if (campoDatos === 'metodoConfirmacion') {
+      actualizarEvento('metodoConfirmacion', valor)
+    }
+  }
+
+  const cambiarMetodoConfirmacion = (metodo: MetodoConfirmacion) => {
+    actualizarEvento('metodoConfirmacion', metodo)
+    const secRsvp = secciones.find((s) => s.tipo === 'confirmacion_rsvp')
+    if (secRsvp) {
+      actualizarDatosSeccion(secRsvp.id, 'metodoConfirmacion', metodo)
+    }
   }
 
   const agregarNuevaSeccion = (tipo: TipoSeccion) => {
@@ -208,12 +221,26 @@ export function VisualCustomizer({
         new Date(evento.fechaEvento).getTime() + 7 * 24 * 60 * 60 * 1000
       ).toISOString()
 
+      const metodoConfirmacionSeleccionado = evento.metodoConfirmacion || 'tarjeton'
+
       const eventoGuardado: DetalleEvento = {
         ...evento,
+        metodoConfirmacion: metodoConfirmacionSeleccionado,
         slugPublico: slug,
         expiraEn: fechaExpira,
         configuracionVisual: visual,
-        secciones: secciones,
+        secciones: secciones.map((s) => {
+          if (s.tipo === 'confirmacion_rsvp') {
+            return {
+              ...s,
+              datos: {
+                ...s.datos,
+                metodoConfirmacion: metodoConfirmacionSeleccionado,
+              },
+            }
+          }
+          return s
+        }),
         imagenPortada: cabecera?.datos?.imagenPortada || evento.imagenPortada,
         imagenRetrato: cabecera?.datos?.imagenRetrato || evento.imagenRetrato,
       }
@@ -674,41 +701,123 @@ export function VisualCustomizer({
                   />
                 </div>
 
-                {/* WhatsApp de Confirmación */}
-                <div className="pt-3 border-t border-slate-200 space-y-3">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                      <MessageSquare size={13} /> WhatsApp para Recibir Confirmaciones
+                {/* Método de Confirmación de Asistencia (RSVP) */}
+                <div className="pt-4 border-t border-slate-200 space-y-3">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                      <Sparkles size={12} className="text-amber-600" />
+                      <span>¿Cómo deseas que tus invitados confirmen asistencia?</span>
                     </label>
-                    <input
-                      type="text"
-                      value={evento.whatsappNumero}
-                      onChange={(e) => actualizarEvento('whatsappNumero', e.target.value)}
-                      placeholder="Con indicativo, ej: 573001234567"
-                      className="w-full px-3 py-2 text-xs font-mono bg-white border border-slate-300 rounded-lg"
-                    />
-                    <p className="text-[10px] text-slate-500">
-                      Incluye código de país (57 para Colombia, 52 para México, etc.) sin espacios ni signos +.
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Selecciona la vía principal para registrar cupos, confirmar asistentes y controlar el aforo.
                     </p>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
-                      Plantilla del Mensaje de WhatsApp
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={evento.whatsappPlantilla}
-                      onChange={(e) => actualizarEvento('whatsappPlantilla', e.target.value)}
-                      className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg leading-relaxed font-mono text-[11px]"
-                    />
-                    <p className="text-[10px] text-slate-500">
-                      Variables dinámicas:{' '}
-                      <code className="text-slate-800 font-bold">{'{invitado}'}</code>,{' '}
-                      <code className="text-slate-800 font-bold">{'{pases}'}</code>,{' '}
-                      <code className="text-slate-800 font-bold">{'{evento}'}</code>.
-                    </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    {[
+                      {
+                        id: 'tarjeton' as MetodoConfirmacion,
+                        titulo: 'Botón Digital Tarjetón',
+                        desc: 'Registro en web, control de aforo en vivo y exportación a PDF/Excel',
+                        badge: 'Recomendado',
+                      },
+                      {
+                        id: 'whatsapp' as MetodoConfirmacion,
+                        titulo: 'Mensaje de WhatsApp',
+                        desc: 'Abre chat directo con mensaje predefinido en tu WhatsApp',
+                        badge: null,
+                      },
+                      {
+                        id: 'ambos' as MetodoConfirmacion,
+                        titulo: 'Ambos Métodos',
+                        desc: 'Formulario digital web + botón opcional de WhatsApp',
+                        badge: 'Híbrido',
+                      },
+                    ].map((metodo) => {
+                      const seleccionado =
+                        (evento.metodoConfirmacion || 'tarjeton') === metodo.id
+                      return (
+                        <button
+                          key={metodo.id}
+                          type="button"
+                          onClick={() => cambiarMetodoConfirmacion(metodo.id)}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer relative ${
+                            seleccionado
+                              ? 'border-slate-900 bg-slate-900 text-white shadow-xs ring-1 ring-slate-900'
+                              : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-800'
+                          }`}
+                        >
+                          {metodo.badge && (
+                            <span
+                              className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded absolute right-2 top-2 ${
+                                seleccionado
+                                  ? 'bg-amber-400 text-slate-950'
+                                  : 'bg-emerald-100 text-emerald-800'
+                              }`}
+                            >
+                              {metodo.badge}
+                            </span>
+                          )}
+                          <span className="text-xs font-bold block pr-8">{metodo.titulo}</span>
+                          <p
+                            className={`text-[10px] mt-1 leading-snug ${
+                              seleccionado ? 'text-slate-300' : 'text-slate-500'
+                            }`}
+                          >
+                            {metodo.desc}
+                          </p>
+                        </button>
+                      )
+                    })}
                   </div>
+
+                  {(evento.metodoConfirmacion === 'tarjeton' || !evento.metodoConfirmacion) && (
+                    <div className="p-3 bg-emerald-50 border border-emerald-200/80 rounded-xl flex items-start gap-2.5 text-emerald-950">
+                      <Check size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                      <div className="text-[11px] leading-relaxed">
+                        <strong>Modo Digital Tarjetón Activado:</strong> Tus invitados confirmarán directamente en la tarjeta interactiva. Las confirmaciones se registrarán automáticamente en tu panel de administración, donde podrás consultar métricas de aforo en vivo y descargar la <strong>Lista de Admisión en PDF</strong> o el archivo <strong>Excel</strong>.
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Campos de WhatsApp (obligatorios si es whatsapp o ambos, opcionales si es tarjeton) */}
+                  {(evento.metodoConfirmacion === 'whatsapp' || evento.metodoConfirmacion === 'ambos') && (
+                    <div className="space-y-3 pt-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                          <MessageSquare size={13} /> WhatsApp para Recibir Confirmaciones
+                        </label>
+                        <input
+                          type="text"
+                          value={evento.whatsappNumero}
+                          onChange={(e) => actualizarEvento('whatsappNumero', e.target.value)}
+                          placeholder="Con indicativo, ej: 573001234567"
+                          className="w-full px-3 py-2 text-xs font-mono bg-white border border-slate-300 rounded-lg"
+                        />
+                        <p className="text-[10px] text-slate-500">
+                          Incluye código de país (57 para Colombia, 52 para México, etc.) sin espacios ni signos +.
+                        </p>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
+                          Plantilla del Mensaje de WhatsApp
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={evento.whatsappPlantilla}
+                          onChange={(e) => actualizarEvento('whatsappPlantilla', e.target.value)}
+                          className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg leading-relaxed font-mono text-[11px]"
+                        />
+                        <p className="text-[10px] text-slate-500">
+                          Variables dinámicas:{' '}
+                          <code className="text-slate-800 font-bold">{'{invitado}'}</code>,{' '}
+                          <code className="text-slate-800 font-bold">{'{pases}'}</code>,{' '}
+                          <code className="text-slate-800 font-bold">{'{evento}'}</code>.
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

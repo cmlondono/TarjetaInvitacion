@@ -8,6 +8,7 @@ import { BackgroundEffects } from './background-effects'
 import { construirUrlWhatsApp } from '@/lib/event-utils'
 import { generarSeccionesPorDefecto } from '@/lib/modular-defaults'
 import { IconoDinamico } from '@/components/ui/icono-dinamico'
+import { ModuloRsvp } from './modulo-rsvp'
 import {
   Calendar,
   Clock,
@@ -865,6 +866,10 @@ export function DynamicInvitationCard({
                   }
 
                   case 'confirmacion_rsvp': {
+                    const metodoConfirmacion =
+                      seccion.datos?.metodoConfirmacion ||
+                      evento.metodoConfirmacion ||
+                      'tarjeton'
                     return (
                       <motion.div
                         key={seccion.id}
@@ -872,28 +877,17 @@ export function DynamicInvitationCard({
                         initial="oculto"
                         animate="visible"
                         variants={animacionAparicion}
-                        className="px-6 sm:px-8 py-6 flex flex-col items-center"
+                        className="w-full"
                       >
-                        {seccion.subtitulo && (
-                          <p
-                            className="text-center text-[11px] opacity-75 mb-3 leading-relaxed max-w-xs"
-                            style={{ color: visual.colorTexto }}
-                          >
-                            {seccion.subtitulo}
-                          </p>
-                        )}
-                        <a
-                          href={esModoVistaPrevia ? undefined : urlWhatsApp}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full py-3.5 px-6 rounded-xl font-sans font-semibold text-white text-xs tracking-wider uppercase transition-all active:scale-[0.98] shadow-md hover:opacity-90 flex items-center justify-center gap-2.5 text-center cursor-pointer"
-                          style={{
-                            backgroundColor: visual.colorPrimario,
-                          }}
-                        >
-                          <WhatsAppIcon />
-                          <span>Confirmar Asistencia en WhatsApp</span>
-                        </a>
+                        <ModuloRsvp
+                          evento={evento}
+                          visual={visual}
+                          invitado={invitado}
+                          esModoVistaPrevia={esModoVistaPrevia}
+                          urlWhatsApp={urlWhatsApp}
+                          subtitulo={seccion.subtitulo}
+                          metodoConfirmacion={metodoConfirmacion}
+                        />
                       </motion.div>
                     )
                   }

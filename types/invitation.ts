@@ -122,8 +122,12 @@ export interface SeccionModular {
     autorMensaje?: string
     // Hospedaje
     hoteles?: HotelHospedaje[]
+    // Confirmación RSVP
+    metodoConfirmacion?: MetodoConfirmacion
   }
 }
+
+export type MetodoConfirmacion = 'tarjeton' | 'whatsapp' | 'ambos'
 
 export interface ConfiguracionVisual {
   fuenteTitulo: FuenteTipografica
@@ -173,7 +177,10 @@ export interface DetalleEvento {
   // Arquitectura modular dinámica
   configuracionVisual?: ConfiguracionVisual
   secciones?: SeccionModular[]
+  metodoConfirmacion?: MetodoConfirmacion
 }
+
+export type EstadoConfirmacion = 'confirmado' | 'no_asiste' | 'pendiente'
 
 export interface Invitado {
   id: string
@@ -184,6 +191,9 @@ export interface Invitado {
   telefono?: string // Opcional, para envío directo con un clic
   codigoAcceso: string // Token de invitación única
   confirmado?: boolean
+  estadoConfirmacion?: EstadoConfirmacion
+  cuposConfirmados?: number
+  mensajeConfirmacion?: string
   fechaConfirmacion?: string
 }
 

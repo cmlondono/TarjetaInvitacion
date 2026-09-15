@@ -875,6 +875,74 @@ export function SeccionItemEditor({
               </div>
             </div>
           )}
+
+          {/* 9. CONFIRMACIÓN DE ASISTENCIA (RSVP) */}
+          {seccion.tipo === 'confirmacion_rsvp' && (
+            <div className="space-y-3 pt-2 border-t border-slate-200">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                <Sparkles size={12} className="text-amber-600" />
+                <span>¿Cómo deseas que tus invitados confirmen asistencia?</span>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {[
+                  {
+                    id: 'tarjeton',
+                    titulo: 'Botón Digital Tarjetón',
+                    desc: 'Registro en web, control de aforo en tiempo real y descarga en PDF/Excel',
+                    destacado: 'Recomendado',
+                  },
+                  {
+                    id: 'whatsapp',
+                    titulo: 'Mensaje de WhatsApp',
+                    desc: 'Abre chat directo con mensaje predefinido en tu WhatsApp',
+                    destacado: null,
+                  },
+                  {
+                    id: 'ambos',
+                    titulo: 'Ambos Métodos',
+                    desc: 'Formulario digital web + opción de notificar por WhatsApp',
+                    destacado: 'Híbrido',
+                  },
+                ].map((metodo) => {
+                  const seleccionado =
+                    (seccion.datos?.metodoConfirmacion || 'tarjeton') === metodo.id
+                  return (
+                    <button
+                      key={metodo.id}
+                      type="button"
+                      onClick={() => alActualizarDatos('metodoConfirmacion', metodo.id)}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer relative ${
+                        seleccionado
+                          ? 'border-slate-900 bg-slate-900 text-white shadow-xs ring-1 ring-slate-900'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-800'
+                      }`}
+                    >
+                      {metodo.destacado && (
+                        <span
+                          className={`text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded absolute right-2 top-2 ${
+                            seleccionado
+                              ? 'bg-amber-400 text-slate-950'
+                              : 'bg-emerald-100 text-emerald-800'
+                          }`}
+                        >
+                          {metodo.destacado}
+                        </span>
+                      )}
+                      <span className="text-xs font-bold block pr-8">{metodo.titulo}</span>
+                      <p
+                        className={`text-[10px] mt-1 leading-snug ${
+                          seleccionado ? 'text-slate-300' : 'text-slate-500'
+                        }`}
+                      >
+                        {metodo.desc}
+                      </p>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

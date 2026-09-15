@@ -295,6 +295,9 @@ export function generarSeccionesPorDefecto(evento: DetalleEvento): SeccionModula
       icono: 'check',
       visible: true,
       orden: 9,
+      datos: {
+        metodoConfirmacion: 'tarjeton',
+      },
     },
   ]
 }

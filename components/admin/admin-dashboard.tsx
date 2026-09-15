@@ -10,6 +10,7 @@ import {
 import { InvitadoRepositorio, EventoRepositorio } from '@/lib/storage'
 import { ModalPago } from '@/components/checkout/modal-pago'
 import { construirMensajeCompartir } from '@/lib/event-utils'
+import { exportarInvitadosExcel, imprimirListaAdmision } from '@/lib/export-utils'
 import {
   Copy,
   Check,
@@ -22,6 +23,13 @@ import {
   Shield,
   AlertCircle,
   Award,
+  FileSpreadsheet,
+  Printer,
+  Search,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  UserCheck,
 } from 'lucide-react'
 
 interface AdminDashboardProps {
@@ -39,14 +47,39 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
   const [idCopiado, setIdCopiado] = useState<string | null>(null)
   const [mostrarModalUpgrade, setMostrarModalUpgrade] = useState(false)
   const [errorLimite, setErrorLimite] = useState<string | null>(null)
+  const [busqueda, setBusqueda] = useState('')
+  const [filtroEstado, setFiltroEstado] = useState<'todos' | 'confirmados' | 'pendientes' | 'no_asiste'>('todos')
 
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://invitacionesya.com'
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tarjeton.online'
   const enlaceAdmin = `${baseUrl}/gestionar/${evento.tokenAdmin}`
   const enlacePublico = `${baseUrl}/i/${evento.slugPublico}`
 
   useEffect(() => {
     const list = InvitadoRepositorio.obtenerPorEvento(evento.id)
     setInvitados(list)
+
+    // Sincronización asíncrona con el servidor para traer confirmaciones en tiempo real
+    const cargarRemotos = async () => {
+      try {
+        const res = await fetch(`/api/invitados?eventoId=${encodeURIComponent(evento.id)}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data.invitados && Array.isArray(data.invitados) && data.invitados.length > 0) {
+            // Combinar inteligentemente respetando cambios locales
+            setInvitados((prev) => {
+              const mapa = new Map<string, Invitado>()
+              prev.forEach((inv) => mapa.set(inv.id, inv))
+              data.invitados.forEach((inv: Invitado) => {
+                const local = mapa.get(inv.id)
+                mapa.set(inv.id, { ...local, ...inv })
+              })
+              return Array.from(mapa.values())
+            })
+          }
+        }
+      } catch {}
+    }
+    cargarRemotos()
   }, [evento.id])
 
   useEffect(() => {
@@ -122,6 +155,56 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
     const texto = `Enlace privado de administración para mi evento *${evento.titulo}*:\n\n${enlaceAdmin}\n\n(Conserva este enlace para gestionar y editar tu invitación).`
     window.open(`https://wa.me/?text=${encodeURIComponent(texto)}`, '_blank')
   }
+
+  // Métricas RSVP y Control de Asistencia en Tiempo Real
+  const confirmados = invitados.filter(
+    (i) => i.confirmado || i.estadoConfirmacion === 'confirmado'
+  )
+  const noAsisten = invitados.filter((i) => i.estadoConfirmacion === 'no_asiste')
+  const pendientes = invitados.filter(
+    (i) => !i.confirmado && i.estadoConfirmacion !== 'no_asiste'
+  )
+
+  const totalCuposEmitidos = invitados.reduce((acc, i) => acc + (i.pases || 1), 0)
+  const totalCuposConfirmados = confirmados.reduce(
+    (acc, i) => acc + (i.cuposConfirmados || i.pases || 1),
+    0
+  )
+
+  const handleCambiarConfirmacionManual = (
+    invitado: Invitado,
+    nuevoEstado: 'confirmado' | 'no_asiste'
+  ) => {
+    InvitadoRepositorio.actualizarConfirmacion(
+      evento.id,
+      { id: invitado.id },
+      {
+        estadoConfirmacion: nuevoEstado,
+        cuposConfirmados:
+          nuevoEstado === 'confirmado' ? invitado.cuposConfirmados || invitado.pases || 1 : 0,
+      }
+    )
+    setInvitados(InvitadoRepositorio.obtenerPorEvento(evento.id))
+  }
+
+  // Lista filtrada por texto de búsqueda y pestaña seleccionada
+  const invitadosFiltrados = invitados.filter((inv) => {
+    const coincideBusqueda =
+      inv.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+      (inv.telefono && inv.telefono.includes(busqueda))
+    if (!coincideBusqueda) return false
+
+    if (filtroEstado === 'confirmados') {
+      return inv.confirmado || inv.estadoConfirmacion === 'confirmado'
+    }
+    if (filtroEstado === 'no_asiste') {
+      return inv.estadoConfirmacion === 'no_asiste'
+    }
+    if (filtroEstado === 'pendientes') {
+      return !inv.confirmado && inv.estadoConfirmacion !== 'no_asiste'
+    }
+    return true
+  })
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 py-10 px-4 sm:px-6 lg:px-8 font-sans">
@@ -324,47 +407,262 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
           )}
         </div>
 
-        {/* Lista de Pases Generados */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs">
-          <div className="flex items-center justify-between mb-4">
+        {/* ══════════ METRICAS DE ASISTENCIA (RSVP) EN TIEMPO REAL ══════════ */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          {/* Total Expedidos */}
+          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
+            <div className="flex items-center justify-between text-slate-500 mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider">Pases Expedidos</span>
+              <Users size={15} />
+            </div>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-slate-900">
+              {invitados.length}
+            </div>
+            <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+              {totalCuposEmitidos} {totalCuposEmitidos === 1 ? 'cupo total' : 'cupos totales'}
+            </p>
+          </div>
+
+          {/* Confirmados */}
+          <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 shadow-xs">
+            <div className="flex items-center justify-between text-emerald-700 mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider">Confirmados</span>
+              <CheckCircle2 size={15} />
+            </div>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-emerald-900">
+              {confirmados.length}
+            </div>
+            <p className="text-[11px] text-emerald-700 mt-0.5 font-bold">
+              {totalCuposConfirmados} {totalCuposConfirmados === 1 ? 'persona asegurada' : 'personas aseguradas'}
+            </p>
+          </div>
+
+          {/* Pendientes */}
+          <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 shadow-xs">
+            <div className="flex items-center justify-between text-amber-700 mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider">Pendientes</span>
+              <Clock size={15} />
+            </div>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-amber-900">
+              {pendientes.length}
+            </div>
+            <p className="text-[11px] text-amber-700 mt-0.5 font-medium">
+              A la espera de respuesta
+            </p>
+          </div>
+
+          {/* No Asistirán */}
+          <div className="bg-slate-100/70 border border-slate-200 rounded-2xl p-4 shadow-xs">
+            <div className="flex items-center justify-between text-slate-500 mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider">No Asisten</span>
+              <XCircle size={15} />
+            </div>
+            <div className="text-xl sm:text-2xl font-bold font-mono text-slate-800">
+              {noAsisten.length}
+            </div>
+            <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+              Cupos liberados
+            </p>
+          </div>
+        </div>
+
+        {/* ══════════ LISTA DE ASISTENCIA & EXPEDICION DE PASES ══════════ */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-6">
+          {/* Cabecera y Botones de Exportación */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
             <div>
-              <h2 className="text-base font-bold font-serif text-slate-950">Registro de Pases Emitidos ({invitados.length})</h2>
-              <p className="text-xs text-slate-500">Distribución directa por mensajería o enlace personalizado.</p>
+              <h2 className="text-base sm:text-lg font-bold font-serif text-slate-950 flex items-center gap-2">
+                <UserCheck size={18} className="text-slate-800" />
+                <span>Control de Asistencia & Pases ({invitados.length})</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Visualice confirmaciones en vivo y exporte la lista para la recepción y catering.
+              </p>
+            </div>
+
+            {/* Acciones de Exportación */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => imprimirListaAdmision(evento, invitados)}
+                disabled={invitados.length === 0}
+                className="py-2 px-3.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+                title="Generar hoja de admisión lista para imprimir o guardar como PDF"
+              >
+                <Printer size={14} className="text-slate-600" />
+                <span>Lista Admisión (PDF)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => exportarInvitadosExcel(evento, invitados, baseUrl)}
+                disabled={invitados.length === 0}
+                className="py-2 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+                title="Descargar archivo .CSV con soporte nativo de Excel"
+              >
+                <FileSpreadsheet size={14} />
+                <span>Exportar Excel</span>
+              </button>
             </div>
           </div>
 
-          {invitados.length === 0 ? (
+          {/* Barra de Búsqueda y Filtros de Estado */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            {/* Buscador */}
+            <div className="relative flex-1 max-w-sm">
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                placeholder="Buscar por nombre o teléfono..."
+                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-slate-800 focus:outline-none transition-all"
+              />
+            </div>
+
+            {/* Filtros de Pestaña */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+              <button
+                type="button"
+                onClick={() => setFiltroEstado('todos')}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
+                  filtroEstado === 'todos'
+                    ? 'bg-white text-slate-900 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Todos ({invitados.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltroEstado('confirmados')}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
+                  filtroEstado === 'confirmados'
+                    ? 'bg-white text-emerald-800 shadow-2xs'
+                    : 'text-slate-600 hover:text-emerald-700'
+                }`}
+              >
+                Confirmados ({confirmados.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltroEstado('pendientes')}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
+                  filtroEstado === 'pendientes'
+                    ? 'bg-white text-amber-800 shadow-2xs'
+                    : 'text-slate-600 hover:text-amber-700'
+                }`}
+              >
+                Pendientes ({pendientes.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltroEstado('no_asiste')}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
+                  filtroEstado === 'no_asiste'
+                    ? 'bg-white text-rose-800 shadow-2xs'
+                    : 'text-slate-600 hover:text-rose-700'
+                }`}
+              >
+                No Asisten ({noAsisten.length})
+              </button>
+            </div>
+          </div>
+
+          {/* Listado de Invitados */}
+          {invitadosFiltrados.length === 0 ? (
             <div className="text-center py-12 border border-dashed border-slate-200 rounded-xl">
               <Users className="mx-auto text-slate-400 mb-2" size={28} />
-              <p className="text-xs font-semibold text-slate-700">Sin invitaciones emitidas</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">Utilice el formulario superior para generar los primeros pases nominales.</p>
+              <p className="text-xs font-semibold text-slate-700">
+                {invitados.length === 0
+                  ? 'Sin invitaciones emitidas aún'
+                  : 'Ningún invitado coincide con los filtros aplicados'}
+              </p>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                {invitados.length === 0
+                  ? 'Utilice el formulario superior para generar los primeros pases nominales.'
+                  : 'Intente buscar con otro término o seleccione otra pestaña.'}
+              </p>
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
-              {invitados.map((inv) => {
+              {invitadosFiltrados.map((inv) => {
                 const linkInvitado = `${baseUrl}/i/${evento.slugPublico}?g=${encodeURIComponent(inv.nombre)}&t=${inv.codigoAcceso}${inv.esPlural ? '&p=1' : ''}`
                 const copiado = idCopiado === inv.id
+                const estaConfirmado = inv.confirmado || inv.estadoConfirmacion === 'confirmado'
+                const noAsiste = inv.estadoConfirmacion === 'no_asiste'
 
                 return (
                   <div key={inv.id} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs sm:text-sm font-bold text-slate-900 truncate">{inv.nombre}</span>
-                        <span className="text-[10px] bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded font-mono shrink-0">
-                          {inv.pases} {inv.pases === 1 ? 'pase' : 'pases'}
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs sm:text-sm font-bold text-slate-950 truncate">
+                          {inv.nombre}
+                        </span>
+
+                        {/* Insignia de Estado RSVP */}
+                        {estaConfirmado ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded font-semibold font-mono">
+                            <CheckCircle2 size={11} className="text-emerald-700" />
+                            <span>Confirmó {inv.cuposConfirmados || inv.pases || 1} {((inv.cuposConfirmados || inv.pases || 1) === 1) ? 'cupo' : 'cupos'}</span>
+                          </span>
+                        ) : noAsiste ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] bg-rose-100 text-rose-800 border border-rose-200 px-2 py-0.5 rounded font-semibold font-mono">
+                            <XCircle size={11} className="text-rose-700" />
+                            <span>No asistirá</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded font-semibold font-mono">
+                            <Clock size={11} className="text-slate-400" />
+                            <span>Pendiente</span>
+                          </span>
+                        )}
+
+                        <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">
+                          Pase para {inv.pases} {inv.pases === 1 ? 'persona' : 'personas'}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-500 truncate max-w-full sm:max-w-md mt-1 font-mono">
+
+                      {/* Mensaje de Restricciones o Felicitaciones si el invitado lo dejó */}
+                      {inv.mensajeConfirmacion && (
+                        <p className="text-[11px] text-slate-600 italic bg-amber-50/70 border border-amber-200/60 px-2.5 py-1 rounded-lg inline-block">
+                          Nota del invitado: &ldquo;{inv.mensajeConfirmacion}&rdquo;
+                        </p>
+                      )}
+
+                      <p className="text-[11px] text-slate-400 truncate max-w-full sm:max-w-md font-mono">
                         {linkInvitado}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0 pt-1 sm:pt-0">
+                    {/* Botones de Acción */}
+                    <div className="flex flex-wrap items-center gap-2 shrink-0 pt-1 sm:pt-0">
+                      {/* Marcar confirmación manual */}
+                      {!estaConfirmado ? (
+                        <button
+                          type="button"
+                          onClick={() => handleCambiarConfirmacionManual(inv, 'confirmado')}
+                          className="px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold transition-colors cursor-pointer"
+                          title="Marcar asistencia manualmente"
+                        >
+                          ✓ Confirmar
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleCambiarConfirmacionManual(inv, 'no_asiste')}
+                          className="px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-800 text-[11px] font-bold transition-colors cursor-pointer"
+                          title="Marcar que no asistirá"
+                        >
+                          ✕ Declinar
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => copiarTexto(linkInvitado, inv.id)}
-                        className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                        title="Copiar enlace"
+                        className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                        title="Copiar enlace individual"
                       >
                         {copiado ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
                         <span>{copiado ? 'Copiado' : 'Copiar'}</span>
@@ -373,7 +671,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                       <button
                         type="button"
                         onClick={() => enviarPorWhatsApp(inv)}
-                        className="flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                         title="Enviar por WhatsApp"
                       >
                         <Share2 size={13} />

@@ -197,7 +197,7 @@ export function ModalPago({
                     Activación de Pase Ilimitado
                   </h3>
                   <p className="text-[11px] text-slate-500 font-medium">
-                    {tituloEvento ? `Evento: ${tituloEvento}` : 'Licencia Oficial de InvitacionesYa'}
+                    {tituloEvento ? `Evento: ${tituloEvento}` : 'Licencia Oficial Tarjetón'}
                   </p>
                 </div>
               </div>

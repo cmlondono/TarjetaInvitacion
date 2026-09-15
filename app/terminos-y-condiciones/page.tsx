@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Términos y Condiciones — InvitacionesYa',
-  description: 'Términos y condiciones de uso de la plataforma InvitacionesYa.',
+  title: 'Términos y Condiciones — Tarjetón',
+  description: 'Términos y condiciones de uso de la plataforma Tarjetón.',
 }
 
 export default function TerminosCondiciones() {
@@ -13,7 +13,7 @@ export default function TerminosCondiciones() {
       <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 text-sm text-slate-700 dark:text-slate-300">
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:underline mb-2"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 hover:underline mb-2"
         >
           <ArrowLeft size={14} /> Volver al inicio
         </Link>
@@ -26,7 +26,7 @@ export default function TerminosCondiciones() {
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white">1. Aceptación del Servicio</h2>
           <p>
-            Al utilizar la plataforma InvitacionesYa para diseñar, generar o compartir tarjetas de invitación digitales, aceptas estos términos y condiciones en su totalidad.
+            Al utilizar la plataforma Tarjetón para confeccionar, diseñar, generar o compartir tarjetones y tarjetas de invitación digitales, aceptas estos términos y condiciones en su totalidad.
           </p>
         </section>
 

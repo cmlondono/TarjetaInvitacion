@@ -21,6 +21,7 @@ import {
 } from '@/lib/modular-defaults'
 import { DynamicInvitationCard } from '@/components/invitation/dynamic-invitation-card'
 import { ModalPago } from '@/components/checkout/modal-pago'
+import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
 import { SeccionItemEditor } from './seccion-item-editor'
 import { IconoDinamico } from '@/components/ui/icono-dinamico'
 import {
@@ -242,18 +243,11 @@ export function VisualCustomizer({
 
           {/* Logotipo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-slate-900 group-hover:bg-slate-800 flex items-center justify-center font-bold text-sm text-white transition-colors">
-              ✦
-            </div>
+            <TarjetonLogo size="sm" subtexto="studio" />
             <div className="hidden sm:block">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-800 group-hover:text-slate-950 transition-colors">
-                  InvitacionesYa Studio
-                </span>
-                <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200 font-medium">
-                  {modoEdicion ? 'Modo Edición' : 'Creador Modular'}
-                </span>
-              </div>
+              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200 font-medium">
+                {modoEdicion ? 'Modo Edición' : 'Creador Modular'}
+              </span>
             </div>
           </Link>
         </div>

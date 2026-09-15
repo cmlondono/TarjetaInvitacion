@@ -16,12 +16,15 @@ import {
   Clock,
 } from 'lucide-react'
 import { LandingAnnouncementBanner } from '@/components/landing/anuncio-banner'
+import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
 
 export const metadata: Metadata = {
-  title: 'InvitacionesYa — Convocatorias Protocolarias & Tarjetas Formales para WhatsApp',
+  title: 'Tarjetón — Convocatorias Protocolarias & Tarjetas Formales para WhatsApp',
   description:
-    'Diseñe invitaciones digitales interactivas para actos corporativos, asambleas, grados y celebraciones formales. Confirmación por WhatsApp y control de aforo.',
+    'Diseñe tarjetones de invitación digitales interactivos para actos corporativos, asambleas, grados y celebraciones formales. Confirmación por WhatsApp y control de aforo.',
   keywords: [
+    'tarjeton digital',
+    'tarjetones de invitacion',
     'invitaciones corporativas digitales',
     'tarjetas de invitacion formales',
     'invitaciones protocolarias whatsapp',
@@ -29,11 +32,11 @@ export const metadata: Metadata = {
     'invitaciones ejecutivas personalizadas',
   ],
   openGraph: {
-    title: 'InvitacionesYa — Papelería Digital Protocolaria & Corporativa',
+    title: 'Tarjetón — Papelería Digital Protocolaria & Corporativa',
     description:
-      'Diseño formal de tarjetas interactivas sin registros obligatorios. Confirmación directa en WhatsApp y control de aforo.',
+      'Diseño formal de tarjetones interactivos sin registros obligatorios. Confirmación directa en WhatsApp y control de aforo.',
     url: 'https://invitacionesya.com',
-    siteName: 'InvitacionesYa',
+    siteName: 'Tarjetón',
     locale: 'es_LA',
     type: 'website',
   },
@@ -43,7 +46,7 @@ export default function PaginaInicio() {
   const jsonLdWeb = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
-    name: 'InvitacionesYa',
+    name: 'Tarjetón',
     applicationCategory: 'DesignApplication',
     operatingSystem: 'All',
     offers: {
@@ -52,7 +55,7 @@ export default function PaginaInicio() {
       priceCurrency: 'USD',
     },
     description:
-      'Plataforma formal para confeccionar invitaciones digitales interactivas con confirmación en WhatsApp.',
+      'Plataforma formal para confeccionar tarjetones e invitaciones digitales interactivas con confirmación en WhatsApp.',
   }
 
   return (
@@ -67,19 +70,7 @@ export default function PaginaInicio() {
 
       {/* Navegación Superior Formal (Tema Claro y Limpio) */}
       <header className="w-full border-b border-slate-200 bg-white/95 backdrop-blur-md sticky top-0 z-40 px-6 sm:px-12 py-4 flex items-center justify-between shadow-2xs">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-white font-bold text-sm">
-            ✦
-          </div>
-          <div>
-            <span className="text-xl font-bold tracking-tight text-slate-900 block leading-none">
-              InvitacionesYa
-            </span>
-            <span className="text-[10px] tracking-widest uppercase text-slate-500 font-medium">
-              Studio & Protocolo
-            </span>
-          </div>
-        </div>
+        <TarjetonLogo size="md" subtexto="protocolo" />
 
         <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-slate-600">
           <a href="#solucion" className="hover:text-slate-900 transition-colors">
@@ -384,8 +375,8 @@ export default function PaginaInicio() {
       {/* Pie de Página Formal */}
       <footer className="w-full bg-white text-slate-500 text-xs py-14 px-6 sm:px-12 border-t border-slate-200 mt-auto">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-900 text-base font-bold">InvitacionesYa</span>
+          <div className="flex items-center gap-3">
+            <TarjetonLogo size="sm" subtexto="none" />
             <span className="text-[11px] text-slate-400">· Papelería digital interactiva para eventos formales</span>
           </div>
 
@@ -406,7 +397,7 @@ export default function PaginaInicio() {
           </div>
 
           <p className="text-[10px] text-slate-400 font-normal">
-            © {new Date().getFullYear()} InvitacionesYa Studio. Todos los derechos reservados.
+            © {new Date().getFullYear()} Tarjetón Studio. Todos los derechos reservados.
           </p>
         </div>
       </footer>

@@ -35,6 +35,7 @@ import {
   ArrowLeft,
   Sparkles,
 } from 'lucide-react'
+import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
 
 export default function PaginaAdminDashboard() {
   const router = useRouter()
@@ -233,22 +234,7 @@ export default function PaginaAdminDashboard() {
       {/* Barra Superior con el mismo estilo de la Landing */}
       <header className="w-full bg-white border-b border-slate-200 px-6 sm:px-12 py-3.5 sticky top-0 z-40 flex items-center justify-between shadow-2xs">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center text-white font-bold text-sm shadow-xs">
-            ✦
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold tracking-tight text-slate-900 block leading-none">
-                InvitacionesYa
-              </span>
-              <span className="text-[10px] bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-                Consola Master
-              </span>
-            </div>
-            <span className="text-[10px] tracking-widest uppercase text-slate-500 font-medium">
-              Panel Administrativo de Control
-            </span>
-          </div>
+          <TarjetonLogo size="sm" subtexto="admin" />
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">

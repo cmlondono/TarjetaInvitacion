@@ -917,7 +917,7 @@ export function DynamicInvitationCard({
                 className="text-[10px] uppercase tracking-[0.25em] font-medium"
                 style={{ color: visual.colorTexto }}
               >
-                InvitacionesYa Studio
+                Tarjetón Studio
               </a>
             </div>
           </div>

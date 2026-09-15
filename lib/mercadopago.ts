@@ -63,7 +63,7 @@ export async function crearPreferenciaMercadoPago({
     const payload = {
       items: [
         {
-          id: 'licencia-premium-invitacionesya',
+          id: 'licencia-premium-tarjeton',
           title: `Pase Ilimitado: ${tituloEvento || 'Evento Formal'}`,
           description: 'Emisión nominal sin límite de aforo y exclusión total de publicidad',
           quantity: 1,
@@ -72,7 +72,7 @@ export async function crearPreferenciaMercadoPago({
         },
       ],
       payer: {
-        email: emailCliente || 'cliente@invitacionesya.com',
+        email: emailCliente || 'cliente@tarjeton.com',
       },
       back_urls: {
         success: redirectExito,
@@ -81,7 +81,7 @@ export async function crearPreferenciaMercadoPago({
       },
       auto_return: 'approved',
       external_reference: externalReference,
-      statement_descriptor: 'INVITACIONESYA',
+      statement_descriptor: 'TARJETON',
       notification_url: `${appUrl}/api/pagos/mercadopago/webhook`,
       payment_methods: {
         excluded_payment_types: [],

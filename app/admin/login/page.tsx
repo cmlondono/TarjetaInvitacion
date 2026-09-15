@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ShieldCheck, Lock, User, KeyRound, Eye, EyeOff, Loader2, ArrowRight } from 'lucide-react'
+import { TarjetonIcon } from '@/components/ui/tarjeton-logo'
 
 export default function PaginaAdminLogin() {
   const router = useRouter()
@@ -50,15 +51,15 @@ export default function PaginaAdminLogin() {
         
         {/* Logotipo y Título Editorial */}
         <div className="text-center space-y-2.5 mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center mx-auto shadow-sm">
-            <Lock size={22} />
+          <div className="flex justify-center mx-auto mb-2">
+            <TarjetonIcon size={52} className="shadow-md rounded-2xl" />
           </div>
           <div>
             <span className="text-[10px] uppercase tracking-[0.25em] font-bold text-slate-500 block mb-1">
               Consola Master & Protocolo
             </span>
-            <h1 className="text-2xl font-bold text-slate-950 tracking-tight">
-              InvitacionesYa Studio
+            <h1 className="text-2xl font-bold font-serif text-slate-950 tracking-tight">
+              Tarjetón Studio
             </h1>
           </div>
           <p className="text-xs text-slate-600 leading-relaxed max-w-xs mx-auto">

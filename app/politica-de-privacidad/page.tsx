@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Política de Privacidad — InvitacionesYa',
-  description: 'Política de privacidad y tratamiento de datos personales de InvitacionesYa.',
+  title: 'Política de Privacidad — Tarjetón',
+  description: 'Política de privacidad y tratamiento de datos personales de Tarjetón.',
 }
 
 export default function PoliticaPrivacidad() {
@@ -13,7 +13,7 @@ export default function PoliticaPrivacidad() {
       <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 text-sm text-slate-700 dark:text-slate-300">
         <Link
           href="/"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:underline mb-2"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 hover:underline mb-2"
         >
           <ArrowLeft size={14} /> Volver al inicio
         </Link>
@@ -26,7 +26,7 @@ export default function PoliticaPrivacidad() {
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white">1. Información que recopilamos</h2>
           <p>
-            En InvitacionesYa priorizamos tu privacidad. Nuestra plataforma funciona sin registro de usuario obligatorio. Solo recopilamos los datos esenciales que decides ingresar para confeccionar tu tarjeta de invitación: título del evento, fecha, lugar, número de contacto para confirmación de WhatsApp y los nombres de los invitados que decidas agregar.
+            En Tarjetón priorizamos tu privacidad. Nuestra plataforma funciona sin registro de usuario obligatorio. Solo recopilamos los datos esenciales que decides ingresar para confeccionar tu tarjetón de invitación: título del evento, fecha, lugar, número de contacto para confirmación de WhatsApp y los nombres de los invitados que decidas agregar.
           </p>
         </section>
 

@@ -32,7 +32,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       description: descripcionBase,
       type: 'website',
       locale: 'es_LA',
-      siteName: 'InvitacionesYa',
+      siteName: 'Tarjetón',
       images: [
         {
           url: `/api/og?titulo=${encodeURIComponent(tituloBase)}&invitado=${encodeURIComponent(nombreDecodificado || '')}`,

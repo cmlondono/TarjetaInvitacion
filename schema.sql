@@ -46,9 +46,17 @@ CREATE TABLE IF NOT EXISTS public.invitados (
   telefono TEXT,
   codigo_acceso TEXT NOT NULL,
   confirmado BOOLEAN NOT NULL DEFAULT false,
+  estado_confirmacion TEXT DEFAULT 'pendiente',
+  cupos_confirmados INTEGER DEFAULT 0,
+  mensaje_confirmacion TEXT,
   fecha_confirmacion TIMESTAMPTZ,
   creado_en TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Si ya tenías creada la tabla anteriormente:
+-- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS estado_confirmacion TEXT DEFAULT 'pendiente';
+-- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS cupos_confirmados INTEGER DEFAULT 0;
+-- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS mensaje_confirmacion TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_invitados_evento_id ON public.invitados(evento_id);
 

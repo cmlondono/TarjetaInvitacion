@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Fragment } from 'react'
 import { motion } from 'framer-motion'
 import { DetalleEvento, ConfiguracionVisual, Invitado, SeccionModular } from '@/types/invitation'
 import { EventCountdown } from './event-countdown'
@@ -126,7 +126,8 @@ export function DynamicInvitationCard({
             {/* Renderizado de Bloques Modulares Dinámicos */}
             <div className="flex flex-col">
               {listaSecciones.map((seccion, index) => {
-                switch (seccion.tipo) {
+                const renderizarBloque = () => {
+                  switch (seccion.tipo) {
                   case 'cabecera': {
                     const imagenPortada = seccion.datos?.imagenPortada || evento.imagenPortada
                     const imagenRetrato = seccion.datos?.imagenRetrato || evento.imagenRetrato
@@ -897,12 +898,28 @@ export function DynamicInvitationCard({
                       </motion.div>
                     )
                   }
-
                   default:
                     return null
                 }
-              })}
-            </div>
+              }
+
+              return (
+                <Fragment key={seccion.id}>
+                  {renderizarBloque()}
+                  {/* Banner publicitario intermedio exclusivo para cuentas gratuitas */}
+                  {index === 2 && !evento.esPremium && (
+                    <div className="px-6 py-2 border-b border-black/[0.04]">
+                      <AdBanner
+                        esPremium={evento.esPremium}
+                        slotId="card-inline-slot"
+                        formato="inline"
+                      />
+                    </div>
+                  )}
+                </Fragment>
+              )
+            })}
+          </div>
 
             {/* Banner publicitario sobrio para cuentas libres */}
             <div className="px-6 sm:px-8 pb-4">

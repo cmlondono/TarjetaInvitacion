@@ -387,6 +387,11 @@ export default function PaginaInicio() {
         </div>
       </section>
 
+      {/* Banner Publicitario Inferior en Landing */}
+      <div className="max-w-4xl mx-auto w-full px-6 my-10">
+        <AdBanner slotId="landing-bottom-banner" formato="horizontal" />
+      </div>
+
       {/* Pie de Página Formal */}
       <footer className="w-full bg-white text-slate-500 text-xs py-14 px-6 sm:px-12 border-t border-slate-200 mt-auto">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">

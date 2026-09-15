@@ -14,3 +14,7 @@ next.user-config.*
 node_modules
 .next/
 .DS_Store
+
+# Archivos locales de medios y scripts de marketing
+scripts/
+public/ads/

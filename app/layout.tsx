@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Roboto_Slab, Inter, Playfair_Display } from 'next/font/google'
-import Script from 'next/script'
 import './globals.css'
 
 const robotoSlab = Roboto_Slab({
@@ -26,6 +25,9 @@ export const metadata: Metadata = {
   },
   description:
     'Plataforma para diseñar tarjetas de invitación interactivas para actos solemnes, eventos corporativos, galas y bodas de etiqueta.',
+  other: {
+    'google-adsense-account': 'ca-pub-4454797114720338',
+  },
 }
 
 export const viewport = {
@@ -45,11 +47,11 @@ export default function RootLayout({
   return (
     <html lang="es" className="bg-white text-slate-900">
       <head>
-        <Script
+        <meta name="google-adsense-account" content={adsenseId} />
+        <script
           async
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`}
           crossOrigin="anonymous"
-          strategy="afterInteractive"
         />
       </head>
       <body className={`${robotoSlab.variable} ${inter.variable} ${playfair.variable} antialiased font-sans`}>

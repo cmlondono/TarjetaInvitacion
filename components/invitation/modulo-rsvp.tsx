@@ -88,6 +88,7 @@ export function ModuloRsvp({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           eventoId: evento.id,
+          slugPublico: evento.slugPublico,
           id: invitado?.id,
           codigoAcceso: invitado?.codigoAcceso,
           nombre: nombre.trim(),

@@ -1,10 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { obtenerClienteSupabase } from '@/lib/supabase'
+import { ServidorAlmacen } from '@/lib/server-storage'
+import { mapearInvitadoDesdeDb } from '@/lib/storage'
+import { Invitado } from '@/types/invitation'
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const eventoId = searchParams.get('eventoId')
+    let eventoId = searchParams.get('eventoId')
+    const slug = searchParams.get('slug')
+
+    const supabase = obtenerClienteSupabase()
+
+    // 1. Resolver ID real del evento si se proporcionó un slug
+    if ((!eventoId || eventoId === 'demo') && slug) {
+      const enMemoria = ServidorAlmacen.obtenerEventoPorSlug(slug)
+      if (enMemoria) {
+        eventoId = enMemoria.id
+      } else if (supabase) {
+        const { data: eventoDb } = await supabase
+          .from('eventos')
+          .select('id')
+          .eq('slug_publico', slug)
+          .maybeSingle()
+        if (eventoDb) eventoId = eventoDb.id
+      }
+    }
 
     if (!eventoId) {
       return NextResponse.json(
@@ -13,39 +34,36 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    const supabase = obtenerClienteSupabase()
+    const mapaInvitados = new Map<string, Invitado>()
 
-    if (supabase) {
+    // 2. Cargar primero de memoria del servidor
+    const enMemoria = ServidorAlmacen.obtenerInvitados(eventoId)
+    enMemoria.forEach((inv) => mapaInvitados.set(inv.id, inv))
+
+    // 3. Cargar de Supabase si está disponible
+    if (supabase && eventoId !== 'demo') {
       const { data, error } = await supabase
         .from('invitados')
         .select('*')
         .eq('evento_id', eventoId)
         .order('creado_en', { ascending: false })
 
-      if (error) {
-        console.error('Error consultando invitados en Supabase:', error)
-        return NextResponse.json({ exito: true, invitados: [] })
+      if (!error && data) {
+        data.forEach((fila: any) => {
+          const invDb = mapearInvitadoDesdeDb(fila)
+          // Si ya existía en memoria con datos más recientes, fusionar
+          const anterior = mapaInvitados.get(invDb.id)
+          mapaInvitados.set(invDb.id, { ...invDb, ...anterior })
+        })
       }
-
-      const invitadosFormateados = (data || []).map((inv: any) => ({
-        id: inv.id,
-        eventoId: inv.evento_id,
-        nombre: inv.nombre,
-        pases: inv.pases,
-        esPlural: inv.es_plural,
-        telefono: inv.telefono,
-        codigoAcceso: inv.codigo_acceso,
-        confirmado: inv.confirmado,
-        estadoConfirmacion: inv.confirmado ? 'confirmado' : 'pendiente',
-        cuposConfirmados: inv.confirmado ? inv.pases : 0,
-        fechaConfirmacion: inv.fecha_confirmacion,
-      }))
-
-      return NextResponse.json({ exito: true, invitados: invitadosFormateados })
     }
 
-    return NextResponse.json({ exito: true, invitados: [] })
+    return NextResponse.json({
+      exito: true,
+      invitados: Array.from(mapaInvitados.values()),
+    })
   } catch (err: any) {
+    console.error('Error en GET /api/invitados:', err)
     return NextResponse.json(
       { exito: false, error: err.message },
       { status: 500 }

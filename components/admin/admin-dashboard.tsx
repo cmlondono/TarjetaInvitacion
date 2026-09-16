@@ -30,6 +30,7 @@ import {
   XCircle,
   Clock,
   UserCheck,
+  RefreshCw,
 } from 'lucide-react'
 
 interface AdminDashboardProps {
@@ -49,38 +50,103 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
   const [errorLimite, setErrorLimite] = useState<string | null>(null)
   const [busqueda, setBusqueda] = useState('')
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'confirmados' | 'pendientes' | 'no_asiste'>('todos')
+  const [sincronizando, setSincronizando] = useState(false)
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tarjeton.online'
   const enlaceAdmin = `${baseUrl}/gestionar/${evento.tokenAdmin}`
   const enlacePublico = `${baseUrl}/i/${evento.slugPublico}`
 
-  useEffect(() => {
-    const list = InvitadoRepositorio.obtenerPorEvento(evento.id)
-    setInvitados(list)
+  const sincronizarInvitados = async () => {
+    setSincronizando(true)
+    try {
+      // 1. Cargar datos locales primero
+      const locales = InvitadoRepositorio.obtenerPorEvento(evento.id)
 
-    // Sincronización asíncrona con el servidor para traer confirmaciones en tiempo real
-    const cargarRemotos = async () => {
-      try {
-        const res = await fetch(`/api/invitados?eventoId=${encodeURIComponent(evento.id)}`)
-        if (res.ok) {
-          const data = await res.json()
-          if (data.invitados && Array.isArray(data.invitados) && data.invitados.length > 0) {
-            // Combinar inteligentemente respetando cambios locales
-            setInvitados((prev) => {
-              const mapa = new Map<string, Invitado>()
-              prev.forEach((inv) => mapa.set(inv.id, inv))
-              data.invitados.forEach((inv: Invitado) => {
-                const local = mapa.get(inv.id)
-                mapa.set(inv.id, { ...local, ...inv })
+      // 2. Traer confirmaciones remotas del servidor (Supabase y caché del servidor)
+      const res = await fetch(
+        `/api/invitados?eventoId=${encodeURIComponent(evento.id)}&slug=${encodeURIComponent(evento.slugPublico || '')}`
+      )
+      if (res.ok) {
+        const data = await res.json()
+        if (data.invitados && Array.isArray(data.invitados)) {
+          const mapa = new Map<string, Invitado>()
+          locales.forEach((inv) => mapa.set(inv.id, inv))
+
+          data.invitados.forEach((remoto: Invitado) => {
+            let matchId: string | null = null
+            if (mapa.has(remoto.id)) {
+              matchId = remoto.id
+            } else {
+              for (const [id, local] of mapa.entries()) {
+                if (
+                  (remoto.codigoAcceso && local.codigoAcceso === remoto.codigoAcceso) ||
+                  (remoto.nombre && local.nombre && remoto.nombre.trim().toLowerCase() === local.nombre.trim().toLowerCase())
+                ) {
+                  matchId = id
+                  break
+                }
+              }
+            }
+
+            if (matchId) {
+              const local = mapa.get(matchId)!
+              mapa.set(matchId, {
+                ...local,
+                ...remoto,
+                id: matchId,
+                eventoId: evento.id,
               })
-              return Array.from(mapa.values())
-            })
-          }
+            } else {
+              mapa.set(remoto.id, { ...remoto, eventoId: evento.id })
+            }
+          })
+
+          const listaActualizada = Array.from(mapa.values())
+
+          // Persistir en localStorage para que PDF y Excel reflejen las confirmaciones de inmediato
+          try {
+            const todos = InvitadoRepositorio.obtenerTodos().filter((i) => i.eventoId !== evento.id)
+            todos.push(...listaActualizada)
+            localStorage.setItem('plataforma_invitaciones_invitados', JSON.stringify(todos))
+          } catch {}
+
+          setInvitados(listaActualizada)
+        } else {
+          setInvitados(locales)
         }
-      } catch {}
+      } else {
+        setInvitados(locales)
+      }
+    } catch {
+      setInvitados(InvitadoRepositorio.obtenerPorEvento(evento.id))
+    } finally {
+      setTimeout(() => setSincronizando(false), 400)
     }
-    cargarRemotos()
-  }, [evento.id])
+  }
+
+  useEffect(() => {
+    sincronizarInvitados()
+
+    // Escuchar actualizaciones locales de confirmación en el mismo navegador
+    const onActualizacionLocal = () => {
+      const actualizados = InvitadoRepositorio.obtenerPorEvento(evento.id)
+      setInvitados(actualizados)
+    }
+
+    window.addEventListener('tarjeton_invitados_actualizados', onActualizacionLocal)
+    window.addEventListener('storage', onActualizacionLocal)
+
+    // Polling periódico cada 8 segundos para detectar confirmaciones de otros dispositivos
+    const intervalo = setInterval(() => {
+      sincronizarInvitados()
+    }, 8000)
+
+    return () => {
+      window.removeEventListener('tarjeton_invitados_actualizados', onActualizacionLocal)
+      window.removeEventListener('storage', onActualizacionLocal)
+      clearInterval(intervalo)
+    }
+  }, [evento.id, evento.slugPublico])
 
   useEffect(() => {
     try {
@@ -110,7 +176,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
       return
     }
 
-    setInvitados(InvitadoRepositorio.obtenerPorEvento(evento.id))
+    sincronizarInvitados()
     setNombreNuevo('')
     setPasesNuevo(1)
     setEsPlural(false)
@@ -128,7 +194,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
 
   const handleEliminarInvitado = (id: string) => {
     InvitadoRepositorio.eliminar(id)
-    setInvitados(InvitadoRepositorio.obtenerPorEvento(evento.id))
+    sincronizarInvitados()
   }
 
   const copiarTexto = async (texto: string, tipo: 'admin' | string) => {
@@ -177,14 +243,14 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
   ) => {
     InvitadoRepositorio.actualizarConfirmacion(
       evento.id,
-      { id: invitado.id },
+      { id: invitado.id, codigoAcceso: invitado.codigoAcceso, nombre: invitado.nombre },
       {
         estadoConfirmacion: nuevoEstado,
         cuposConfirmados:
           nuevoEstado === 'confirmado' ? invitado.cuposConfirmados || invitado.pases || 1 : 0,
       }
     )
-    setInvitados(InvitadoRepositorio.obtenerPorEvento(evento.id))
+    sincronizarInvitados()
   }
 
   // Lista filtrada por texto de búsqueda y pestaña seleccionada
@@ -480,11 +546,22 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
               </p>
             </div>
 
-            {/* Acciones de Exportación */}
+            {/* Acciones de Exportación & Refresco */}
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
-                onClick={() => imprimirListaAdmision(evento, invitados)}
+                onClick={() => sincronizarInvitados()}
+                disabled={sincronizando}
+                className="py-2 px-3 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                title="Actualizar y consultar nuevas confirmaciones"
+              >
+                <RefreshCw size={13} className={sincronizando ? 'animate-spin text-slate-900' : 'text-slate-600'} />
+                <span className="hidden sm:inline">{sincronizando ? 'Sincronizando...' : 'Actualizar'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => imprimirListaAdmision(evento, filtroEstado === 'todos' ? invitados : invitadosFiltrados)}
                 disabled={invitados.length === 0}
                 className="py-2 px-3.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
                 title="Generar hoja de admisión lista para imprimir o guardar como PDF"
@@ -495,7 +572,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
 
               <button
                 type="button"
-                onClick={() => exportarInvitadosExcel(evento, invitados, baseUrl)}
+                onClick={() => exportarInvitadosExcel(evento, filtroEstado === 'todos' ? invitados : invitadosFiltrados, baseUrl)}
                 disabled={invitados.length === 0}
                 className="py-2 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
                 title="Descargar archivo .CSV con soporte nativo de Excel"

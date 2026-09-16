@@ -14,7 +14,7 @@ export function exportarInvitadosExcel(
     'Nombre del Invitado',
     'Estado de Confirmación',
     'Pases Asignados',
-    'Cupos Confirmados',
+    'Cupos Aprobados',
     'Teléfono / WhatsApp',
     'Fecha de Confirmación',
     'Mensaje o Restricciones',
@@ -24,7 +24,7 @@ export function exportarInvitadosExcel(
   const filas = invitados.map((inv, index) => {
     let estadoTexto = 'Pendiente de Confirmar'
     if (inv.confirmado || inv.estadoConfirmacion === 'confirmado') {
-      estadoTexto = 'CONFIRMADO (Asiste)'
+      estadoTexto = 'APROBADO (Confirmado)'
     } else if (inv.estadoConfirmacion === 'no_asiste') {
       estadoTexto = 'DECLINADO (No Asiste)'
     }
@@ -114,40 +114,65 @@ export function imprimirListaAdmision(
       const cupos = estaConfirmado ? inv.cuposConfirmados || inv.pases || 1 : 0
 
       const badgeColor = estaConfirmado
-        ? 'background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0;'
+        ? 'background: #DCFCE7; color: #166534; border: 1px solid #86EFAC;'
         : noAsiste
         ? 'background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA;'
         : 'background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0;'
 
       const estadoTexto = estaConfirmado
-        ? '✓ CONFIRMADO'
+        ? '✓ APROBADO'
         : noAsiste
-        ? '✕ NO ASISTE'
+        ? '✕ DECLINADO'
         : '○ PENDIENTE'
 
+      const ingresoHtml = estaConfirmado
+        ? `
+          <div style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; background: #DCFCE7; border: 1.5px solid #166534; color: #166534; font-weight: bold; margin: 0 auto; font-size: 13px;">
+            ✓
+          </div>
+          <div style="font-size: 8.5px; font-weight: 800; color: #166534; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px;">
+            APROBADO
+          </div>
+        `
+        : noAsiste
+        ? `
+          <div style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 6px; background: #FEE2E2; border: 1.5px solid #DC2626; color: #DC2626; font-weight: bold; margin: 0 auto; font-size: 11px;">
+            ✕
+          </div>
+          <div style="font-size: 8.5px; font-weight: 700; color: #991B1B; text-transform: uppercase; margin-top: 2px;">
+            DECLINA
+          </div>
+        `
+        : `
+          <div style="width: 18px; height: 18px; border: 1.5px dashed #94A3B8; border-radius: 4px; margin: 0 auto;"></div>
+          <div style="font-size: 8.5px; color: #64748B; text-transform: uppercase; margin-top: 2px;">
+            POR VALIDAR
+          </div>
+        `
+
       return `
-        <tr style="border-bottom: 1px solid #E2E8F0; page-break-inside: avoid;">
+        <tr style="border-bottom: 1px solid #E2E8F0; page-break-inside: avoid; ${estaConfirmado ? 'background: #F0FDF4;' : ''}">
           <td style="padding: 10px 8px; text-align: center; font-family: monospace; font-size: 11px; color: #64748B;">
             ${idx + 1}
           </td>
           <td style="padding: 10px 8px;">
             <strong style="color: #0F172A; font-size: 13px; display: block;">${inv.nombre}</strong>
             ${inv.telefono ? `<span style="font-size: 10px; color: #64748B; font-family: monospace;">Tel: ${inv.telefono}</span>` : ''}
-            ${inv.mensajeConfirmacion ? `<div style="font-size: 10px; color: #475569; font-style: italic; margin-top: 2px;">Nota: ${inv.mensajeConfirmacion}</div>` : ''}
+            ${inv.mensajeConfirmacion ? `<div style="font-size: 10px; color: #166534; font-style: italic; margin-top: 2px;">Nota: &ldquo;${inv.mensajeConfirmacion}&rdquo;</div>` : ''}
           </td>
           <td style="padding: 10px 8px; text-align: center; font-size: 12px; font-weight: bold; color: #1E293B;">
             ${inv.pases}
           </td>
-          <td style="padding: 10px 8px; text-align: center; font-size: 12px; font-weight: bold; color: ${estaConfirmado ? '#166534' : '#64748B'};">
-            ${cupos}
+          <td style="padding: 10px 8px; text-align: center; font-size: 12px; font-weight: 800; color: ${estaConfirmado ? '#166534' : '#64748B'};">
+            ${estaConfirmado ? `${cupos} cupo(s)` : '0'}
           </td>
           <td style="padding: 10px 8px; text-align: center;">
-            <span style="display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: bold; font-family: monospace; letter-spacing: 0.05em; ${badgeColor}">
+            <span style="display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 9px; font-weight: 800; font-family: monospace; letter-spacing: 0.05em; ${badgeColor}">
               ${estadoTexto}
             </span>
           </td>
-          <td style="padding: 10px 8px; text-align: center; border-left: 1px dashed #CBD5E1; min-width: 90px;">
-            <div style="width: 18px; height: 18px; border: 1.5px solid #94A3B8; border-radius: 4px; margin: 0 auto;"></div>
+          <td style="padding: 10px 8px; text-align: center; border-left: 1px dashed #CBD5E1; min-width: 95px;">
+            ${ingresoHtml}
           </td>
         </tr>
       `
@@ -224,8 +249,8 @@ export function imprimirListaAdmision(
           <div style="padding: 8px 14px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 11px;">
             Total Invitados: <strong>${invitados.length}</strong>
           </div>
-          <div style="padding: 8px 14px; background: #DCFCE7; border: 1px solid #BBF7D0; border-radius: 8px; font-size: 11px; color: #166534;">
-            Asistentes Confirmados: <strong>${confirmados.length} invitados (${totalCuposConfirmados} personas)</strong>
+          <div style="padding: 8px 14px; background: #DCFCE7; border: 1px solid #86EFAC; border-radius: 8px; font-size: 11px; color: #166534;">
+            ✓ Asistentes Aprobados: <strong>${confirmados.length} invitados (${totalCuposConfirmados} personas)</strong>
           </div>
           <div style="padding: 8px 14px; background: #F1F5F9; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 11px; color: #475569;">
             Generado el: ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -239,10 +264,10 @@ export function imprimirListaAdmision(
           <tr>
             <th style="width: 35px; border-top-left-radius: 8px;">#</th>
             <th style="text-align: left;">Invitado / Titular</th>
-            <th style="width: 80px;">Pases</th>
-            <th style="width: 80px;">Cupos Conf.</th>
-            <th style="width: 120px;">Estado RSVP</th>
-            <th style="width: 90px; border-top-right-radius: 8px;">Ingreso</th>
+            <th style="width: 75px;">Pases</th>
+            <th style="width: 95px;">Cupos Aprob.</th>
+            <th style="width: 115px;">Estado</th>
+            <th style="width: 100px; border-top-right-radius: 8px;">Admisión / Puerta</th>
           </tr>
         </thead>
         <tbody>

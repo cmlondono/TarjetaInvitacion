@@ -18,9 +18,18 @@ export default function PaginaGestionar() {
 
   useEffect(() => {
     if (token) {
-      const e = EventoRepositorio.obtenerPorTokenAdmin(token)
-      setEvento(e)
-      setCargando(false)
+      const cargar = async () => {
+        let e = EventoRepositorio.obtenerPorTokenAdmin(token)
+        if (!e) {
+          e = await EventoRepositorio.obtenerPorTokenAdminAsync(token)
+          if (e) {
+            EventoRepositorio.guardar(e)
+          }
+        }
+        setEvento(e)
+        setCargando(false)
+      }
+      cargar()
     }
   }, [token])
 

@@ -11,6 +11,7 @@ import { InvitadoRepositorio, EventoRepositorio } from '@/lib/storage'
 import { ModalPago } from '@/components/checkout/modal-pago'
 import { construirMensajeCompartir } from '@/lib/event-utils'
 import { exportarInvitadosExcel, imprimirListaAdmision } from '@/lib/export-utils'
+import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
 import {
   Copy,
   Check,
@@ -31,6 +32,7 @@ import {
   Clock,
   UserCheck,
   RefreshCw,
+  ArrowLeft,
 } from 'lucide-react'
 
 interface AdminDashboardProps {
@@ -273,19 +275,59 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
   })
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 py-10 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-16">
+      {/* Barra de Navegación Institucional Tarjetón */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-3 flex items-center justify-between shadow-2xs">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold transition-all shadow-2xs"
+            title="Regresar a la página principal"
+          >
+            <ArrowLeft size={14} />
+            <span className="hidden sm:inline">Inicio</span>
+          </Link>
+
+          <Link href="/" className="flex items-center gap-2 group">
+            <TarjetonLogo size="sm" subtexto="gestión" />
+            <span className="hidden md:inline-block text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 font-medium">
+              Panel de Anfitrión
+            </span>
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/crear?editar=${evento.tokenAdmin}`}
+            className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 transition-colors flex items-center gap-1.5"
+          >
+            <Edit3 size={13} />
+            <span className="hidden sm:inline">Editar Tarjeta</span>
+          </Link>
+          <a
+            href={enlacePublico}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5 shadow-2xs"
+          >
+            <ExternalLink size={13} />
+            <span>Ver Tarjeta</span>
+          </a>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto space-y-6 pt-8 px-4 sm:px-6 lg:px-8">
         
         {/* Cabecera Corporativa del Evento (Clara y Formal) */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[11px] font-mono tracking-widest uppercase px-2.5 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-semibold">
-                Panel de Control
+                Control de Evento
               </span>
               {evento.esPremium ? (
-                <span className="text-[11px] font-mono tracking-widest uppercase px-2.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-300 flex items-center gap-1.5 font-bold">
-                  <Award size={12} /> Pase Ilimitado
+                <span className="text-[11px] font-mono tracking-widest uppercase px-2.5 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-300/80 flex items-center gap-1.5 font-bold">
+                  <Award size={12} className="text-amber-700" /> Pase Ilimitado
                 </span>
               ) : (
                 <span className="text-[11px] font-mono tracking-widest uppercase px-2.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
@@ -353,7 +395,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
             <button
               type="button"
               onClick={guardarEnMiWhatsApp}
-              className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-xs"
+              className="px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-slate-950 text-xs font-bold transition-all active:scale-[0.98] flex items-center justify-center gap-2 shrink-0 cursor-pointer shadow-xs"
             >
               <Share2 size={14} />
               <span>Guardar en mi WhatsApp</span>
@@ -380,7 +422,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
               <div
                 className={`h-full transition-all duration-500 rounded-full ${
                   cantidadInvitados >= LIMITE_INVITADOS_GRATIS
-                    ? 'bg-red-500'
+                    ? 'bg-amber-600'
                     : 'bg-slate-900'
                 }`}
                 style={{ width: `${porcentajeUso}%` }}
@@ -395,7 +437,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
               </p>
               <button
                 onClick={() => setMostrarModalUpgrade(true)}
-                className="text-slate-900 hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                className="text-amber-700 hover:text-amber-800 hover:underline font-bold flex items-center gap-1 cursor-pointer"
               >
                 <span>Habilitar Cupo Ilimitado ($3.99 USD)</span>
               </button>
@@ -473,62 +515,78 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
           )}
         </div>
 
-        {/* ══════════ METRICAS DE ASISTENCIA (RSVP) EN TIEMPO REAL ══════════ */}
+        {/* ══════════ METRICAS DE ASISTENCIA (RSVP) EN TIEMPO REAL (ARMONIZADAS) ══════════ */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* Total Expedidos */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
-            <div className="flex items-center justify-between text-slate-500 mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider">Pases Expedidos</span>
-              <Users size={15} />
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-4.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Pases Emitidos</span>
+              <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 border border-slate-200 flex items-center justify-center">
+                <Users size={14} />
+              </div>
             </div>
-            <div className="text-xl sm:text-2xl font-bold font-mono text-slate-900">
-              {invitados.length}
+            <div>
+              <div className="text-2xl font-bold font-mono text-slate-950">
+                {invitados.length}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+                {totalCuposEmitidos} {totalCuposEmitidos === 1 ? 'cupo asignado' : 'cupos asignados'}
+              </p>
             </div>
-            <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
-              {totalCuposEmitidos} {totalCuposEmitidos === 1 ? 'cupo total' : 'cupos totales'}
-            </p>
           </div>
 
           {/* Confirmados */}
-          <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 shadow-xs">
-            <div className="flex items-center justify-between text-emerald-700 mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider">Confirmados</span>
-              <CheckCircle2 size={15} />
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-4.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">Confirmados</span>
+              <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/70 flex items-center justify-center">
+                <CheckCircle2 size={14} />
+              </div>
             </div>
-            <div className="text-xl sm:text-2xl font-bold font-mono text-emerald-900">
-              {confirmados.length}
+            <div>
+              <div className="text-2xl font-bold font-mono text-slate-950">
+                {confirmados.length}
+              </div>
+              <p className="text-[11px] text-emerald-700 mt-0.5 font-semibold">
+                {totalCuposConfirmados} {totalCuposConfirmados === 1 ? 'persona asegurada' : 'personas aseguradas'}
+              </p>
             </div>
-            <p className="text-[11px] text-emerald-700 mt-0.5 font-bold">
-              {totalCuposConfirmados} {totalCuposConfirmados === 1 ? 'persona asegurada' : 'personas aseguradas'}
-            </p>
           </div>
 
           {/* Pendientes */}
-          <div className="bg-amber-50/70 border border-amber-200 rounded-2xl p-4 shadow-xs">
-            <div className="flex items-center justify-between text-amber-700 mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider">Pendientes</span>
-              <Clock size={15} />
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-4.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Pendientes</span>
+              <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 border border-amber-200/70 flex items-center justify-center">
+                <Clock size={14} />
+              </div>
             </div>
-            <div className="text-xl sm:text-2xl font-bold font-mono text-amber-900">
-              {pendientes.length}
+            <div>
+              <div className="text-2xl font-bold font-mono text-slate-950">
+                {pendientes.length}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+                Por recibir confirmación
+              </p>
             </div>
-            <p className="text-[11px] text-amber-700 mt-0.5 font-medium">
-              A la espera de respuesta
-            </p>
           </div>
 
           {/* No Asistirán */}
-          <div className="bg-slate-100/70 border border-slate-200 rounded-2xl p-4 shadow-xs">
-            <div className="flex items-center justify-between text-slate-500 mb-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider">No Asisten</span>
-              <XCircle size={15} />
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-4.5 shadow-2xs hover:border-slate-300 transition-all flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">No Asisten</span>
+              <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center">
+                <XCircle size={14} />
+              </div>
             </div>
-            <div className="text-xl sm:text-2xl font-bold font-mono text-slate-800">
-              {noAsisten.length}
+            <div>
+              <div className="text-2xl font-bold font-mono text-slate-950">
+                {noAsisten.length}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
+                Cupos desestimados
+              </p>
             </div>
-            <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
-              Cupos liberados
-            </p>
           </div>
         </div>
 
@@ -563,10 +621,10 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                 type="button"
                 onClick={() => imprimirListaAdmision(evento, filtroEstado === 'todos' ? invitados : invitadosFiltrados)}
                 disabled={invitados.length === 0}
-                className="py-2 px-3.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
+                className="py-2 px-3.5 rounded-xl border border-amber-300/80 bg-amber-50/50 hover:bg-amber-100/60 text-amber-900 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
                 title="Generar hoja de admisión lista para imprimir o guardar como PDF"
               >
-                <Printer size={14} className="text-slate-600" />
+                <Printer size={14} className="text-amber-700" />
                 <span>Lista Admisión (PDF)</span>
               </button>
 
@@ -574,10 +632,10 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                 type="button"
                 onClick={() => exportarInvitadosExcel(evento, filtroEstado === 'todos' ? invitados : invitadosFiltrados, baseUrl)}
                 disabled={invitados.length === 0}
-                className="py-2 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+                className="py-2 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-2xs"
                 title="Descargar archivo .CSV con soporte nativo de Excel"
               >
-                <FileSpreadsheet size={14} />
+                <FileSpreadsheet size={14} className="text-emerald-400" />
                 <span>Exportar Excel</span>
               </button>
             </div>
@@ -604,7 +662,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                 onClick={() => setFiltroEstado('todos')}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
                   filtroEstado === 'todos'
-                    ? 'bg-white text-slate-900 shadow-2xs'
+                    ? 'bg-white text-slate-950 shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -615,7 +673,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                 onClick={() => setFiltroEstado('confirmados')}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
                   filtroEstado === 'confirmados'
-                    ? 'bg-white text-emerald-800 shadow-2xs'
+                    ? 'bg-white text-emerald-800 shadow-2xs border border-emerald-200/50'
                     : 'text-slate-600 hover:text-emerald-700'
                 }`}
               >
@@ -626,7 +684,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                 onClick={() => setFiltroEstado('pendientes')}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
                   filtroEstado === 'pendientes'
-                    ? 'bg-white text-amber-800 shadow-2xs'
+                    ? 'bg-white text-amber-800 shadow-2xs border border-amber-200/50'
                     : 'text-slate-600 hover:text-amber-700'
                 }`}
               >
@@ -637,7 +695,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                 onClick={() => setFiltroEstado('no_asiste')}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
                   filtroEstado === 'no_asiste'
-                    ? 'bg-white text-rose-800 shadow-2xs'
+                    ? 'bg-white text-rose-800 shadow-2xs border border-rose-200/50'
                     : 'text-slate-600 hover:text-rose-700'
                 }`}
               >
@@ -679,12 +737,12 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
 
                         {/* Insignia de Estado RSVP */}
                         {estaConfirmado ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded font-semibold font-mono">
+                          <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-2 py-0.5 rounded font-semibold font-mono">
                             <CheckCircle2 size={11} className="text-emerald-700" />
                             <span>Confirmó {inv.cuposConfirmados || inv.pases || 1} {((inv.cuposConfirmados || inv.pases || 1) === 1) ? 'cupo' : 'cupos'}</span>
                           </span>
                         ) : noAsiste ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] bg-rose-100 text-rose-800 border border-rose-200 px-2 py-0.5 rounded font-semibold font-mono">
+                          <span className="inline-flex items-center gap-1 text-[10px] bg-rose-50 text-rose-800 border border-rose-200/80 px-2 py-0.5 rounded font-semibold font-mono">
                             <XCircle size={11} className="text-rose-700" />
                             <span>No asistirá</span>
                           </span>
@@ -702,7 +760,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
 
                       {/* Mensaje de Restricciones o Felicitaciones si el invitado lo dejó */}
                       {inv.mensajeConfirmacion && (
-                        <p className="text-[11px] text-slate-600 italic bg-amber-50/70 border border-amber-200/60 px-2.5 py-1 rounded-lg inline-block">
+                        <p className="text-[11px] text-amber-900 italic bg-amber-50/70 border border-amber-200/60 px-2.5 py-1 rounded-lg inline-block">
                           Nota del invitado: &ldquo;{inv.mensajeConfirmacion}&rdquo;
                         </p>
                       )}
@@ -719,7 +777,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                         <button
                           type="button"
                           onClick={() => handleCambiarConfirmacionManual(inv, 'confirmado')}
-                          className="px-2.5 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold transition-colors cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-lg border border-emerald-200/80 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold transition-colors cursor-pointer"
                           title="Marcar asistencia manualmente"
                         >
                           ✓ Confirmar
@@ -728,7 +786,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                         <button
                           type="button"
                           onClick={() => handleCambiarConfirmacionManual(inv, 'no_asiste')}
-                          className="px-2.5 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-800 text-[11px] font-bold transition-colors cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 text-slate-600 text-[11px] font-semibold transition-colors cursor-pointer"
                           title="Marcar que no asistirá"
                         >
                           ✕ Declinar
@@ -748,7 +806,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                       <button
                         type="button"
                         onClick={() => enviarPorWhatsApp(inv)}
-                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                        className="px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#20ba59] text-slate-950 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
                         title="Enviar por WhatsApp"
                       >
                         <Share2 size={13} />
@@ -771,7 +829,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
           )}
         </div>
 
-      </div>
+      </main>
 
       {/* Modal Pasarela de Pago para Licencia Premium ($3.99 USD) */}
       <ModalPago

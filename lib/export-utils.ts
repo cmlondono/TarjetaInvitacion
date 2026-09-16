@@ -104,7 +104,7 @@ export function imprimirListaAdmision(
     }
   )
 
-  const ventana = window.open('', '_blank', 'width=900,height=1000')
+  const ventana = window.open('', '_blank', 'width=920,height=1020')
   if (!ventana) return
 
   const filasHtml = invitados
@@ -114,10 +114,10 @@ export function imprimirListaAdmision(
       const cupos = estaConfirmado ? inv.cuposConfirmados || inv.pases || 1 : 0
 
       const badgeColor = estaConfirmado
-        ? 'background: #DCFCE7; color: #166534; border: 1px solid #86EFAC;'
+        ? 'background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0;'
         : noAsiste
-        ? 'background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA;'
-        : 'background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0;'
+        ? 'background: #FFF1F2; color: #9F1239; border: 1px solid #FECDD3;'
+        : 'background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0;'
 
       const estadoTexto = estaConfirmado
         ? '✓ APROBADO'
@@ -127,38 +127,38 @@ export function imprimirListaAdmision(
 
       const ingresoHtml = estaConfirmado
         ? `
-          <div style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; background: #DCFCE7; border: 1.5px solid #166534; color: #166534; font-weight: bold; margin: 0 auto; font-size: 13px;">
+          <div style="display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 6px; background: #F0FDF4; border: 1.5px solid #166534; color: #166534; font-weight: 900; margin: 0 auto; font-size: 13px;">
             ✓
           </div>
-          <div style="font-size: 8.5px; font-weight: 800; color: #166534; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px;">
+          <div style="font-size: 8px; font-weight: 800; color: #166534; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px;">
             APROBADO
           </div>
         `
         : noAsiste
         ? `
-          <div style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 6px; background: #FEE2E2; border: 1.5px solid #DC2626; color: #DC2626; font-weight: bold; margin: 0 auto; font-size: 11px;">
+          <div style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 6px; background: #FFF1F2; border: 1.5px solid #E11D48; color: #E11D48; font-weight: 700; margin: 0 auto; font-size: 11px;">
             ✕
           </div>
-          <div style="font-size: 8.5px; font-weight: 700; color: #991B1B; text-transform: uppercase; margin-top: 2px;">
-            DECLINA
+          <div style="font-size: 8px; font-weight: 700; color: #9F1239; text-transform: uppercase; margin-top: 2px;">
+            DECLINADO
           </div>
         `
         : `
-          <div style="width: 18px; height: 18px; border: 1.5px dashed #94A3B8; border-radius: 4px; margin: 0 auto;"></div>
-          <div style="font-size: 8.5px; color: #64748B; text-transform: uppercase; margin-top: 2px;">
+          <div style="width: 18px; height: 18px; border: 1.5px dashed #94A3B8; border-radius: 4px; margin: 0 auto; background: #F8FAFC;"></div>
+          <div style="font-size: 8px; font-weight: 600; color: #64748B; text-transform: uppercase; margin-top: 2px;">
             POR VALIDAR
           </div>
         `
 
       return `
-        <tr style="border-bottom: 1px solid #E2E8F0; page-break-inside: avoid; ${estaConfirmado ? 'background: #F0FDF4;' : ''}">
+        <tr style="border-bottom: 1px solid #E2E8F0; page-break-inside: avoid; background: ${idx % 2 === 1 ? '#FAFAFA' : '#FFFFFF'};">
           <td style="padding: 10px 8px; text-align: center; font-family: monospace; font-size: 11px; color: #64748B;">
             ${idx + 1}
           </td>
           <td style="padding: 10px 8px;">
             <strong style="color: #0F172A; font-size: 13px; display: block;">${inv.nombre}</strong>
             ${inv.telefono ? `<span style="font-size: 10px; color: #64748B; font-family: monospace;">Tel: ${inv.telefono}</span>` : ''}
-            ${inv.mensajeConfirmacion ? `<div style="font-size: 10px; color: #166534; font-style: italic; margin-top: 2px;">Nota: &ldquo;${inv.mensajeConfirmacion}&rdquo;</div>` : ''}
+            ${inv.mensajeConfirmacion ? `<div style="font-size: 10px; color: #166534; font-style: italic; margin-top: 2px; background: #F0FDF4; padding: 2px 6px; border-radius: 4px; display: inline-block;">Nota: &ldquo;${inv.mensajeConfirmacion}&rdquo;</div>` : ''}
           </td>
           <td style="padding: 10px 8px; text-align: center; font-size: 12px; font-weight: bold; color: #1E293B;">
             ${inv.pases}
@@ -200,36 +200,37 @@ export function imprimirListaAdmision(
         table {
           width: 100%;
           border-collapse: collapse;
-          margin-top: 20px;
+          margin-top: 18px;
         }
         th {
           background: #0F172A;
           color: #FFFFFF;
-          font-size: 10px;
+          font-size: 9.5px;
           text-transform: uppercase;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.08em;
           padding: 10px 8px;
+          border-bottom: 2.5px solid #C5A059;
         }
       </style>
     </head>
     <body>
-      <div class="no-print" style="margin-bottom: 24px; padding: 14px 18px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
+      <div class="no-print" style="margin-bottom: 24px; padding: 12px 18px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
         <span style="font-size: 13px; color: #475569; font-weight: 500;">
-          Vista previa oficial para control de aforo y admisión en puerta.
+          Vista previa oficial para control de aforo y admisión en recepción.
         </span>
-        <button onclick="window.print()" style="background: #0F172A; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        <button onclick="window.print()" style="background: #0F172A; color: white; border: 1px solid #334155; padding: 9px 18px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
           🖨️ Imprimir / Guardar como PDF
         </button>
       </div>
 
-      <!-- Cabecera Institucional del Reporte -->
-      <div style="border-bottom: 2px solid #0F172A; padding-bottom: 16px;">
+      <!-- Cabecera Institucional del Reporte con Acento Dorado Tarjetón -->
+      <div style="border-top: 3px solid #C5A059; padding-top: 18px; border-bottom: 1.5px solid #E2E8F0; padding-bottom: 16px;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
-            <div style="font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #B48222;">
+            <div style="font-size: 9.5px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: #C5A059; font-family: monospace;">
               ✦ TARJETÓN · PROTOCOLO & ADMISIÓN OFICIAL ✦
             </div>
-            <h1 style="margin: 4px 0 2px 0; font-size: 24px; font-family: Georgia, serif; color: #0F172A;">
+            <h1 style="margin: 4px 0 3px 0; font-size: 24px; font-family: Georgia, serif; color: #0F172A; letter-spacing: -0.01em;">
               ${evento.titulo}
             </h1>
             <p style="margin: 0; font-size: 12px; color: #475569;">
@@ -244,15 +245,15 @@ export function imprimirListaAdmision(
           </div>
         </div>
 
-        <!-- Tarjetas de Resumen Numérico -->
-        <div style="display: flex; gap: 12px; margin-top: 16px;">
-          <div style="padding: 8px 14px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 11px;">
+        <!-- Tarjetas de Resumen Numérico Armónicas -->
+        <div style="display: flex; gap: 10px; margin-top: 16px;">
+          <div style="padding: 7px 14px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 11px; color: #1E293B;">
             Total Invitados: <strong>${invitados.length}</strong>
           </div>
-          <div style="padding: 8px 14px; background: #DCFCE7; border: 1px solid #86EFAC; border-radius: 8px; font-size: 11px; color: #166534;">
-            ✓ Asistentes Aprobados: <strong>${confirmados.length} invitados (${totalCuposConfirmados} personas)</strong>
+          <div style="padding: 7px 14px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; font-size: 11px; color: #166534;">
+            ✓ Asistentes Aprobados: <strong>${confirmados.length} (${totalCuposConfirmados} cupos asegurados)</strong>
           </div>
-          <div style="padding: 8px 14px; background: #F1F5F9; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 11px; color: #475569;">
+          <div style="padding: 7px 14px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; font-size: 11px; color: #64748B;">
             Generado el: ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
@@ -262,12 +263,12 @@ export function imprimirListaAdmision(
       <table>
         <thead>
           <tr>
-            <th style="width: 35px; border-top-left-radius: 8px;">#</th>
+            <th style="width: 35px; border-top-left-radius: 6px;">#</th>
             <th style="text-align: left;">Invitado / Titular</th>
-            <th style="width: 75px;">Pases</th>
+            <th style="width: 70px;">Pases</th>
             <th style="width: 95px;">Cupos Aprob.</th>
-            <th style="width: 115px;">Estado</th>
-            <th style="width: 100px; border-top-right-radius: 8px;">Admisión / Puerta</th>
+            <th style="width: 110px;">Estado</th>
+            <th style="width: 100px; border-top-right-radius: 6px;">Admisión / Puerta</th>
           </tr>
         </thead>
         <tbody>
@@ -275,8 +276,9 @@ export function imprimirListaAdmision(
         </tbody>
       </table>
 
-      <div style="margin-top: 24px; text-align: center; font-size: 10px; color: #94A3B8; border-top: 1px solid #E2E8F0; padding-top: 12px;">
-        Documento oficial expedido por Tarjetón Studio · Control de admisión protocolario
+      <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; color: #94A3B8; border-top: 1.5px solid #C5A059; padding-top: 12px; font-family: monospace; text-transform: uppercase; letter-spacing: 0.08em;">
+        <span>Documento oficial expedido por Tarjetón Studio</span>
+        <span>Control de recepción y protocolo</span>
       </div>
     </body>
     </html>

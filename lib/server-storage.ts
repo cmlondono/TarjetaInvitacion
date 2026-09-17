@@ -43,6 +43,43 @@ export const ServidorAlmacen = {
     return eventosCache.get(id) || null
   },
 
+  eliminarEvento(id: string): void {
+    if (!id) return
+    const ev = eventosCache.get(id)
+    if (ev) {
+      if (ev.slugPublico) eventosCache.delete(`slug:${ev.slugPublico}`)
+      if (ev.tokenAdmin) eventosCache.delete(`token:${ev.tokenAdmin}`)
+      eventosCache.delete(id)
+    }
+    // Eliminar también confirmaciones e invitados de ese evento
+    confirmacionesCache.delete(id)
+  },
+
+  obtenerEventosPorRango(desde?: string, hasta?: string, busqueda?: string): DetalleEvento[] {
+    const lista: DetalleEvento[] = []
+    const tiempoDesde = desde ? new Date(desde).getTime() : 0
+    // Si viene 'YYYY-MM-DD' añadir 23:59:59 para cubrir el día completo
+    const tiempoHasta = hasta
+      ? new Date(hasta.includes('T') ? hasta : `${hasta}T23:59:59.999Z`).getTime()
+      : Infinity
+    const q = busqueda ? busqueda.toLowerCase().trim() : ''
+
+    for (const [key, ev] of eventosCache.entries()) {
+      if (!key.startsWith('slug:') && !key.startsWith('token:')) {
+        const fechaEv = ev.fechaEvento ? new Date(ev.fechaEvento).getTime() : 0
+        const cumpleRango = fechaEv >= tiempoDesde && fechaEv <= tiempoHasta
+        const cumpleBusqueda = !q || ev.titulo?.toLowerCase().includes(q) || ev.anfitriones?.toLowerCase().includes(q) || ev.slugPublico?.toLowerCase().includes(q)
+
+        if (cumpleRango && cumpleBusqueda) {
+          lista.push(ev)
+        }
+      }
+    }
+
+    // Ordenar cronológicamente por fecha del evento
+    return lista.sort((a, b) => new Date(a.fechaEvento).getTime() - new Date(b.fechaEvento).getTime())
+  },
+
   guardarInvitado(eventoId: string, invitado: Invitado): void {
     if (!eventoId || !invitado) return
     let mapa = confirmacionesCache.get(eventoId)

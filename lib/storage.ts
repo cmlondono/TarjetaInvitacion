@@ -214,15 +214,24 @@ export const EventoRepositorio = {
    * Eliminar un evento
    */
   eliminar(id: string): void {
+    // 1. Limpiar memoria global del servidor
+    ServidorAlmacen.eliminarEvento(id)
+
+    // 2. Limpiar almacenamiento del navegador
     if (typeof window !== 'undefined') {
       const eventos = this.obtenerTodos().filter((e) => e.id !== id)
       localStorage.setItem(LOCAL_STORAGE_KEY_EVENTOS, JSON.stringify(eventos))
+      const invitados = InvitadoRepositorio.obtenerTodos().filter((i) => i.eventoId !== id)
+      localStorage.setItem(LOCAL_STORAGE_KEY_INVITADOS, JSON.stringify(invitados))
     }
 
+    // 3. Limpieza en cascada en Supabase PostgreSQL
     try {
       const supabase = obtenerClienteSupabase()
       if (supabase) {
-        supabase.from('eventos').delete().eq('id', id).then()
+        supabase.from('invitados').delete().eq('evento_id', id).then(() => {
+          supabase.from('eventos').delete().eq('id', id).then()
+        })
       }
     } catch {}
   },

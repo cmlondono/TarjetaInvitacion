@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { consultarPagoMercadoPago } from '@/lib/mercadopago'
-import { EventoRepositorio } from '@/lib/storage'
+import { obtenerClienteSupabase } from '@/lib/supabase'
+import { ServidorAlmacen } from '@/lib/server-storage'
+import { mapearEventoDesdeDb } from '@/lib/storage'
 
 export async function POST(request: Request) {
   try {
@@ -8,7 +10,6 @@ export async function POST(request: Request) {
     const searchParams = url.searchParams
 
     // Mercado Pago puede enviar el ID de pago en query params o en el body JSON
-    const topic = searchParams.get('topic') || searchParams.get('type')
     let paymentId = searchParams.get('id') || searchParams.get('data.id')
 
     if (!paymentId) {
@@ -26,24 +27,44 @@ export async function POST(request: Request) {
     const pago = await consultarPagoMercadoPago(paymentId)
 
     if (pago && pago.status === 'approved') {
-      const ref = pago.external_reference || '' // Ej: PREM_tokenAdmin_1700000000
+      const ref = pago.external_reference || '' // Formato: PREM_${tokenAdmin}_${timestamp}
       console.log(`[MERCADO PAGO WEBHOOK] Pago Aprobado: ${paymentId} para referencia: ${ref}`)
 
       const partes = ref.split('_')
-      const tokenFragmento = partes[1]
+      const tokenRef = partes.slice(1, -1).join('_') || partes[1]
 
-      if (tokenFragmento) {
-        const todos = EventoRepositorio.obtenerTodos()
-        const eventoEncontrado = todos.find(
-          (e) =>
-            e.tokenAdmin.startsWith(tokenFragmento) ||
-            e.id.startsWith(tokenFragmento)
-        )
+      if (tokenRef) {
+        // 1. Actualizar en Supabase PostgreSQL
+        try {
+          const supabase = obtenerClienteSupabase()
+          if (supabase) {
+            const { data: eventoDb } = await supabase
+              .from('eventos')
+              .select('*')
+              .or(`token_admin.eq.${tokenRef},id.eq.${tokenRef}`)
+              .maybeSingle()
 
-        if (eventoEncontrado) {
-          eventoEncontrado.esPremium = true
-          EventoRepositorio.guardar(eventoEncontrado)
-          console.log(`[MERCADO PAGO WEBHOOK] Evento ${eventoEncontrado.titulo} activado como PREMIUM.`)
+            if (eventoDb) {
+              await supabase
+                .from('eventos')
+                .update({ es_premium: true })
+                .eq('id', eventoDb.id)
+
+              const evMapeado = mapearEventoDesdeDb({ ...eventoDb, es_premium: true })
+              ServidorAlmacen.guardarEvento(evMapeado)
+              console.log(`[MERCADO PAGO WEBHOOK] Evento "${evMapeado.titulo}" activado como PREMIUM en Supabase.`)
+            }
+          }
+        } catch (dbErr) {
+          console.error('[MERCADO PAGO WEBHOOK] Error actualizando Supabase:', dbErr)
+        }
+
+        // 2. Actualizar también en caché del servidor
+        const evMemoria =
+          ServidorAlmacen.obtenerEventoPorToken(tokenRef) ||
+          ServidorAlmacen.obtenerEventoPorId(tokenRef)
+        if (evMemoria) {
+          ServidorAlmacen.guardarEvento({ ...evMemoria, esPremium: true })
         }
       }
     }

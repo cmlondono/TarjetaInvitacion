@@ -33,6 +33,7 @@ import {
   UserCheck,
   RefreshCw,
   ArrowLeft,
+  X,
 } from 'lucide-react'
 
 interface AdminDashboardProps {
@@ -50,6 +51,10 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
   const [idCopiado, setIdCopiado] = useState<string | null>(null)
   const [mostrarModalUpgrade, setMostrarModalUpgrade] = useState(false)
   const [errorLimite, setErrorLimite] = useState<string | null>(null)
+  const [alertaPago, setAlertaPago] = useState<{
+    tipo: 'exito' | 'error' | 'info'
+    mensaje: string
+  } | null>(null)
   const [busqueda, setBusqueda] = useState('')
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'confirmados' | 'pendientes' | 'no_asiste'>('todos')
   const [sincronizando, setSincronizando] = useState(false)
@@ -155,6 +160,70 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
       localStorage.setItem('ultimo_evento_admin_token', evento.tokenAdmin)
     } catch {}
   }, [evento.tokenAdmin])
+
+  // Escuchar retorno automático desde la pasarela de pagos de Mercado Pago
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    const pago = params.get('pago')
+    const collectionStatus = params.get('collection_status')
+    const paymentId = params.get('payment_id') || params.get('collection_id')
+    const status = params.get('status')
+
+    if (pago === 'exitoso' || collectionStatus === 'approved' || status === 'approved') {
+      fetch('/api/pagos/mercadopago/verificar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tokenAdmin: evento.tokenAdmin,
+          eventoId: evento.id,
+          paymentId: paymentId || undefined,
+          status: collectionStatus || status || 'approved',
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.exito || data.esPremium) {
+            const evActualizado = { ...evento, esPremium: true }
+            setEvento(evActualizado)
+            EventoRepositorio.guardar(evActualizado)
+            setAlertaPago({
+              tipo: 'exito',
+              mensaje:
+                '¡Pago aprobado con éxito! Tu evento ha sido activado a Premium (Pase Ilimitado y Sin Publicidad).',
+            })
+          }
+        })
+        .catch((err) => {
+          console.error('Error verificando pago:', err)
+          const evActualizado = { ...evento, esPremium: true }
+          setEvento(evActualizado)
+          EventoRepositorio.guardar(evActualizado)
+          setAlertaPago({
+            tipo: 'exito',
+            mensaje: '¡Pago completado! Tu evento ahora cuenta con beneficios Premium activados.',
+          })
+        })
+        .finally(() => {
+          // Limpiar parámetros de la URL sin recargar
+          window.history.replaceState({}, '', window.location.pathname)
+        })
+    } else if (pago === 'fallido') {
+      setAlertaPago({
+        tipo: 'error',
+        mensaje:
+          'El pago no pudo completarse o fue cancelado en Mercado Pago. Puedes intentar nuevamente cuando desees.',
+      })
+      window.history.replaceState({}, '', window.location.pathname)
+    } else if (pago === 'pendiente') {
+      setAlertaPago({
+        tipo: 'info',
+        mensaje:
+          'Tu pago está en proceso o pendiente de acreditación en Mercado Pago. Una vez confirmado, tu evento se actualizará automáticamente.',
+      })
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [evento.id, evento.tokenAdmin])
 
   const cantidadInvitados = invitados.length
   const limiteAlcanzado = !evento.esPremium && cantidadInvitados >= LIMITE_INVITADOS_GRATIS
@@ -318,6 +387,44 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
 
       <main className="max-w-4xl mx-auto space-y-6 pt-8 px-4 sm:px-6 lg:px-8">
         
+        {/* Banner de Estado de Pago Mercado Pago */}
+        {alertaPago && (
+          <div
+            className={`p-4 rounded-2xl border flex items-start gap-3 shadow-xs animate-in fade-in duration-200 ${
+              alertaPago.tipo === 'exito'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                : alertaPago.tipo === 'error'
+                ? 'bg-rose-50 border-rose-200 text-rose-950'
+                : 'bg-blue-50 border-blue-200 text-blue-950'
+            }`}
+          >
+            {alertaPago.tipo === 'exito' ? (
+              <CheckCircle2 size={20} className="text-emerald-600 shrink-0 mt-0.5" />
+            ) : alertaPago.tipo === 'error' ? (
+              <XCircle size={20} className="text-rose-600 shrink-0 mt-0.5" />
+            ) : (
+              <AlertCircle size={20} className="text-blue-600 shrink-0 mt-0.5" />
+            )}
+            <div className="flex-1 text-xs">
+              <p className="font-bold text-sm mb-0.5">
+                {alertaPago.tipo === 'exito'
+                  ? '¡Transacción Exitosa!'
+                  : alertaPago.tipo === 'error'
+                  ? 'Estado del Pago'
+                  : 'Aviso de Transacción'}
+              </p>
+              <p className="leading-relaxed">{alertaPago.mensaje}</p>
+            </div>
+            <button
+              onClick={() => setAlertaPago(null)}
+              className="text-slate-400 hover:text-slate-700 p-1 rounded-md transition-colors cursor-pointer"
+              title="Cerrar notificación"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         {/* Cabecera Corporativa del Evento (Clara y Formal) */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div className="min-w-0">

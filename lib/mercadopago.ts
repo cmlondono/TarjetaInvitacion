@@ -26,22 +26,36 @@ export async function crearPreferenciaMercadoPago({
   eventoId,
   tituloEvento,
   emailCliente,
+  precioCOP,
 }: {
   tokenAdmin?: string
   eventoId?: string
   tituloEvento?: string
   emailCliente?: string
+  precioCOP?: number
 }): Promise<PreferenciaRespuesta | null> {
   try {
     const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN || ''
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const precio = parseInt(process.env.MERCADOPAGO_PRECIO_COP || '15900', 10)
+    
+    // Resolver URL pública real (HTTPS obligatorio en producción para Mercado Pago)
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+    if (!appUrl) {
+      if (process.env.VERCEL_URL) {
+        appUrl = `https://${process.env.VERCEL_URL}`
+      } else {
+        appUrl = 'https://tarjeton.online'
+      }
+    }
+    if (!appUrl.startsWith('http')) {
+      appUrl = `https://${appUrl}`
+    }
 
-    const tokenLimpio = (tokenAdmin || eventoId || 'evento')
-      .toString()
-      .replace(/[^a-zA-Z0-9]/g, '')
-      .slice(0, 12)
-    const externalReference = `PREM_${tokenLimpio}_${Date.now()}`
+    const precio = precioCOP && precioCOP > 0
+      ? precioCOP
+      : parseInt(process.env.MERCADOPAGO_PRECIO_COP || '15900', 10)
+
+    const identificador = tokenAdmin || eventoId || 'evento'
+    const externalReference = `PREM_${identificador}_${Date.now()}`
 
     const redirectExito = tokenAdmin
       ? `${appUrl}/gestionar/${tokenAdmin}?pago=exitoso`
@@ -50,17 +64,23 @@ export async function crearPreferenciaMercadoPago({
       ? `${appUrl}/gestionar/${tokenAdmin}?pago=fallido`
       : `${appUrl}/crear?pago=fallido`
 
-    // Si no hay token de acceso configurado aún, retornar simulación para pruebas
+    // Si no hay token de acceso configurado
     if (!accessToken || accessToken.includes('00000000')) {
-      return {
-        id: `PREF-DEMO-${Date.now()}`,
-        init_point: `${appUrl}/gestionar/${tokenAdmin || 'demo'}?pago=exitoso`,
-        sandbox_init_point: `${appUrl}/gestionar/${tokenAdmin || 'demo'}?pago=exitoso`,
-        external_reference: externalReference,
+      // En desarrollo local, permitir simulación para testing
+      if (process.env.NODE_ENV === 'development') {
+        return {
+          id: `PREF-DEMO-${Date.now()}`,
+          init_point: `${appUrl}/gestionar/${tokenAdmin || 'demo'}?pago=exitoso&demo=true`,
+          sandbox_init_point: `${appUrl}/gestionar/${tokenAdmin || 'demo'}?pago=exitoso&demo=true`,
+          external_reference: externalReference,
+        }
       }
+      // En producción, no simular aprobaciones gratuitas si falta el token
+      console.error('MERCADOPAGO_ACCESS_TOKEN no está configurado en producción.')
+      return null
     }
 
-    const payload = {
+    const payload: any = {
       items: [
         {
           id: 'licencia-premium-tarjeton',
@@ -72,7 +92,7 @@ export async function crearPreferenciaMercadoPago({
         },
       ],
       payer: {
-        email: emailCliente || 'cliente@tarjeton.com',
+        email: emailCliente && emailCliente.includes('@') ? emailCliente : 'cliente@tarjeton.online',
       },
       back_urls: {
         success: redirectExito,
@@ -82,11 +102,15 @@ export async function crearPreferenciaMercadoPago({
       auto_return: 'approved',
       external_reference: externalReference,
       statement_descriptor: 'TARJETON',
-      notification_url: `${appUrl}/api/pagos/mercadopago/webhook`,
       payment_methods: {
         excluded_payment_types: [],
         installments: 1,
       },
+    }
+
+    // Mercado Pago requiere HTTPS para notification_url
+    if (appUrl.startsWith('https://')) {
+      payload.notification_url = `${appUrl}/api/pagos/mercadopago/webhook`
     }
 
     const respuesta = await fetch('https://api.mercadopago.com/checkout/preferences', {
@@ -108,7 +132,7 @@ export async function crearPreferenciaMercadoPago({
     return {
       id: data.id,
       init_point: data.init_point,
-      sandbox_init_point: data.sandbox_init_point,
+      sandbox_init_point: data.sandbox_init_point || data.init_point,
       external_reference: externalReference,
     }
   } catch (error) {

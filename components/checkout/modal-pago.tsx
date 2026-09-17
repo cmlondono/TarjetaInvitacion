@@ -97,6 +97,7 @@ export function ModalPago({
           eventoId,
           tituloEvento,
           emailCliente: correoCliente.trim() || undefined,
+          precioCOP: precioFinalCOP,
         }),
       })
 
@@ -113,15 +114,12 @@ export function ModalPago({
         AdminStorage.registrarUsoCupon(cuponAplicado.codigo)
       }
 
-      // Si tenemos un enlace real de Mercado Pago (no demo)
+      // Si tenemos un enlace de Mercado Pago (producción o sandbox)
       if (data.initPoint && !data.initPoint.includes('demo')) {
-        const popup = window.open(data.initPoint, '_blank')
-        if (!popup) {
-          window.location.href = data.initPoint
-        }
-        setProcesando(false)
+        // Redirigir directamente en la misma ventana para evitar bloqueos de ventanas emergentes en móviles
+        window.location.href = data.initPoint
       } else {
-        // Modo sandbox / simulación asistida inmediata
+        // Solo en entorno local/desarrollo sin credenciales
         setTimeout(() => {
           setProcesando(false)
           ejecutarAprobacionSimulada()
@@ -409,16 +407,18 @@ export function ModalPago({
                 )}
               </button>
 
-              {/* Opción de prueba para desarrollo */}
-              <div className="pt-1 text-center">
-                <button
-                  type="button"
-                  onClick={ejecutarAprobacionSimulada}
-                  className="text-[11px] text-slate-500 hover:text-slate-800 font-medium underline cursor-pointer"
-                >
-                  Simular Aprobación Instantánea (Modo Pruebas / Sandbox)
-                </button>
-              </div>
+              {/* Opción de prueba únicamente en desarrollo local */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="pt-1 text-center">
+                  <button
+                    type="button"
+                    onClick={ejecutarAprobacionSimulada}
+                    className="text-[11px] text-slate-500 hover:text-slate-800 font-medium underline cursor-pointer"
+                  >
+                    Simular Aprobación Instantánea (Modo Pruebas / Sandbox)
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Sellos de Seguridad */}

@@ -11,7 +11,6 @@ import {
   Trash2,
   X,
   Sparkles,
-  GripVertical,
 } from 'lucide-react'
 
 interface BarraInsercionEntreBloquesProps {
@@ -26,10 +25,7 @@ export function BarraInsercionEntreBloques({
   const [abierto, setAbierto] = useState(false)
 
   return (
-    <div
-      onPointerDown={(e) => e.stopPropagation()}
-      className="relative py-1.5 group/insert z-20"
-    >
+    <div className="relative py-1.5 group/insert z-20">
       {/* Línea divisoria sutil que se activa en hover */}
       <div className="flex items-center justify-center relative">
         <div className="w-full h-px bg-amber-400/30 group-hover/insert:bg-amber-500/80 transition-all" />
@@ -106,11 +102,10 @@ export function BarraHerramientasBloque({
 }: BarraHerramientasBloqueProps) {
   const [confirmando, setConfirmando] = useState(false)
 
+  if (esCabecera) return null
+
   return (
-    <div
-      onPointerDown={(e) => e.stopPropagation()}
-      className="absolute top-2 right-2 z-30 opacity-90 sm:opacity-0 sm:group-hover/seccion:opacity-100 transition-all flex items-center gap-1 bg-slate-950/95 backdrop-blur-md text-white p-1 rounded-xl shadow-xl border border-slate-700/80 text-[10px]"
-    >
+    <div className="absolute top-2 right-2 z-30 opacity-90 sm:opacity-0 sm:group-hover/seccion:opacity-100 transition-all flex items-center gap-1 bg-slate-950/95 backdrop-blur-md text-white p-1 rounded-xl shadow-xl border border-slate-700/80 text-[10px]">
       {confirmando ? (
         <div className="flex items-center gap-1.5 px-1.5 py-0.5 animate-in fade-in zoom-in-95 duration-150">
           <span className="text-[10px] font-bold text-rose-300">¿Eliminar bloque?</span>
@@ -167,24 +162,20 @@ export function BarraHerramientasBloque({
             </button>
           )}
 
-          {!esCabecera && (
-            <>
-              <div className="w-px h-3 bg-slate-700 mx-0.5" />
+          <div className="w-px h-3 bg-slate-700 mx-0.5" />
 
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setConfirmando(true)
-                }}
-                title="Eliminar este bloque directamente de la tarjeta"
-                className="px-2 py-0.5 bg-rose-950/80 hover:bg-rose-600 text-rose-300 hover:text-white rounded-md cursor-pointer transition-all flex items-center gap-1 border border-rose-700/50 shadow-xs"
-              >
-                <Trash2 size={11} className="text-rose-400 group-hover:text-white" />
-                <span className="text-[10px] font-bold">Eliminar</span>
-              </button>
-            </>
-          )}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setConfirmando(true)
+            }}
+            title="Eliminar este bloque directamente de la tarjeta"
+            className="px-2 py-0.5 bg-rose-950/80 hover:bg-rose-600 text-rose-300 hover:text-white rounded-md cursor-pointer transition-all flex items-center gap-1 border border-rose-700/50 shadow-xs"
+          >
+            <Trash2 size={11} className="text-rose-400 group-hover:text-white" />
+            <span className="text-[10px] font-bold">Eliminar</span>
+          </button>
         </>
       )}
     </div>

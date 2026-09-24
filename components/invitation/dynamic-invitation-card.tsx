@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Fragment } from 'react'
-import { motion, Reorder } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   DetalleEvento,
   ConfiguracionVisual,
@@ -60,90 +60,6 @@ interface DynamicInvitationCardProps {
   alMoverSeccion?: (indice: number, direccion: 'arriba' | 'abajo') => void
   alEliminarSeccion?: (seccionId: string) => void
   alInsertarSeccionEnIndice?: (indice: number, tipo: TipoSeccion) => void
-  alReordenarSecciones?: (nuevasSecciones: SeccionModular[]) => void
-}
-
-interface BloqueSeccionReordenableProps {
-  seccion: SeccionModular
-  index: number
-  totalSecciones: number
-  alMoverSeccion?: (indice: number, direccion: 'arriba' | 'abajo') => void
-  alEliminarSeccion?: (seccionId: string) => void
-  alInsertarSeccionEnIndice?: (indice: number, tipo: TipoSeccion) => void
-  children: React.ReactNode
-}
-
-function BloqueSeccionReordenable({
-  seccion,
-  index,
-  totalSecciones,
-  alMoverSeccion,
-  alEliminarSeccion,
-  alInsertarSeccionEnIndice,
-  children,
-}: BloqueSeccionReordenableProps) {
-  return (
-    <Reorder.Item
-      as="div"
-      value={seccion}
-      id={seccion.id}
-      whileDrag={{
-        scale: 1.015,
-        boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.3)',
-        zIndex: 50,
-      }}
-      className="relative group/seccion my-1 transition-all cursor-grab active:cursor-grabbing select-none"
-    >
-      {/* Barra de herramientas flotante superior derecha (discreta al pasar el ratón) */}
-      <BarraHerramientasBloque
-        indice={index}
-        totalSecciones={totalSecciones}
-        esCabecera={seccion.tipo === 'cabecera'}
-        alMover={(dir) => alMoverSeccion?.(index, dir)}
-        alEliminar={() => alEliminarSeccion?.(seccion.id)}
-      />
-
-      {/* Contenedor del contenido con resaltado sutil al interactuar */}
-      <div className="rounded-2xl ring-1 ring-transparent hover:ring-2 hover:ring-amber-400/40 transition-all">
-        {children}
-      </div>
-
-      {/* Barra de inserción de nuevo bloque debajo */}
-      <div className="pt-1" onPointerDown={(e) => e.stopPropagation()}>
-        <BarraInsercionEntreBloques
-          indice={index + 1}
-          alInsertar={(idx, tipo) => alInsertarSeccionEnIndice?.(idx, tipo)}
-        />
-      </div>
-    </Reorder.Item>
-  )
-}
-
-function ContenedorListaSecciones({
-  esModoEdicionDirecta,
-  listaSecciones,
-  alReordenarSecciones,
-  children,
-}: {
-  esModoEdicionDirecta: boolean
-  listaSecciones: SeccionModular[]
-  alReordenarSecciones?: (nuevas: SeccionModular[]) => void
-  children: React.ReactNode
-}) {
-  if (esModoEdicionDirecta) {
-    return (
-      <Reorder.Group
-        as="div"
-        axis="y"
-        values={listaSecciones}
-        onReorder={(nuevas) => alReordenarSecciones?.(nuevas)}
-        className="flex flex-col relative z-10 space-y-4 pt-1"
-      >
-        {children}
-      </Reorder.Group>
-    )
-  }
-  return <div className="flex flex-col relative z-10">{children}</div>
 }
 
 const animacionAparicion = {
@@ -185,7 +101,6 @@ export function DynamicInvitationCard({
   alMoverSeccion,
   alEliminarSeccion,
   alInsertarSeccionEnIndice,
-  alReordenarSecciones,
 }: DynamicInvitationCardProps) {
   const [cuentaCopiada, setCuentaCopiada] = useState(false)
   const urlWhatsApp = construirUrlWhatsApp(evento, invitado || undefined)
@@ -380,21 +295,9 @@ export function DynamicInvitationCard({
               colorSecundario={visual.colorSecundario}
             />
 
-            {/* Renderizado de Bloques Modulares Dinámicos con Reordenamiento Drag & Drop */}
+            {/* Renderizado de Bloques Modulares Dinámicos */}
             <div className="flex flex-col relative z-10">
-              {esModoEdicionDirecta && (
-                <BarraInsercionEntreBloques
-                  indice={0}
-                  alInsertar={(idx, tipo) => alInsertarSeccionEnIndice?.(idx, tipo)}
-                />
-              )}
-
-              <ContenedorListaSecciones
-                esModoEdicionDirecta={esModoEdicionDirecta}
-                listaSecciones={listaSecciones}
-                alReordenarSecciones={alReordenarSecciones}
-              >
-                {listaSecciones.map((seccion, index) => {
+              {listaSecciones.map((seccion, index) => {
                 const renderizarBloque = () => {
                   switch (seccion.tipo) {
                   case 'cabecera': {
@@ -2238,30 +2141,45 @@ export function DynamicInvitationCard({
               const bloque = renderizarBloque()
               if (!bloque && !esModoEdicionDirecta) return null
 
-              if (!esModoEdicionDirecta) {
-                return (
-                  <Fragment key={seccion.id}>
-                    {bloque}
-                  </Fragment>
-                )
-              }
-
               return (
-                <BloqueSeccionReordenable
-                  key={seccion.id}
-                  seccion={seccion}
-                  index={index}
-                  totalSecciones={listaSecciones.length}
-                  alMoverSeccion={alMoverSeccion}
-                  alEliminarSeccion={alEliminarSeccion}
-                  alInsertarSeccionEnIndice={alInsertarSeccionEnIndice}
-                >
-                  {bloque}
-                </BloqueSeccionReordenable>
+                <Fragment key={seccion.id}>
+                  {esModoEdicionDirecta && index > 0 && (
+                    <BarraInsercionEntreBloques
+                      indice={index}
+                      alInsertar={(idx, tipo) => alInsertarSeccionEnIndice?.(idx, tipo)}
+                    />
+                  )}
+
+                  <div
+                    className={`relative ${
+                      esModoEdicionDirecta
+                        ? 'group/seccion hover:ring-2 hover:ring-slate-900/30 rounded-xl transition-all'
+                        : ''
+                    }`}
+                  >
+                    {esModoEdicionDirecta && (
+                      <BarraHerramientasBloque
+                        indice={index}
+                        totalSecciones={listaSecciones.length}
+                        esCabecera={seccion.tipo === 'cabecera'}
+                        alMover={(dir) => alMoverSeccion?.(index, dir)}
+                        alEliminar={() => alEliminarSeccion?.(seccion.id)}
+                      />
+                    )}
+
+                    {bloque}
+                  </div>
+
+                  {esModoEdicionDirecta && index === listaSecciones.length - 1 && (
+                    <BarraInsercionEntreBloques
+                      indice={index + 1}
+                      alInsertar={(idx, tipo) => alInsertarSeccionEnIndice?.(idx, tipo)}
+                    />
+                  )}
+                </Fragment>
               )
             })}
-          </ContenedorListaSecciones>
-        </div>
+          </div>
 
             {/* Pie de página institucional */}
             <div className="pb-6 text-center opacity-40 hover:opacity-80 transition-opacity">

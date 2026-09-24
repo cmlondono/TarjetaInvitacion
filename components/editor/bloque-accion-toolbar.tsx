@@ -11,6 +11,7 @@ import {
   Trash2,
   X,
   Sparkles,
+  GripVertical,
 } from 'lucide-react'
 
 interface BarraInsercionEntreBloquesProps {
@@ -89,20 +90,22 @@ interface BarraHerramientasBloqueProps {
   indice: number
   totalSecciones: number
   esCabecera?: boolean
+  nombreBloque?: string
   alMover: (direccion: 'arriba' | 'abajo') => void
   alEliminar: () => void
+  onIniciarArrastre?: (e: React.PointerEvent) => void
 }
 
 export function BarraHerramientasBloque({
   indice,
   totalSecciones,
   esCabecera = false,
+  nombreBloque,
   alMover,
   alEliminar,
+  onIniciarArrastre,
 }: BarraHerramientasBloqueProps) {
   const [confirmando, setConfirmando] = useState(false)
-
-  if (esCabecera) return null
 
   return (
     <div className="absolute top-2 right-2 z-30 opacity-90 sm:opacity-0 sm:group-hover/seccion:opacity-100 transition-all flex items-center gap-1 bg-slate-950/95 backdrop-blur-md text-white p-1 rounded-xl shadow-xl border border-slate-700/80 text-[10px]">
@@ -134,6 +137,21 @@ export function BarraHerramientasBloque({
         </div>
       ) : (
         <>
+          {onIniciarArrastre && (
+            <button
+              type="button"
+              onPointerDown={(e) => {
+                e.stopPropagation()
+                onIniciarArrastre(e)
+              }}
+              title="Mantén presionado y arrastra para reordenar este bloque"
+              className="px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 font-bold rounded-md cursor-grab active:cursor-grabbing transition-all flex items-center gap-1 border border-amber-500/40 select-none touch-none group/drag"
+            >
+              <GripVertical size={12} className="text-amber-400 group-hover/drag:text-slate-950" />
+              <span className="text-[10px]">Arrastrar</span>
+            </button>
+          )}
+
           {indice > 0 && (
             <button
               type="button"
@@ -162,20 +180,24 @@ export function BarraHerramientasBloque({
             </button>
           )}
 
-          <div className="w-px h-3 bg-slate-700 mx-0.5" />
+          {!esCabecera && (
+            <>
+              <div className="w-px h-3 bg-slate-700 mx-0.5" />
 
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              setConfirmando(true)
-            }}
-            title="Eliminar este bloque directamente de la tarjeta"
-            className="px-2 py-0.5 bg-rose-950/80 hover:bg-rose-600 text-rose-300 hover:text-white rounded-md cursor-pointer transition-all flex items-center gap-1 border border-rose-700/50 shadow-xs"
-          >
-            <Trash2 size={11} className="text-rose-400 group-hover:text-white" />
-            <span className="text-[10px] font-bold">Eliminar</span>
-          </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setConfirmando(true)
+                }}
+                title="Eliminar este bloque directamente de la tarjeta"
+                className="px-2 py-0.5 bg-rose-950/80 hover:bg-rose-600 text-rose-300 hover:text-white rounded-md cursor-pointer transition-all flex items-center gap-1 border border-rose-700/50 shadow-xs"
+              >
+                <Trash2 size={11} className="text-rose-400 group-hover:text-white" />
+                <span className="text-[10px] font-bold">Eliminar</span>
+              </button>
+            </>
+          )}
         </>
       )}
     </div>

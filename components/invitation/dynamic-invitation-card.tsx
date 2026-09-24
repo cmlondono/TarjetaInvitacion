@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Fragment } from 'react'
-import { motion } from 'framer-motion'
+import { motion, Reorder, useDragControls } from 'framer-motion'
 import {
   DetalleEvento,
   ConfiguracionVisual,
@@ -46,6 +46,7 @@ import {
   Trash2,
   Wand2,
   X,
+  GripVertical,
 } from 'lucide-react'
 
 interface DynamicInvitationCardProps {
@@ -60,6 +61,151 @@ interface DynamicInvitationCardProps {
   alMoverSeccion?: (indice: number, direccion: 'arriba' | 'abajo') => void
   alEliminarSeccion?: (seccionId: string) => void
   alInsertarSeccionEnIndice?: (indice: number, tipo: TipoSeccion) => void
+  alReordenarSecciones?: (nuevasSecciones: SeccionModular[]) => void
+}
+
+function obtenerNombreTipoSeccion(tipo: TipoSeccion): string {
+  switch (tipo) {
+    case 'cabecera':
+      return 'Cabecera Principal'
+    case 'cuenta_regresiva':
+      return 'Cuenta Regresiva'
+    case 'fecha_hora':
+      return 'Fecha y Calendario'
+    case 'itinerario':
+      return 'Itinerario'
+    case 'ubicacion':
+      return 'Ubicación y Mapa'
+    case 'codigo_vestimenta':
+      return 'Código de Vestimenta'
+    case 'regalos_bancarios':
+      return 'Mesa de Regalos'
+    case 'galeria_fotos':
+      return 'Galería Fotográfica'
+    case 'mensaje_libre':
+      return 'Mensaje / Frase'
+    case 'hospedaje':
+      return 'Hospedaje'
+    case 'confirmacion_rsvp':
+      return 'Confirmación RSVP'
+    case 'texto_libre':
+      return 'Texto Personalizado'
+    case 'imagen_libre':
+      return 'Imagen / Fotografía'
+    case 'boton_enlace':
+      return 'Botón / Enlace'
+    case 'separador_ornamental':
+      return 'Separador Ornamental'
+    default:
+      return 'Módulo'
+  }
+}
+
+interface BloqueSeccionReordenableProps {
+  seccion: SeccionModular
+  index: number
+  totalSecciones: number
+  alMoverSeccion?: (indice: number, direccion: 'arriba' | 'abajo') => void
+  alEliminarSeccion?: (seccionId: string) => void
+  alInsertarSeccionEnIndice?: (indice: number, tipo: TipoSeccion) => void
+  children: React.ReactNode
+}
+
+function BloqueSeccionReordenable({
+  seccion,
+  index,
+  totalSecciones,
+  alMoverSeccion,
+  alEliminarSeccion,
+  alInsertarSeccionEnIndice,
+  children,
+}: BloqueSeccionReordenableProps) {
+  const dragControls = useDragControls()
+  const nombreBloque = obtenerNombreTipoSeccion(seccion.tipo)
+
+  return (
+    <Reorder.Item
+      as="div"
+      value={seccion}
+      id={seccion.id}
+      dragListener={false}
+      dragControls={dragControls}
+      whileDrag={{
+        scale: 1.02,
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+        zIndex: 50,
+      }}
+      className="relative group/seccion my-1.5 transition-all"
+    >
+      {/* Pestaña flotante superior para arrastrar con mouse o touch */}
+      <div
+        onPointerDown={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          dragControls.start(e)
+        }}
+        className="absolute -top-3.5 left-3 z-30 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/95 hover:bg-amber-600 text-white text-[10px] font-semibold tracking-wide border border-slate-700/80 shadow-lg cursor-grab active:cursor-grabbing select-none touch-none transition-colors opacity-95 group-hover/seccion:opacity-100"
+        title="Mantén presionado y arrastra para reordenar este bloque"
+      >
+        <GripVertical size={13} className="text-amber-400 group-hover:text-white" />
+        <span>{nombreBloque}</span>
+        <span className="text-[9px] text-amber-300 font-bold uppercase tracking-wider ml-0.5 bg-amber-950/70 px-1.5 py-0.5 rounded-full border border-amber-500/30">
+          Arrastrar
+        </span>
+      </div>
+
+      {/* Barra de herramientas flotante superior derecha */}
+      <BarraHerramientasBloque
+        indice={index}
+        totalSecciones={totalSecciones}
+        esCabecera={seccion.tipo === 'cabecera'}
+        nombreBloque={nombreBloque}
+        alMover={(dir) => alMoverSeccion?.(index, dir)}
+        alEliminar={() => alEliminarSeccion?.(seccion.id)}
+        onIniciarArrastre={(e) => dragControls.start(e)}
+      />
+
+      {/* Contenedor del contenido con borde sutil al hover */}
+      <div className="pt-2 rounded-2xl ring-1 ring-slate-200/60 dark:ring-slate-800/60 group-hover/seccion:ring-2 group-hover/seccion:ring-amber-500/50 transition-all bg-white/40 dark:bg-slate-900/40 backdrop-blur-xs">
+        {children}
+      </div>
+
+      {/* Barra de inserción de nuevo bloque debajo */}
+      <div className="pt-1.5">
+        <BarraInsercionEntreBloques
+          indice={index + 1}
+          alInsertar={(idx, tipo) => alInsertarSeccionEnIndice?.(idx, tipo)}
+        />
+      </div>
+    </Reorder.Item>
+  )
+}
+
+function ContenedorListaSecciones({
+  esModoEdicionDirecta,
+  listaSecciones,
+  alReordenarSecciones,
+  children,
+}: {
+  esModoEdicionDirecta: boolean
+  listaSecciones: SeccionModular[]
+  alReordenarSecciones?: (nuevas: SeccionModular[]) => void
+  children: React.ReactNode
+}) {
+  if (esModoEdicionDirecta) {
+    return (
+      <Reorder.Group
+        as="div"
+        axis="y"
+        values={listaSecciones}
+        onReorder={(nuevas) => alReordenarSecciones?.(nuevas)}
+        className="flex flex-col relative z-10 space-y-4 pt-1"
+      >
+        {children}
+      </Reorder.Group>
+    )
+  }
+  return <div className="flex flex-col relative z-10">{children}</div>
 }
 
 const animacionAparicion = {
@@ -101,6 +247,7 @@ export function DynamicInvitationCard({
   alMoverSeccion,
   alEliminarSeccion,
   alInsertarSeccionEnIndice,
+  alReordenarSecciones,
 }: DynamicInvitationCardProps) {
   const [cuentaCopiada, setCuentaCopiada] = useState(false)
   const urlWhatsApp = construirUrlWhatsApp(evento, invitado || undefined)
@@ -295,9 +442,21 @@ export function DynamicInvitationCard({
               colorSecundario={visual.colorSecundario}
             />
 
-            {/* Renderizado de Bloques Modulares Dinámicos */}
+            {/* Renderizado de Bloques Modulares Dinámicos con Reordenamiento Drag & Drop */}
             <div className="flex flex-col relative z-10">
-              {listaSecciones.map((seccion, index) => {
+              {esModoEdicionDirecta && (
+                <BarraInsercionEntreBloques
+                  indice={0}
+                  alInsertar={(idx, tipo) => alInsertarSeccionEnIndice?.(idx, tipo)}
+                />
+              )}
+
+              <ContenedorListaSecciones
+                esModoEdicionDirecta={esModoEdicionDirecta}
+                listaSecciones={listaSecciones}
+                alReordenarSecciones={alReordenarSecciones}
+              >
+                {listaSecciones.map((seccion, index) => {
                 const renderizarBloque = () => {
                   switch (seccion.tipo) {
                   case 'cabecera': {
@@ -2141,45 +2300,30 @@ export function DynamicInvitationCard({
               const bloque = renderizarBloque()
               if (!bloque && !esModoEdicionDirecta) return null
 
-              return (
-                <Fragment key={seccion.id}>
-                  {esModoEdicionDirecta && index > 0 && (
-                    <BarraInsercionEntreBloques
-                      indice={index}
-                      alInsertar={(idx, tipo) => alInsertarSeccionEnIndice?.(idx, tipo)}
-                    />
-                  )}
-
-                  <div
-                    className={`relative ${
-                      esModoEdicionDirecta
-                        ? 'group/seccion hover:ring-2 hover:ring-slate-900/30 rounded-xl transition-all'
-                        : ''
-                    }`}
-                  >
-                    {esModoEdicionDirecta && (
-                      <BarraHerramientasBloque
-                        indice={index}
-                        totalSecciones={listaSecciones.length}
-                        esCabecera={seccion.tipo === 'cabecera'}
-                        alMover={(dir) => alMoverSeccion?.(index, dir)}
-                        alEliminar={() => alEliminarSeccion?.(seccion.id)}
-                      />
-                    )}
-
+              if (!esModoEdicionDirecta) {
+                return (
+                  <Fragment key={seccion.id}>
                     {bloque}
-                  </div>
+                  </Fragment>
+                )
+              }
 
-                  {esModoEdicionDirecta && index === listaSecciones.length - 1 && (
-                    <BarraInsercionEntreBloques
-                      indice={index + 1}
-                      alInsertar={(idx, tipo) => alInsertarSeccionEnIndice?.(idx, tipo)}
-                    />
-                  )}
-                </Fragment>
+              return (
+                <BloqueSeccionReordenable
+                  key={seccion.id}
+                  seccion={seccion}
+                  index={index}
+                  totalSecciones={listaSecciones.length}
+                  alMoverSeccion={alMoverSeccion}
+                  alEliminarSeccion={alEliminarSeccion}
+                  alInsertarSeccionEnIndice={alInsertarSeccionEnIndice}
+                >
+                  {bloque}
+                </BloqueSeccionReordenable>
               )
             })}
-          </div>
+          </ContenedorListaSecciones>
+        </div>
 
             {/* Pie de página institucional */}
             <div className="pb-6 text-center opacity-40 hover:opacity-80 transition-opacity">

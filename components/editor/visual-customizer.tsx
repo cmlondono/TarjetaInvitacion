@@ -1961,6 +1961,12 @@ export function VisualCustomizer({
                       const reordenadas = copia.map((s, i) => ({ ...s, orden: i }))
                       setSecciones(reordenadas)
                     }}
+                    alReordenarSecciones={(nuevas) => {
+                      const idsVisibles = new Set(nuevas.map((s) => s.id))
+                      const noVisibles = secciones.filter((s) => !idsVisibles.has(s.id))
+                      const combinadas = [...nuevas, ...noVisibles].map((s, i) => ({ ...s, orden: i }))
+                      setSecciones(combinadas)
+                    }}
                   />
                 </SobreAperturaAnimado>
               </ErrorBoundary>

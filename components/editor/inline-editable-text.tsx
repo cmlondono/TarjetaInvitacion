@@ -88,6 +88,7 @@ export function InlineEditableText({
           onChange={(e) => setTextoLocal(e.target.value)}
           onBlur={finalizarEdicion}
           onKeyDown={manejarKeyDown}
+          onPointerDown={(e) => e.stopPropagation()}
           autoFocus
           onFocus={(e) => e.currentTarget.select()}
           rows={3}
@@ -106,6 +107,7 @@ export function InlineEditableText({
         onChange={(e) => setTextoLocal(e.target.value)}
         onBlur={finalizarEdicion}
         onKeyDown={manejarKeyDown}
+        onPointerDown={(e) => e.stopPropagation()}
         autoFocus
         onFocus={(e) => e.currentTarget.select()}
         className={clasesInput}

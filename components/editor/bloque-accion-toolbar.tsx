@@ -26,7 +26,10 @@ export function BarraInsercionEntreBloques({
   const [abierto, setAbierto] = useState(false)
 
   return (
-    <div className="relative py-1.5 group/insert z-20">
+    <div
+      onPointerDown={(e) => e.stopPropagation()}
+      className="relative py-1.5 group/insert z-20"
+    >
       {/* Línea divisoria sutil que se activa en hover */}
       <div className="flex items-center justify-center relative">
         <div className="w-full h-px bg-amber-400/30 group-hover/insert:bg-amber-500/80 transition-all" />
@@ -90,25 +93,24 @@ interface BarraHerramientasBloqueProps {
   indice: number
   totalSecciones: number
   esCabecera?: boolean
-  nombreBloque?: string
   alMover: (direccion: 'arriba' | 'abajo') => void
   alEliminar: () => void
-  onIniciarArrastre?: (e: React.PointerEvent) => void
 }
 
 export function BarraHerramientasBloque({
   indice,
   totalSecciones,
   esCabecera = false,
-  nombreBloque,
   alMover,
   alEliminar,
-  onIniciarArrastre,
 }: BarraHerramientasBloqueProps) {
   const [confirmando, setConfirmando] = useState(false)
 
   return (
-    <div className="absolute top-2 right-2 z-30 opacity-90 sm:opacity-0 sm:group-hover/seccion:opacity-100 transition-all flex items-center gap-1 bg-slate-950/95 backdrop-blur-md text-white p-1 rounded-xl shadow-xl border border-slate-700/80 text-[10px]">
+    <div
+      onPointerDown={(e) => e.stopPropagation()}
+      className="absolute top-2 right-2 z-30 opacity-90 sm:opacity-0 sm:group-hover/seccion:opacity-100 transition-all flex items-center gap-1 bg-slate-950/95 backdrop-blur-md text-white p-1 rounded-xl shadow-xl border border-slate-700/80 text-[10px]"
+    >
       {confirmando ? (
         <div className="flex items-center gap-1.5 px-1.5 py-0.5 animate-in fade-in zoom-in-95 duration-150">
           <span className="text-[10px] font-bold text-rose-300">¿Eliminar bloque?</span>
@@ -137,21 +139,6 @@ export function BarraHerramientasBloque({
         </div>
       ) : (
         <>
-          {onIniciarArrastre && (
-            <button
-              type="button"
-              onPointerDown={(e) => {
-                e.stopPropagation()
-                onIniciarArrastre(e)
-              }}
-              title="Mantén presionado y arrastra para reordenar este bloque"
-              className="px-2 py-0.5 bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-slate-950 font-bold rounded-md cursor-grab active:cursor-grabbing transition-all flex items-center gap-1 border border-amber-500/40 select-none touch-none group/drag"
-            >
-              <GripVertical size={12} className="text-amber-400 group-hover/drag:text-slate-950" />
-              <span className="text-[10px]">Arrastrar</span>
-            </button>
-          )}
-
           {indice > 0 && (
             <button
               type="button"

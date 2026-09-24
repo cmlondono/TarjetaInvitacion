@@ -50,6 +50,8 @@ CREATE TABLE IF NOT EXISTS public.invitados (
   cupos_confirmados INTEGER DEFAULT 0,
   mensaje_confirmacion TEXT,
   fecha_confirmacion TIMESTAMPTZ,
+  enviado_por_whatsapp BOOLEAN DEFAULT false,
+  fecha_envio_whatsapp TIMESTAMPTZ,
   creado_en TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -57,6 +59,8 @@ CREATE TABLE IF NOT EXISTS public.invitados (
 -- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS estado_confirmacion TEXT DEFAULT 'pendiente';
 -- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS cupos_confirmados INTEGER DEFAULT 0;
 -- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS mensaje_confirmacion TEXT;
+-- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS enviado_por_whatsapp BOOLEAN DEFAULT false;
+-- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS fecha_envio_whatsapp TIMESTAMPTZ;
 
 CREATE INDEX IF NOT EXISTS idx_invitados_evento_id ON public.invitados(evento_id);
 

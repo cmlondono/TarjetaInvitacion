@@ -60,6 +60,8 @@ export function mapearInvitadoDesdeDb(fila: any): Invitado {
         : 0,
     mensajeConfirmacion: fila.mensaje_confirmacion || undefined,
     fechaConfirmacion: fila.fecha_confirmacion || undefined,
+    enviadoPorWhatsApp: Boolean(fila.enviado_por_whatsapp),
+    fechaEnvioWhatsApp: fila.fecha_envio_whatsapp || undefined,
   }
 }
 
@@ -324,6 +326,7 @@ export const InvitadoRepositorio = {
       codigoAcceso: Math.random().toString(36).substring(2, 8),
       confirmado: false,
       estadoConfirmacion: 'pendiente',
+      enviadoPorWhatsApp: false,
     }
 
     // 1. Guardar en memoria de servidor
@@ -503,6 +506,51 @@ export const InvitadoRepositorio = {
     } catch {}
 
     return { exito: true, invitado: invitadoActualizado }
+  },
+
+  marcarEnviadoWhatsApp(
+    eventoId: string,
+    invitadoId: string,
+    enviado = true
+  ): { exito: boolean; invitado?: Invitado } {
+    const todos = this.obtenerTodos()
+    const index = todos.findIndex((i) => i.id === invitadoId)
+    if (index === -1) return { exito: false }
+
+    const ahora = new Date().toISOString()
+    const actualizado: Invitado = {
+      ...todos[index],
+      enviadoPorWhatsApp: enviado,
+      fechaEnvioWhatsApp: enviado ? ahora : undefined,
+    }
+    todos[index] = actualizado
+
+    ServidorAlmacen.guardarInvitado(eventoId, actualizado)
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LOCAL_STORAGE_KEY_INVITADOS, JSON.stringify(todos))
+      window.dispatchEvent(
+        new CustomEvent('tarjeton_invitados_actualizados', {
+          detail: { invitadoActualizado: actualizado },
+        })
+      )
+    }
+
+    try {
+      const supabase = obtenerClienteSupabase()
+      if (supabase) {
+        supabase
+          .from('invitados')
+          .update({
+            enviado_por_whatsapp: enviado,
+            fecha_envio_whatsapp: enviado ? ahora : null,
+          })
+          .eq('id', invitadoId)
+          .then()
+      }
+    } catch {}
+
+    return { exito: true, invitado: actualizado }
   },
 
   eliminar(id: string): void {

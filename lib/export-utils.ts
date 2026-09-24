@@ -16,6 +16,8 @@ export function exportarInvitadosExcel(
     'Pases Asignados',
     'Cupos Aprobados',
     'Teléfono / WhatsApp',
+    'Envío WhatsApp',
+    'Fecha de Envío',
     'Fecha de Confirmación',
     'Mensaje o Restricciones',
     'Enlace Individual de Invitación',
@@ -36,6 +38,17 @@ export function exportarInvitadosExcel(
 
     const link = `${baseUrl}/i/${evento.slugPublico}?g=${encodeURIComponent(inv.nombre)}&t=${inv.codigoAcceso}${inv.esPlural ? '&p=1' : ''}`
 
+    const envioWhatsAppTexto = inv.enviadoPorWhatsApp ? 'ENVIADO' : 'No enviado'
+    const fechaEnvio = inv.fechaEnvioWhatsApp
+      ? new Date(inv.fechaEnvioWhatsApp).toLocaleString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : 'Sin registro'
+
     const fecha = inv.fechaConfirmacion
       ? new Date(inv.fechaConfirmacion).toLocaleString('es-ES', {
           day: '2-digit',
@@ -53,6 +66,8 @@ export function exportarInvitadosExcel(
       inv.pases || 1,
       cupos,
       `"${(inv.telefono || '').replace(/"/g, '""')}"`,
+      `"${envioWhatsAppTexto}"`,
+      `"${fechaEnvio}"`,
       `"${fecha}"`,
       `"${(inv.mensajeConfirmacion || '').replace(/"/g, '""')}"`,
       `"${link}"`,

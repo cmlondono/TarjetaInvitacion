@@ -9,6 +9,7 @@ import {
 } from '@/types/invitation'
 import { InvitadoRepositorio, EventoRepositorio } from '@/lib/storage'
 import { ModalPago } from '@/components/checkout/modal-pago'
+import { ModalDespachoWhatsApp } from './modal-despacho-whatsapp'
 import { construirMensajeCompartir } from '@/lib/event-utils'
 import { exportarInvitadosExcel, imprimirListaAdmision } from '@/lib/export-utils'
 import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
@@ -34,6 +35,8 @@ import {
   RefreshCw,
   ArrowLeft,
   X,
+  Zap,
+  Send,
 } from 'lucide-react'
 
 interface AdminDashboardProps {
@@ -50,13 +53,16 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
   const [copiadoAdmin, setCopiadoAdmin] = useState(false)
   const [idCopiado, setIdCopiado] = useState<string | null>(null)
   const [mostrarModalUpgrade, setMostrarModalUpgrade] = useState(false)
+  const [mostrarModalDespacho, setMostrarModalDespacho] = useState(false)
   const [errorLimite, setErrorLimite] = useState<string | null>(null)
   const [alertaPago, setAlertaPago] = useState<{
     tipo: 'exito' | 'error' | 'info'
     mensaje: string
   } | null>(null)
   const [busqueda, setBusqueda] = useState('')
-  const [filtroEstado, setFiltroEstado] = useState<'todos' | 'confirmados' | 'pendientes' | 'no_asiste'>('todos')
+  const [filtroEstado, setFiltroEstado] = useState<
+    'todos' | 'confirmados' | 'pendientes' | 'no_asiste' | 'enviados' | 'no_enviados'
+  >('todos')
   const [sincronizando, setSincronizando] = useState(false)
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tarjeton.online'
@@ -286,6 +292,8 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
       ? `https://wa.me/${tel}?text=${encodeURIComponent(mensaje)}`
       : `https://wa.me/?text=${encodeURIComponent(mensaje)}`
     window.open(url, '_blank')
+    InvitadoRepositorio.marcarEnviadoWhatsApp(evento.id, invitado.id, true)
+    sincronizarInvitados()
   }
 
   const guardarEnMiWhatsApp = () => {
@@ -339,6 +347,12 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
     }
     if (filtroEstado === 'pendientes') {
       return !inv.confirmado && inv.estadoConfirmacion !== 'no_asiste'
+    }
+    if (filtroEstado === 'enviados') {
+      return inv.enviadoPorWhatsApp
+    }
+    if (filtroEstado === 'no_enviados') {
+      return !inv.enviadoPorWhatsApp
     }
     return true
   })
@@ -712,7 +726,18 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
             </div>
 
             {/* Acciones de Exportación & Refresco */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setMostrarModalDespacho(true)}
+                disabled={invitados.length === 0}
+                className="py-2 px-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-slate-950 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-sm border border-emerald-500/20"
+                title="Iniciar asistente guiado continuo de envío por WhatsApp"
+              >
+                <Zap size={14} className="fill-slate-950 text-slate-950 shrink-0" />
+                <span>Despacho Rápido WhatsApp</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => sincronizarInvitados()}
@@ -763,11 +788,11 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
             </div>
 
             {/* Filtros de Pestaña */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+            <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
               <button
                 type="button"
                 onClick={() => setFiltroEstado('todos')}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
                   filtroEstado === 'todos'
                     ? 'bg-white text-slate-950 shadow-2xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -778,7 +803,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
               <button
                 type="button"
                 onClick={() => setFiltroEstado('confirmados')}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
                   filtroEstado === 'confirmados'
                     ? 'bg-white text-emerald-800 shadow-2xs border border-emerald-200/50'
                     : 'text-slate-600 hover:text-emerald-700'
@@ -789,7 +814,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
               <button
                 type="button"
                 onClick={() => setFiltroEstado('pendientes')}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
                   filtroEstado === 'pendientes'
                     ? 'bg-white text-amber-800 shadow-2xs border border-amber-200/50'
                     : 'text-slate-600 hover:text-amber-700'
@@ -800,13 +825,24 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
               <button
                 type="button"
                 onClick={() => setFiltroEstado('no_asiste')}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
                   filtroEstado === 'no_asiste'
                     ? 'bg-white text-rose-800 shadow-2xs border border-rose-200/50'
                     : 'text-slate-600 hover:text-rose-700'
                 }`}
               >
                 No Asisten ({noAsisten.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltroEstado('no_enviados')}
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg font-semibold transition-colors cursor-pointer ${
+                  filtroEstado === 'no_enviados'
+                    ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Sin Enviar ({invitados.filter((i) => !i.enviadoPorWhatsApp).length})
               </button>
             </div>
           </div>
@@ -863,6 +899,25 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                         <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">
                           Pase para {inv.pases} {inv.pases === 1 ? 'persona' : 'personas'}
                         </span>
+
+                        {/* Insignia de Envío WhatsApp */}
+                        {inv.enviadoPorWhatsApp ? (
+                          <span
+                            className="inline-flex items-center gap-1 text-[10px] bg-[#25D366]/15 text-emerald-900 border border-[#25D366]/30 px-2 py-0.5 rounded font-semibold font-mono"
+                            title={
+                              inv.fechaEnvioWhatsApp
+                                ? `Enviado el ${new Date(inv.fechaEnvioWhatsApp).toLocaleString()}`
+                                : 'Enviado por WhatsApp'
+                            }
+                          >
+                            <Send size={9} className="text-[#25D366]" />
+                            <span>Enviado</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-500 border border-slate-200 px-2 py-0.5 rounded font-mono">
+                            <span>Sin enviar</span>
+                          </span>
+                        )}
                       </div>
 
                       {/* Mensaje de Restricciones o Felicitaciones si el invitado lo dejó */}
@@ -913,11 +968,15 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                       <button
                         type="button"
                         onClick={() => enviarPorWhatsApp(inv)}
-                        className="px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#20ba59] text-slate-950 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
-                        title="Enviar por WhatsApp"
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs ${
+                          inv.enviadoPorWhatsApp
+                            ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+                            : 'bg-[#25D366] hover:bg-[#20ba59] text-slate-950'
+                        }`}
+                        title={inv.enviadoPorWhatsApp ? 'Volver a enviar por WhatsApp' : 'Enviar por WhatsApp'}
                       >
                         <Share2 size={13} />
-                        <span>WhatsApp</span>
+                        <span>{inv.enviadoPorWhatsApp ? 'Reenviar' : 'WhatsApp'}</span>
                       </button>
 
                       <button
@@ -937,6 +996,16 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
         </div>
 
       </main>
+
+      {/* Modal Asistente de Despacho Rápido por WhatsApp */}
+      <ModalDespachoWhatsApp
+        abierto={mostrarModalDespacho}
+        onCerrar={() => setMostrarModalDespacho(false)}
+        evento={evento}
+        invitados={invitados}
+        baseUrl={baseUrl}
+        onSincronizar={sincronizarInvitados}
+      />
 
       {/* Modal Pasarela de Pago para Licencia Premium ($3.99 USD) */}
       <ModalPago

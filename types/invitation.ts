@@ -329,6 +329,8 @@ export interface Invitado {
   cuposConfirmados?: number
   mensajeConfirmacion?: string
   fechaConfirmacion?: string
+  enviadoPorWhatsApp?: boolean
+  fechaEnvioWhatsApp?: string
 }
 
 // Constante de negocio: Límite de invitados gratuitos

@@ -517,9 +517,9 @@ export function VisualCustomizer({
   return (
     <div className="w-full max-w-[100vw] min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans overflow-x-hidden">
       {/* Barra Superior de Herramientas */}
-      <header className="w-full max-w-full bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-3 sticky top-0 z-40 flex flex-col sm:flex-row sm:items-center sm:justify-between shadow-2xs gap-2 overflow-x-clip sm:overflow-visible">
+      <header className="w-full bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-2.5 sticky top-0 z-40 flex flex-col lg:flex-row lg:items-center lg:justify-between shadow-2xs gap-2">
         {/* Fila 1: Regresar + Identidad Tarjetón */}
-        <div className="flex items-center justify-between w-full sm:w-auto min-w-0 shrink-0">
+        <div className="flex items-center justify-between w-full lg:w-auto min-w-0 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {/* Botón para regresar a la Landing Page con verificación de guardado */}
             <button
@@ -556,9 +556,9 @@ export function VisualCustomizer({
           </div>
         </div>
 
-        {/* Fila 2: Acciones Principales (En móvil: Carrusel horizontal fluido con swipe; En escritorio: Barra alineada) */}
-        <div className="w-full max-w-full min-w-0 pt-1.5 sm:pt-0 border-t border-slate-100 sm:border-0 overflow-x-auto sm:overflow-visible [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] scroll-smooth touch-pan-x overscroll-x-contain shrink-0">
-          <div className="flex items-center justify-start sm:justify-end gap-1.5 sm:gap-2.5 w-max sm:w-auto min-w-full sm:min-w-0 px-1 sm:px-0 py-0.5 sm:py-0 pr-4 sm:pr-0">
+        {/* Fila 2: Acciones Principales (En móvil: Carrusel horizontal fluido con swipe; En escritorio: Barra alineada sin desbordes) */}
+        <div className="w-full lg:w-auto min-w-0 pt-1.5 lg:pt-0 border-t border-slate-100 lg:border-0 overflow-x-auto lg:overflow-visible [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] scroll-smooth touch-pan-x shrink-0">
+          <div className="flex items-center justify-start sm:justify-end gap-1.5 sm:gap-2 w-max lg:w-auto min-w-full sm:min-w-0 px-1 sm:px-0 py-0.5 sm:py-0 pr-4 lg:pr-0">
             {/* Botón Sobre 3D: Activar y personalizar estilos, colores y lacre */}
             <button
               type="button"
@@ -571,8 +571,7 @@ export function VisualCustomizer({
               title="Personalizar Sobre 3D: activar, cambiar estilos, colores y sellos de lacre"
             >
               <Mail size={13} className="shrink-0 text-current" />
-              <span className="hidden sm:inline">Sobre 3D</span>
-              <span className="sm:hidden text-[11px]">Sobre 3D</span>
+              <span>Sobre 3D</span>
               {visual.animacionSobre && (
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
               )}
@@ -586,8 +585,8 @@ export function VisualCustomizer({
               title="Abrir Estudio Tarjetón: marcos, texturas artesanales, monogramas y biblioteca de iconos"
             >
               <Sparkles size={13} className="text-amber-400 shrink-0" />
-              <span className="hidden sm:inline">Estudio Tarjetón</span>
-              <span className="sm:hidden text-[11px]">Estudio</span>
+              <span className="hidden xl:inline">Estudio Tarjetón</span>
+              <span className="xl:hidden text-[11px] sm:text-xs">Estudio</span>
             </button>
 
             {/* Botón para alternar el Panel Lateral de Ajustes */}
@@ -605,16 +604,16 @@ export function VisualCustomizer({
               title={panelAjustesAbierto ? 'Ocultar panel lateral' : 'Abrir ajustes detallados'}
             >
               <Sliders size={13} className="shrink-0" />
-              <span className="hidden sm:inline">{panelAjustesAbierto ? 'Ocultar Ajustes' : 'Ajustes Detallados'}</span>
-              <span className="sm:hidden text-[11px]">{panelAjustesAbierto ? 'Ocultar' : 'Ajustes'}</span>
+              <span className="hidden xl:inline">{panelAjustesAbierto ? 'Ocultar Ajustes' : 'Ajustes Detallados'}</span>
+              <span className="xl:hidden text-[11px] sm:text-xs">{panelAjustesAbierto ? 'Ocultar' : 'Ajustes'}</span>
             </button>
 
             {/* Estado de Licencia / Premium */}
             {evento.esPremium ? (
               <span className="inline-flex items-center gap-1 sm:gap-1.5 text-xs font-bold px-3 py-1.5 sm:py-2 rounded-xl bg-slate-900 text-white shadow-2xs shrink-0 whitespace-nowrap select-none">
                 <Award size={13} className="text-amber-400 shrink-0" />
-                <span className="hidden sm:inline">Licencia Activa</span>
-                <span className="sm:hidden text-[11px]">VIP</span>
+                <span className="hidden xl:inline">Licencia Activa</span>
+                <span className="xl:hidden text-[11px] sm:text-xs">VIP</span>
               </span>
             ) : (
               <button
@@ -624,8 +623,8 @@ export function VisualCustomizer({
                 title="Habilitar invitados ilimitados y remover publicidad"
               >
                 <Award size={13} className="text-amber-700 shrink-0" />
-                <span className="hidden md:inline">Activar</span>
-                <span className="text-[11px] sm:text-xs">Premium</span>
+                <span className="hidden xl:inline">Activar Premium</span>
+                <span className="xl:hidden text-[11px] sm:text-xs">Premium</span>
               </button>
             )}
 
@@ -639,8 +638,8 @@ export function VisualCustomizer({
                 <span className="text-[11px] sm:text-xs">Guardando...</span>
               ) : (
                 <>
-                  <span className="sm:hidden text-[11px]">{modoEdicion ? 'Guardar' : 'Publicar'}</span>
-                  <span className="hidden sm:inline">{modoEdicion ? 'Guardar Cambios' : 'Publicar Tarjeta'}</span>
+                  <span className="hidden xl:inline">{modoEdicion ? 'Guardar Cambios' : 'Publicar Tarjeta'}</span>
+                  <span className="xl:hidden text-[11px] sm:text-xs">{modoEdicion ? 'Guardar' : 'Publicar'}</span>
                   <ArrowRight size={13} className="shrink-0" />
                 </>
               )}

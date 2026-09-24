@@ -227,6 +227,30 @@ export interface MusicaFondoConfig {
   autoReproducir?: boolean
 }
 
+export type EstiloSobreTipo =
+  | 'clasico'    // Protocolar Clásico / Barón en V con bordes dorados
+  | 'moderno'    // Minimalista Chic con solapa recta horizontal contemporánea
+  | 'vintage'    // Romántico Vintage con curvas suaves, arabescos y tono cálido
+  | 'gala'       // Gala Golden Black con alto contraste y marco dorado doble
+  | 'artesanal'  // Papel Artesanal Kraft con textura hecha a mano
+  | 'diamante'   // Geométrico Diamante / Origami facetado
+
+export type ColorLacreTipo =
+  | 'oro'             // Oro fundido 24k resplandeciente
+  | 'rojo_rubi'       // Rojo lacre tradicional burdeos imperial
+  | 'azul_noche'      // Azul zafiro real profundo
+  | 'verde_esmeralda' // Verde esmeralda bosque
+  | 'negro_onix'      // Negro carbón / ónix gala
+  | 'bronce'          // Bronce / cobre envejecido
+  | 'rosa_oro'        // Oro rosa aperlado
+
+export type ForroSobreTipo =
+  | 'satinado'        // Degradado satinado suave de acento
+  | 'arabesco'        // Arabescos barrocos y filigrana de oro
+  | 'geometrico'      // Trama geométrica contemporánea
+  | 'floral'          // Ramas de olivo y follaje botánico
+  | 'liso'            // Fondo pulcro minimalista
+
 export interface ConfiguracionVisual {
   fuenteTitulo: FuenteTipografica
   fuenteCuerpo: FuenteTipografica
@@ -242,6 +266,12 @@ export interface ConfiguracionVisual {
   selloCera?: SelloCeraTipo // Sello de cera / lacre artesanal en relieve
   marcoDecorativo?: MarcoDecorativoTipo // Marco de oro fino, esquineros vintage, etc.
   textoMonograma?: string // Monograma opcional para el sello (ej: "J&M", "50", "A")
+  animacionSobre?: boolean // Animación interactiva de sobre protocolario al abrir la tarjeta
+  colorSobre?: string // Color o estilo del sobre protocolario
+  estiloSobre?: EstiloSobreTipo // Estilo de diseño del sobre (Clásico, Moderno, Vintage, Gala, etc.)
+  colorLacre?: ColorLacreTipo // Tonalidad del sello de lacre
+  forroSobre?: ForroSobreTipo // Patrón decorativo del forro interior
+  textoImpresoSobre?: string // Texto de caligrafía o encabezado protocolario impreso en el sobre (ej: "Pase de Honor Protocolario", "Invitación Formal")
   mostrarCuentaRegresiva: boolean
   mostrarUbicacion: boolean
   mostrarDressCode: boolean

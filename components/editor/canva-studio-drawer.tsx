@@ -37,6 +37,7 @@ import {
   Wine,
   Heart,
   Baby,
+  Mail,
 } from 'lucide-react'
 
 export type PestanaCanva =
@@ -59,6 +60,7 @@ export interface CanvaStudioDrawerProps {
   alAplicarPlantilla: (plantillaId: string) => void
   alAgregarSeccion: (tipo: TipoSeccion) => void
   pestanaInicial?: PestanaCanva
+  onAbrirPersonalizadorSobre?: () => void
 }
 
 const TEXTURAS_DISPONIBLES: {
@@ -132,6 +134,7 @@ export function CanvaStudioDrawer({
   alAplicarPlantilla,
   alAgregarSeccion,
   pestanaInicial,
+  onAbrirPersonalizadorSobre,
 }: CanvaStudioDrawerProps) {
   const [pestanaActiva, setPestanaActiva] = useState<PestanaCanva>(pestanaInicial || 'elementos')
   const [filtroIcono, setFiltroIcono] = useState('')
@@ -245,7 +248,7 @@ export function CanvaStudioDrawer({
             <div className="space-y-4">
               <div>
                 <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5 mb-1">
-                  <Square size={14} className="text-amber-600" /> Marcos & Filetes Editoriales
+                  <Square size={14} className="text-slate-800" /> Marcos & Filetes Editoriales
                 </h4>
                 <p className="text-[11px] text-slate-500 mb-3">
                   Delicadas molduras impresas, filetes de oro y ribetes perimetrales para la tarjeta.
@@ -258,9 +261,9 @@ export function CanvaStudioDrawer({
                         key={marco.id}
                         type="button"
                         onClick={() => alActualizarVisual('marcoDecorativo', marco.id)}
-                        className={`w-full p-3 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                        className={`w-full p-3 rounded-xl border text-left flex items-center justify-between cursor-pointer select-none ${
                           estaActivo
-                            ? 'border-amber-500 bg-amber-50/50 shadow-2xs font-bold text-amber-950 ring-1 ring-amber-500'
+                            ? 'border-slate-950 bg-slate-50 shadow-2xs font-bold text-slate-950 ring-1 ring-slate-950'
                             : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                         }`}
                       >
@@ -268,11 +271,89 @@ export function CanvaStudioDrawer({
                           <p className="text-xs font-bold text-slate-900">{marco.nombre}</p>
                           <p className="text-[10px] text-slate-500">{marco.descripcion}</p>
                         </div>
-                        {estaActivo && <Check size={14} className="text-amber-600" />}
+                        {estaActivo && <Check size={14} className="text-slate-950" />}
                       </button>
                     )
                   })}
                 </div>
+              </div>
+
+              {/* Sobre Protocolario 3D */}
+              {/* Sobre Protocolario de Apertura 3D */}
+              <div className="pt-3 border-t border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <Mail size={14} className="text-slate-800" /> Sobre de Apertura 3D
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Animación ceremonial de sobre y sello al entrar a la invitación.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => alActualizarVisual('animacionSobre', !visual.animacionSobre)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                      visual.animacionSobre ? 'bg-slate-900' : 'bg-slate-200'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition duration-200 ease-in-out ${
+                        visual.animacionSobre ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {visual.animacionSobre && (
+                  <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-3">
+                    {/* Selector rápido de estilo */}
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block mb-1.5">
+                        Estilo de Sobre
+                      </label>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {[
+                          { id: 'clasico', nombre: 'Clásico', icon: '✉️' },
+                          { id: 'moderno', nombre: 'Moderno', icon: '📐' },
+                          { id: 'vintage', nombre: 'Vintage', icon: '🕊️' },
+                          { id: 'gala', nombre: 'Gala', icon: '👑' },
+                          { id: 'artesanal', nombre: 'Kraft', icon: '🌿' },
+                          { id: 'diamante', nombre: 'Diamante', icon: '💎' },
+                        ].map((estilo) => {
+                          const esActivo = (visual.estiloSobre || 'clasico') === estilo.id
+                          return (
+                            <button
+                              key={estilo.id}
+                              type="button"
+                              onClick={() => alActualizarVisual('estiloSobre', estilo.id)}
+                              className={`py-1.5 px-2 rounded-lg border text-center cursor-pointer text-xs flex items-center justify-center gap-1 select-none ${
+                                esActivo
+                                  ? 'bg-white border-slate-900 font-bold text-slate-900 shadow-2xs'
+                                  : 'bg-white/60 border-slate-200 text-slate-600 hover:bg-white'
+                              }`}
+                            >
+                              <span>{estilo.icon}</span>
+                              <span className="text-[10px]">{estilo.nombre}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Botón para abrir personalizador completo */}
+                    {onAbrirPersonalizadorSobre && (
+                      <button
+                        type="button"
+                        onClick={onAbrirPersonalizadorSobre}
+                        className="w-full py-2 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer transition-all"
+                      >
+                        <Mail size={13} className="text-white" />
+                        <span>Abrir Personalizador de Sobre Completo</span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

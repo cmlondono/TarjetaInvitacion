@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { ConfiguracionVisual } from '@/types/invitation'
 import { Check, Pipette } from 'lucide-react'
 
@@ -111,13 +111,155 @@ export function SelectorColorTonal({
     { id: 'colorTexto', label: 'Texto', desc: 'Tipografía y cuerpo de texto' },
   ]
 
-  const colorActual = visual[elementoActivo] || '#FFFFFF'
+const MAPA_VAR_CSS: Record<ElementoEditable, string> = {
+  colorTarjeta: '--color-tarjeta-live',
+  colorFondo: '--color-fondo-live',
+  colorPrimario: '--color-primario-live',
+  colorSecundario: '--color-secundario-live',
+  colorTexto: '--color-texto-live',
+}
 
-  const seleccionarColor = (nuevoColor: string) => {
-    alActualizarVisual(elementoActivo, nuevoColor)
-  }
+  const colorProp = visual[elementoActivo] || '#FFFFFF'
+  const [colorLocal, setColorLocal] = useState<string>(colorProp)
+
+  const colorInputRef = useRef<HTMLInputElement>(null)
+  const hexInputRef = useRef<HTMLInputElement>(null)
+  const muestraDotRef = useRef<HTMLSpanElement>(null)
+  const ultimoColorRef = useRef<string>(colorProp)
+  const rafIdRef = useRef<number | null>(null)
+  const colorEnEsperaRef = useRef<string | null>(null)
+
+  // Sincronizar inputs nativos cuando cambia el elemento o la prop externa
+  useEffect(() => {
+    setColorLocal(colorProp)
+    ultimoColorRef.current = colorProp
+    if (colorInputRef.current && colorInputRef.current.value !== colorProp) {
+      colorInputRef.current.value = colorProp
+    }
+    if (hexInputRef.current && hexInputRef.current.value !== colorProp) {
+      hexInputRef.current.value = colorProp
+    }
+    if (muestraDotRef.current) {
+      muestraDotRef.current.style.backgroundColor = colorProp
+    }
+  }, [elementoActivo, colorProp])
+
+  const aplicarColorDirecto = useCallback(
+    (nuevoColor: string, inmediato = false) => {
+      const cssVar = MAPA_VAR_CSS[elementoActivo]
+      ultimoColorRef.current = nuevoColor
+
+      // 1. Si es inmediato (evento nativo 'change' al soltar el mouse, clic en celda o blur en hex):
+      if (inmediato) {
+        if (rafIdRef.current !== null) {
+          cancelAnimationFrame(rafIdRef.current)
+          rafIdRef.current = null
+        }
+
+        // Actualizar directamente el canvas sin repintar el resto del editor
+        const canvas = document.getElementById('tarjeton-preview-canvas')
+        if (canvas) {
+          canvas.style.setProperty(cssVar, nuevoColor)
+        }
+
+        // Sincronizar inputs nativos
+        if (hexInputRef.current && hexInputRef.current.value !== nuevoColor) {
+          hexInputRef.current.value = nuevoColor
+        }
+        if (muestraDotRef.current) {
+          muestraDotRef.current.style.backgroundColor = nuevoColor
+        }
+        if (colorInputRef.current && colorInputRef.current.value !== nuevoColor) {
+          colorInputRef.current.value = nuevoColor
+        }
+
+        // Guardar estado en React
+        setColorLocal(nuevoColor)
+        alActualizarVisual(elementoActivo, nuevoColor)
+        return
+      }
+
+      // 2. Durante el arrastre continuo en vivo (evento nativo 'input'):
+      // ¡0ms de bloqueo! Cero llamadas a setState mientras se arrastra el mouse.
+      // Sincronizamos la previsualización al monitor a través de requestAnimationFrame (60/144 FPS).
+      // Chromium ejecuta su bucle de eventos a 1000 Hz completamente libre, sin retraso alguno en el selector.
+      colorEnEsperaRef.current = nuevoColor
+
+      if (rafIdRef.current === null) {
+        rafIdRef.current = requestAnimationFrame(() => {
+          rafIdRef.current = null
+          const colorAProcesar = colorEnEsperaRef.current
+          if (!colorAProcesar) return
+
+          const canvas = document.getElementById('tarjeton-preview-canvas')
+          if (canvas) {
+            canvas.style.setProperty(cssVar, colorAProcesar)
+          }
+
+          if (hexInputRef.current && hexInputRef.current.value !== colorAProcesar) {
+            hexInputRef.current.value = colorAProcesar
+          }
+          if (muestraDotRef.current) {
+            muestraDotRef.current.style.backgroundColor = colorAProcesar
+          }
+        })
+      }
+    },
+    [elementoActivo, alActualizarVisual]
+  )
+
+  // Manejo nativo de eventos DOM con e.stopPropagation():
+  // Bypassea por completo el sistema de eventos sintéticos de React (react-dom-client).
+  // 'input' se ejecuta en 0.001ms y nunca dispara renderizados.
+  // 'change' se ejecuta ÚNICAMENTE cuando el usuario suelta el clic o selecciona el color.
+  useEffect(() => {
+    const el = colorInputRef.current
+    if (!el) return
+
+    const handleNativeInput = (e: Event) => {
+      e.stopPropagation()
+      const val = (e.target as HTMLInputElement).value
+      aplicarColorDirecto(val, false)
+    }
+
+    const handleNativeChange = (e: Event) => {
+      e.stopPropagation()
+      const val = (e.target as HTMLInputElement).value
+      aplicarColorDirecto(val, true)
+    }
+
+    el.addEventListener('input', handleNativeInput)
+    el.addEventListener('change', handleNativeChange)
+
+    return () => {
+      el.removeEventListener('input', handleNativeInput)
+      el.removeEventListener('change', handleNativeChange)
+    }
+  }, [aplicarColorDirecto])
+
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current)
+      }
+    }
+  }, [])
 
   const aplicarPaletaCompleta = (p: (typeof PALETAS_MINIMALISTAS)[0]) => {
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current)
+      rafIdRef.current = null
+    }
+
+    const canvas = document.getElementById('tarjeton-preview-canvas')
+    if (canvas) {
+      canvas.style.setProperty('--color-fondo-live', p.fondo)
+      canvas.style.setProperty('--color-tarjeta-live', p.tarjeta)
+      canvas.style.setProperty('--color-primario-live', p.primario)
+      canvas.style.setProperty('--color-secundario-live', p.secundario)
+      canvas.style.setProperty('--color-texto-live', p.texto)
+    }
+
     alActualizarVisual('colorFondo', p.fondo)
     alActualizarVisual('colorTarjeta', p.tarjeta)
     alActualizarVisual('colorPrimario', p.primario)
@@ -149,6 +291,7 @@ export function SelectorColorTonal({
                 title={elem.desc}
               >
                 <span
+                  ref={activo ? muestraDotRef : undefined}
                   className="w-3.5 h-3.5 rounded-full border border-black/15 shadow-2xs shrink-0"
                   style={{ backgroundColor: color }}
                 />
@@ -177,18 +320,18 @@ export function SelectorColorTonal({
               <div key={columna.gama} className="flex flex-col gap-1.5">
                 {columna.tonos.map((tono) => {
                   const estaSeleccionado =
-                    colorActual.toUpperCase() === tono.toUpperCase()
+                    colorLocal.toUpperCase() === tono.toUpperCase()
 
                   return (
                     <button
                       key={tono}
                       type="button"
-                      onClick={() => seleccionarColor(tono)}
+                      onClick={() => aplicarColorDirecto(tono, true)}
                       title={`${columna.gama}: ${tono}`}
-                      className={`w-full aspect-square rounded-md border transition-all cursor-pointer relative flex items-center justify-center ${
+                      className={`w-full aspect-square rounded-md border cursor-pointer relative flex items-center justify-center select-none ${
                         estaSeleccionado
                           ? 'border-slate-900 scale-110 shadow-md ring-2 ring-slate-900/30 z-10'
-                          : 'border-black/10 hover:scale-105 hover:border-black/30'
+                          : 'border-black/10 hover:border-black/30'
                       }`}
                       style={{ backgroundColor: tono }}
                     >
@@ -220,11 +363,11 @@ export function SelectorColorTonal({
         <div className="flex items-center gap-2.5">
           <div className="relative">
             <input
+              ref={colorInputRef}
               type="color"
-              value={colorActual}
-              onChange={(e) => seleccionarColor(e.target.value)}
+              defaultValue={colorProp}
               className="w-8 h-8 rounded-lg border border-slate-300 cursor-pointer overflow-hidden p-0 bg-transparent"
-              title="Abrir selector libre de color"
+              title="Arrastra libremente para seleccionar cualquier tono en tiempo real"
             />
           </div>
           <div>
@@ -232,9 +375,26 @@ export function SelectorColorTonal({
               Color libre / Hex
             </span>
             <input
+              ref={hexInputRef}
               type="text"
-              value={colorActual}
-              onChange={(e) => seleccionarColor(e.target.value)}
+              defaultValue={colorLocal}
+              onChange={(e) => {
+                const val = e.target.value
+                if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(val)) {
+                  aplicarColorDirecto(val, true)
+                }
+              }}
+              onBlur={() => {
+                if (hexInputRef.current) {
+                  const val = hexInputRef.current.value
+                  if (/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(val)) {
+                    aplicarColorDirecto(val, true)
+                  } else {
+                    hexInputRef.current.value = colorProp
+                    setColorLocal(colorProp)
+                  }
+                }
+              }}
               placeholder="#FFFFFF"
               className="text-xs font-mono font-bold text-slate-800 bg-transparent outline-none w-20 uppercase"
             />

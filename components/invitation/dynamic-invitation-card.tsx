@@ -230,8 +230,8 @@ export function DynamicInvitationCard({
     <div
       className={`w-full ${
         esModoVistaPrevia ? 'min-h-full py-3 sm:py-6' : 'min-h-screen py-8 sm:py-12'
-      } flex flex-col items-center justify-center px-2 sm:px-4 relative overflow-hidden transition-colors duration-500`}
-      style={{ backgroundColor: visual.colorFondo }}
+      } flex flex-col items-center justify-center px-2 sm:px-4 relative overflow-hidden`}
+      style={{ backgroundColor: 'var(--color-fondo-live, ' + (visual.colorFondo || '#F8FAFC') + ')' }}
     >
       {/* Micro-textura y efectos sutiles */}
       <BackgroundEffects efecto={visual.efectoFondo} colorAcento={visual.colorSecundario} />
@@ -244,13 +244,13 @@ export function DynamicInvitationCard({
             onClick={alternarMusica}
             className={`px-3 py-2 rounded-full backdrop-blur-md border shadow-lg flex items-center gap-2 transition-all cursor-pointer select-none active:scale-95 ${
               reproduciendoMusica
-                ? 'bg-slate-900/90 text-white border-amber-400/50 ring-2 ring-amber-400/30'
+                ? 'bg-slate-900/90 text-white border-slate-400/50 ring-2 ring-slate-400/30'
                 : 'bg-white/90 text-slate-800 border-slate-300 hover:bg-white'
             }`}
             title={reproduciendoMusica ? 'Pausar melodía de fondo' : 'Reproducir melodía de fondo'}
           >
             <div className={`relative ${reproduciendoMusica ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }}>
-              <Music size={14} className={reproduciendoMusica ? 'text-amber-400' : 'text-slate-600'} />
+              <Music size={14} className={reproduciendoMusica ? 'text-white' : 'text-slate-600'} />
             </div>
             <span className="text-[11px] font-semibold tracking-wide max-w-[120px] truncate">
               {visual.musicaFondo.titulo || 'Melodía'}
@@ -268,14 +268,17 @@ export function DynamicInvitationCard({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className={`${claseFormaExterior} p-[1px] shadow-2xl transition-all`}
+          className={`${claseFormaExterior} p-[1px] shadow-2xl`}
           style={{
-            background: `linear-gradient(180deg, ${visual.colorSecundario}44 0%, ${visual.colorPrimario}22 50%, ${visual.colorSecundario}33 100%)`,
+            background: `linear-gradient(180deg, color-mix(in srgb, var(--color-secundario-live, ${visual.colorSecundario}) 25%, transparent) 0%, color-mix(in srgb, var(--color-primario-live, ${visual.colorPrimario}) 15%, transparent) 50%, color-mix(in srgb, var(--color-secundario-live, ${visual.colorSecundario}) 20%, transparent) 100%)`,
           }}
         >
           <div
             className={`relative ${claseFormaInterior} overflow-hidden backdrop-blur-xl border border-white/60 dark:border-black/40`}
-            style={{ backgroundColor: visual.colorTarjeta }}
+            style={{
+              backgroundColor: 'var(--color-tarjeta-live, ' + (visual.colorTarjeta || '#FFFFFF') + ')',
+              color: 'var(--color-texto-live, ' + (visual.colorTexto || '#0F172A') + ')',
+            }}
           >
             {/* Decoraciones Estéticas y Texturas Artesanales */}
             <DecoracionesTarjeta
@@ -299,7 +302,7 @@ export function DynamicInvitationCard({
                         key={seccion.id}
                         className="relative text-center flex flex-col items-center border-b border-black/[0.06] dark:border-white/[0.08]"
                         style={{
-                          background: `linear-gradient(180deg, ${visual.colorPrimario}0A 0%, transparent 100%)`,
+                          background: `linear-gradient(180deg, color-mix(in srgb, var(--color-primario-live, ${visual.colorPrimario || '#0F172A'}) 5%, transparent) 0%, transparent 100%)`,
                         }}
                       >
                         {/* Fotografía de Portada Superior si está definida */}
@@ -314,7 +317,7 @@ export function DynamicInvitationCard({
                             <div
                               className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-black/60"
                               style={{
-                                background: `linear-gradient(180deg, transparent 40%, ${visual.colorTarjeta} 100%)`,
+                                background: `linear-gradient(180deg, transparent 40%, var(--color-tarjeta-live, ${visual.colorTarjeta || '#FFFFFF'}) 100%)`,
                               }}
                             />
                             {esModoEdicionDirecta && (
@@ -353,7 +356,7 @@ export function DynamicInvitationCard({
                             )}
                           </div>
                         ) : esModoEdicionDirecta ? (
-                          <div className="w-full py-6 border-2 border-dashed border-amber-400/40 bg-amber-500/5 hover:bg-amber-500/10 flex flex-col items-center justify-center gap-2 transition-colors">
+                          <div className="w-full py-6 border-2 border-dashed border-slate-300 bg-slate-100/50 hover:bg-slate-100 flex flex-col items-center justify-center gap-2 transition-colors">
                             <div className="flex items-center gap-2">
                               <label className="px-3 py-1.5 rounded-full bg-slate-900 text-white text-[11px] font-bold shadow-sm flex items-center gap-1.5 cursor-pointer hover:bg-slate-800">
                                 <Camera size={13} />
@@ -393,7 +396,7 @@ export function DynamicInvitationCard({
                             <div className={`relative group/retrato ${imagenPortada ? '-mt-8 sm:-mt-10' : 'mt-0'} z-10`}>
                               <div
                                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 shadow-md mb-3 bg-white"
-                                style={{ borderColor: visual.colorPrimario }}
+                                style={{ borderColor: 'var(--color-primario-live, ' + (visual.colorPrimario || '#0F172A') + ')' }}
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
@@ -420,8 +423,8 @@ export function DynamicInvitationCard({
                               )}
                             </div>
                           ) : esModoEdicionDirecta ? (
-                            <label className="w-12 h-12 rounded-full border-2 border-dashed border-amber-400/50 hover:border-amber-500 bg-amber-500/5 flex items-center justify-center cursor-pointer mb-2 transition-colors" title="Añadir foto de anfitrión o logo">
-                              <Camera size={14} className="text-amber-600" />
+                            <label className="w-12 h-12 rounded-full border-2 border-dashed border-slate-300 hover:border-slate-500 bg-slate-100/50 flex items-center justify-center cursor-pointer mb-2 transition-colors" title="Añadir foto de anfitrión o logo">
+                              <Camera size={14} className="text-slate-600" />
                               <input
                                 type="file"
                                 accept="image/*"
@@ -662,13 +665,13 @@ export function DynamicInvitationCard({
                           href={enlaceCalendar}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-full py-2 px-3 rounded-lg text-[11px] font-medium flex items-center justify-center gap-1.5 border transition-all hover:bg-black/5"
+                          className="w-full py-2 px-3 rounded-lg text-[11px] font-medium flex items-center justify-center gap-1.5 border hover:bg-black/5"
                           style={{
-                            borderColor: `${visual.colorPrimario}20`,
-                            color: visual.colorTexto,
+                            borderColor: 'var(--color-primario-live, ' + (visual.colorPrimario || '#0F172A') + ')',
+                            color: 'var(--color-texto-live, ' + (visual.colorTexto || '#0F172A') + ')',
                           }}
                         >
-                          <CalendarPlus size={13} style={{ color: visual.colorSecundario }} />
+                          <CalendarPlus size={13} style={{ color: 'var(--color-secundario-live, ' + (visual.colorSecundario || '#D4AF37') + ')' }} />
                           <span>Guardar en mi Calendario</span>
                         </a>
                       </motion.div>
@@ -722,15 +725,15 @@ export function DynamicInvitationCard({
                         </div>
 
                         {/* Cronograma vertical */}
-                        <div className="space-y-3 pl-1 relative border-l-2 ml-3" style={{ borderColor: `${visual.colorPrimario}20` }}>
+                        <div className="space-y-3 pl-1 relative border-l-2 ml-3" style={{ borderColor: 'var(--color-primario-live, ' + (visual.colorPrimario || '#0F172A') + ')' }}>
                           {hitos.map((hito, hIdx) => (
                             <div key={hito.id} className="relative pl-5">
                               {/* Punto o icono del hito */}
                               <div
                                 className="absolute -left-[11px] top-0.5 w-5 h-5 rounded-full border bg-white flex items-center justify-center shadow-xs"
                                 style={{
-                                  borderColor: visual.colorSecundario,
-                                  color: visual.colorSecundario,
+                                  borderColor: 'var(--color-secundario-live, ' + (visual.colorSecundario || '#D4AF37') + ')',
+                                  color: 'var(--color-secundario-live, ' + (visual.colorSecundario || '#D4AF37') + ')',
                                 }}
                               >
                                 <IconoDinamico nombre={hito.icono || 'sparkles'} size={10} />
@@ -749,8 +752,8 @@ export function DynamicInvitationCard({
                                     etiqueta="span"
                                     className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded inline-block"
                                     style={{
-                                      backgroundColor: `${visual.colorPrimario}10`,
-                                      color: visual.colorPrimario,
+                                      backgroundColor: `color-mix(in srgb, var(--color-primario-live, ${visual.colorPrimario || '#0F172A'}) 10%, transparent)`,
+                                      color: 'var(--color-primario-live, ' + (visual.colorPrimario || '#0F172A') + ')',
                                     }}
                                     placeholder="20:00"
                                   />
@@ -812,7 +815,7 @@ export function DynamicInvitationCard({
                               }
                               alActualizarDatosSeccion?.(seccion.id, 'itinerario', [...hitos, nuevoHito])
                             }}
-                            className="w-full py-2 border-2 border-dashed border-amber-400/40 rounded-xl bg-amber-500/5 hover:bg-amber-500/10 text-amber-900 text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer mt-3 transition-colors"
+                            className="w-full py-2 border-2 border-dashed border-slate-300 rounded-xl bg-slate-100/70 hover:bg-slate-200/80 text-slate-800 text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer mt-3 transition-colors"
                           >
                             <Plus size={13} /> <span>+ Añadir momento al itinerario</span>
                           </button>
@@ -913,10 +916,10 @@ export function DynamicInvitationCard({
                               href={enlaceMapa}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="py-2.5 px-3 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 border transition-all hover:bg-black/5"
+                              className="py-2.5 px-3 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 border hover:bg-black/5"
                               style={{
-                                borderColor: `${visual.colorPrimario}33`,
-                                color: visual.colorTexto,
+                                borderColor: 'var(--color-primario-live, ' + (visual.colorPrimario || '#0F172A') + ')',
+                                color: 'var(--color-texto-live, ' + (visual.colorTexto || '#0F172A') + ')',
                               }}
                             >
                               <ExternalLink size={12} />
@@ -928,10 +931,10 @@ export function DynamicInvitationCard({
                               href={enlaceWaze}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="py-2.5 px-3 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 border transition-all hover:bg-black/5"
+                              className="py-2.5 px-3 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 border hover:bg-black/5"
                               style={{
-                                borderColor: `${visual.colorPrimario}33`,
-                                color: visual.colorTexto,
+                                borderColor: 'var(--color-primario-live, ' + (visual.colorPrimario || '#0F172A') + ')',
+                                color: 'var(--color-texto-live, ' + (visual.colorTexto || '#0F172A') + ')',
                               }}
                             >
                               <Navigation size={12} />
@@ -1171,8 +1174,8 @@ export function DynamicInvitationCard({
                               href={enlaceLista}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="w-full py-2 px-3 rounded-lg text-xs font-semibold text-center border flex items-center justify-center gap-1.5 transition-all hover:bg-black/5"
-                              style={{ borderColor: `${visual.colorPrimario}30`, color: visual.colorTexto }}
+                              className="w-full py-2 px-3 rounded-lg text-xs font-semibold text-center border flex items-center justify-center gap-1.5 hover:bg-black/5"
+                              style={{ borderColor: 'var(--color-primario-live, ' + (visual.colorPrimario || '#0F172A') + ')', color: 'var(--color-texto-live, ' + (visual.colorTexto || '#0F172A') + ')' }}
                             >
                               <span>Ver Mesa de Regalos Online</span>
                               <ExternalLink size={12} />
@@ -1716,7 +1719,7 @@ export function DynamicInvitationCard({
                           onClick={(e) => {
                             if (esModoEdicionDirecta) e.preventDefault()
                           }}
-                          className={`w-full py-3.5 px-5 rounded-xl text-center flex flex-col items-center justify-center gap-0.5 shadow-xs transition-all active:scale-[0.98] ${
+                          className={`w-full py-3.5 px-5 rounded-xl text-center flex flex-col items-center justify-center gap-0.5 shadow-xs active:scale-[0.98] ${
                             estiloDorado
                               ? 'bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-bold'
                               : estiloBorde
@@ -1725,9 +1728,9 @@ export function DynamicInvitationCard({
                           }`}
                           style={{
                             backgroundColor:
-                              !estiloDorado && !estiloBorde ? visual.colorPrimario : undefined,
-                            borderColor: estiloBorde ? visual.colorPrimario : undefined,
-                            color: estiloBorde ? visual.colorTexto : undefined,
+                              !estiloDorado && !estiloBorde ? 'var(--color-primario-live, ' + (visual.colorPrimario || '#0F172A') + ')' : undefined,
+                            borderColor: estiloBorde ? 'var(--color-primario-live, ' + (visual.colorPrimario || '#0F172A') + ')' : undefined,
+                            color: estiloBorde ? 'var(--color-texto-live, ' + (visual.colorTexto || '#0F172A') + ')' : undefined,
                           }}
                         >
                           <div className="flex items-center gap-2 text-xs sm:text-sm">
@@ -1878,7 +1881,7 @@ export function DynamicInvitationCard({
                   <div
                     className={`relative ${
                       esModoEdicionDirecta
-                        ? 'group/seccion hover:ring-2 hover:ring-amber-400/50 rounded-xl transition-all'
+                        ? 'group/seccion hover:ring-2 hover:ring-slate-900/30 rounded-xl transition-all'
                         : ''
                     }`}
                   >

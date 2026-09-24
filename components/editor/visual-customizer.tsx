@@ -22,6 +22,8 @@ import {
   CATALOGO_SECCIONES,
 } from '@/lib/modular-defaults'
 import { DynamicInvitationCard } from '@/components/invitation/dynamic-invitation-card'
+import { SobreAperturaAnimado } from '@/components/invitation/sobre-apertura-animado'
+import { ModalPersonalizadorSobre } from './modal-personalizador-sobre'
 import { ModalPago } from '@/components/checkout/modal-pago'
 import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
 import { SeccionItemEditor } from './seccion-item-editor'
@@ -60,6 +62,7 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertTriangle,
+  Mail,
 } from 'lucide-react'
 
 const PRESETS_MUSICA = [
@@ -213,6 +216,8 @@ export function VisualCustomizer({
   const [seccionExpandidaId, setSeccionExpandidaId] = useState<string | null>(null)
   const [mostrarEstudioCanva, setMostrarEstudioCanva] = useState(false)
   const [pestanaCanvaInicial, setPestanaCanvaInicial] = useState<PestanaCanva>('elementos')
+  const [mostrarModalSobre, setMostrarModalSobre] = useState(false)
+  const [claveSobre, setClaveSobre] = useState(0)
 
   const abrirEstudioCanvaEnPestana = (pestana: PestanaCanva = 'elementos') => {
     setPestanaCanvaInicial(pestana)
@@ -553,6 +558,25 @@ export function VisualCustomizer({
 
         {/* Fila 2 (en móvil se ubica debajo del título sin sobreponerse): Acciones Principales */}
         <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2.5 w-full sm:w-auto pt-1 sm:pt-0 border-t border-slate-100 sm:border-0 shrink-0">
+          {/* Botón Sobre 3D: Activar y personalizar estilos, colores y lacre */}
+          <button
+            type="button"
+            onClick={() => setMostrarModalSobre(true)}
+            className={`flex-1 sm:flex-initial justify-center px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95 border shrink-0 ${
+              visual.animacionSobre
+                ? 'bg-slate-950 hover:bg-slate-900 text-white border-slate-950 shadow-xs'
+                : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300'
+            }`}
+            title="Personalizar Sobre 3D: activar, cambiar estilos, colores y sellos de lacre"
+          >
+            <Mail size={13} className="shrink-0 text-current" />
+            <span className="hidden sm:inline">Sobre 3D</span>
+            <span className="sm:hidden text-[11px]">Sobre</span>
+            {visual.animacionSobre && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+            )}
+          </button>
+
           {/* Botón Estudio Tarjetón (Acorde a la app y en negro institucional) */}
           <button
             type="button"
@@ -942,6 +966,102 @@ export function VisualCustomizer({
                     )
                   })}
                 </div>
+              </div>
+
+              {/* ══════════ SOBRE PROTOCOLARIO INTERACTIVO DE APERTURA ══════════ */}
+              <div className="pt-3 border-t border-slate-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <Mail size={14} className="text-slate-800" />
+                      <span>Sobre Protocolario de Apertura</span>
+                    </label>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Animación 3D de sobre con sello de cera al abrir la tarjeta.
+                    </p>
+                  </div>
+
+                  {/* Switch Activar / Desactivar */}
+                  <button
+                    type="button"
+                    onClick={() => actualizarVisual('animacionSobre', !visual.animacionSobre)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      visual.animacionSobre ? 'bg-slate-900' : 'bg-slate-200'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        visual.animacionSobre ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {visual.animacionSobre && (
+                  <div className="space-y-3 bg-slate-50 border border-slate-200 p-3 rounded-2xl animate-in fade-in zoom-in-95 duration-200">
+                    {/* Selector de Color del Sobre */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700 block">
+                        Tono del Sobre
+                      </label>
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {[
+                          { id: '', nombre: 'A juego', color: visual.colorPrimario },
+                          { id: '#0F172A', nombre: 'Azul Noche', color: '#0F172A' },
+                          { id: '#4C0519', nombre: 'Borgoña', color: '#4C0519' },
+                          { id: '#064E3B', nombre: 'Esmeralda', color: '#064E3B' },
+                          { id: '#0B0F17', nombre: 'Negro Ónix', color: '#0B0F17' },
+                          { id: '#F5F3EF', nombre: 'Marfil Real', color: '#F5F3EF' },
+                        ].map((s) => {
+                          const activo = (visual.colorSobre || '') === s.id
+                          return (
+                            <button
+                              key={s.nombre}
+                              type="button"
+                              onClick={() => actualizarVisual('colorSobre', s.id || undefined)}
+                              className={`py-1.5 px-2 rounded-xl border text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer text-[11px] ${
+                                activo
+                                  ? 'border-slate-900 bg-white shadow-xs font-bold text-slate-900'
+                                  : 'border-slate-200 bg-white/70 hover:bg-white text-slate-600'
+                              }`}
+                            >
+                              <span
+                                className="w-3 h-3 rounded-full border border-black/10 shrink-0 shadow-2xs"
+                                style={{ backgroundColor: s.color }}
+                              />
+                              <span className="truncate">{s.nombre}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Monograma / Iniciales del Sello */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700 block">
+                        Monograma del Sello de Cera
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={4}
+                        value={visual.textoMonograma || ''}
+                        onChange={(e) => actualizarVisual('textoMonograma', e.target.value.toUpperCase())}
+                        placeholder="Ej: S&C, T, XV"
+                        className="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-serif uppercase tracking-widest text-slate-900 bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
+                      />
+                    </div>
+
+                    {/* Botón para abrir el Personalizador Completo de Sobre */}
+                    <button
+                      type="button"
+                      onClick={() => setMostrarModalSobre(true)}
+                      className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-all cursor-pointer"
+                    >
+                      <Sliders size={13} className="text-white" />
+                      <span>Personalizar Estilos, Formas & Lacres</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Música de Fondo Protocolaria */}
@@ -1501,6 +1621,21 @@ export function VisualCustomizer({
                   <span>Texturas</span>
                 </button>
 
+                {/* Sobre Protocolario Interactivo */}
+                <button
+                  type="button"
+                  onClick={() => setMostrarModalSobre(true)}
+                  className={`px-2.5 py-1 rounded-xl border text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs ${
+                    visual.animacionSobre
+                      ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200'
+                  }`}
+                  title="Personalizar Sobre 3D: activar, cambiar estilos, colores y sellos de lacre"
+                >
+                  <Mail size={13} className={visual.animacionSobre ? 'text-white' : 'text-slate-700'} />
+                  <span>Sobre {visual.animacionSobre ? '✓' : ''}</span>
+                </button>
+
                 {/* Control Rápido de Color & Tonos */}
                 <button
                   type="button"
@@ -1675,32 +1810,58 @@ export function VisualCustomizer({
 
           {/* Marco de Dispositivo Móvil */}
           <div
-            className={`w-full transition-all duration-300 flex justify-center ${
+            id="tarjeton-preview-canvas"
+            className={`w-full flex justify-center ${
               vistaDispositivo === 'movil' ? 'max-w-[440px]' : 'max-w-2xl'
             }`}
+            style={{
+              ['--color-tarjeta-live' as any]: visual.colorTarjeta || '#FFFFFF',
+              ['--color-fondo-live' as any]: visual.colorFondo || '#F8FAFC',
+              ['--color-primario-live' as any]: visual.colorPrimario || '#0F172A',
+              ['--color-secundario-live' as any]: visual.colorSecundario || '#D4AF37',
+              ['--color-texto-live' as any]: visual.colorTexto || '#0F172A',
+            }}
           >
             <div className="w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-slate-800 bg-white">
               <ErrorBoundary fallbackTitle="Detalle visual al renderizar la tarjeta en vivo">
-                <DynamicInvitationCard
+                <SobreAperturaAnimado
+                  key={`sobre-${claveSobre}-${modoEdicionDirecta ? 'edit' : 'preview'}`}
                   evento={{ ...evento, secciones }}
                   visual={visual}
-                  esModoVistaPrevia={!modoEdicionDirecta}
-                  esModoEdicionDirecta={modoEdicionDirecta}
-                  alActualizarSeccion={(secId, campo, val) => actualizarCampoSeccion(secId, campo, val)}
-                  alActualizarDatosSeccion={(secId, campoDatos, val) =>
-                    actualizarDatosSeccion(secId, campoDatos, val)
-                  }
-                  alActualizarEvento={(campo, val) => actualizarEvento(campo, val)}
-                  alMoverSeccion={(idx, dir) => moverSeccion(idx, dir)}
-                  alEliminarSeccion={(secId) => eliminarSeccion(secId)}
-                  alInsertarSeccionEnIndice={(idx, tipo) => {
-                    const nueva = crearSeccionPorTipo(tipo, idx)
-                    const copia = [...secciones]
-                    copia.splice(idx, 0, nueva)
-                    const reordenadas = copia.map((s, i) => ({ ...s, orden: i }))
-                    setSecciones(reordenadas)
+                  invitado={{
+                    id: 'preview-invitado',
+                    eventoId: evento.id,
+                    nombre: 'Familia Ramírez Gómez',
+                    pases: 2,
+                    esPlural: true,
+                    codigoAcceso: 'preview',
+                    confirmado: false,
+                    estadoConfirmacion: 'pendiente',
                   }}
-                />
+                  esModoEdicionDirecta={modoEdicionDirecta}
+                  claveReinicio={claveSobre}
+                >
+                  <DynamicInvitationCard
+                    evento={{ ...evento, secciones }}
+                    visual={visual}
+                    esModoVistaPrevia={!modoEdicionDirecta}
+                    esModoEdicionDirecta={modoEdicionDirecta}
+                    alActualizarSeccion={(secId, campo, val) => actualizarCampoSeccion(secId, campo, val)}
+                    alActualizarDatosSeccion={(secId, campoDatos, val) =>
+                      actualizarDatosSeccion(secId, campoDatos, val)
+                    }
+                    alActualizarEvento={(campo, val) => actualizarEvento(campo, val)}
+                    alMoverSeccion={(idx, dir) => moverSeccion(idx, dir)}
+                    alEliminarSeccion={(secId) => eliminarSeccion(secId)}
+                    alInsertarSeccionEnIndice={(idx, tipo) => {
+                      const nueva = crearSeccionPorTipo(tipo, idx)
+                      const copia = [...secciones]
+                      copia.splice(idx, 0, nueva)
+                      const reordenadas = copia.map((s, i) => ({ ...s, orden: i }))
+                      setSecciones(reordenadas)
+                    }}
+                  />
+                </SobreAperturaAnimado>
               </ErrorBoundary>
             </div>
           </div>
@@ -1784,6 +1945,31 @@ export function VisualCustomizer({
         alAplicarPlantilla={aplicarPlantilla}
         alAgregarSeccion={agregarNuevaSeccion}
         pestanaInicial={pestanaCanvaInicial}
+        onAbrirPersonalizadorSobre={() => {
+          setMostrarEstudioCanva(false)
+          setMostrarModalSobre(true)
+        }}
+      />
+
+      {/* Modal Personalizador de Sobre Protocolario 3D */}
+      <ModalPersonalizadorSobre
+        abierto={mostrarModalSobre}
+        onCerrar={() => setMostrarModalSobre(false)}
+        visual={visual}
+        onChangeVisual={(cambios) => setVisual((prev) => ({ ...prev, ...cambios }))}
+        onProbarApertura={(cambiosFinales) => {
+          setVisual((prev) => ({
+            ...prev,
+            ...cambiosFinales,
+            animacionSobre: true,
+          }))
+          setModoEdicionDirecta(false)
+          setVistaMobile('preview')
+          setClaveSobre((prev) => prev + 1)
+          setTimeout(() => {
+            document.getElementById('tarjeton-preview-canvas')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          }, 120)
+        }}
       />
 
       {/* ════════════ MODAL ALERTA: SALIR SIN GUARDAR CAMBIOS ════════════ */}

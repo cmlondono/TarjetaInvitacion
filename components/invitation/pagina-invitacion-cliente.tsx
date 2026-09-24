@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { DetalleEvento, Invitado } from '@/types/invitation'
 import { EventoRepositorio, InvitadoRepositorio } from '@/lib/storage'
 import { DynamicInvitationCard } from './dynamic-invitation-card'
+import { SobreAperturaAnimado } from './sobre-apertura-animado'
 import { TEMA_POR_DEFECTO } from '@/lib/theme-presets'
 import { haExpirado } from '@/lib/event-utils'
 import { Calendar, ArrowRight } from 'lucide-react'
@@ -24,59 +25,21 @@ export function PaginaInvitacionCliente({
   tokenParam,
   esPluralParam = false,
 }: PaginaInvitacionClienteProps) {
-  // 1. Resolver evento: Priorizar SSR si existe, o hidratar inmediatamente desde localStorage
-  const [evento, setEvento] = useState<DetalleEvento>(() => {
+  const [montado, setMontado] = useState(false)
+  // 1. Resolver evento de forma idéntica en SSR y cliente para evitar Hydration Mismatch
+  const [evento, setEvento] = useState<DetalleEvento | null>(() => {
     if (eventoInicial && eventoInicial.id !== 'demo') {
       return eventoInicial
     }
-
-    if (typeof window !== 'undefined') {
-      const local = EventoRepositorio.obtenerPorSlug(slug)
-      if (local) return local
-    }
-
-    return (
-      eventoInicial || {
-        id: 'demo',
-        tokenAdmin: '',
-        slugPublico: slug,
-        tipoEvento: 'corporativo',
-        titulo: 'Convocatoria Oficial',
-        subtitulo: 'Tiene el agrado de invitarle a',
-        anfitriones: 'Comité Organizador',
-        fechaEvento: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-        horaEvento: '7:00 PM',
-        direccion: 'Sede Principal del Evento',
-        enlaceMapa: 'https://maps.google.com',
-        whatsappNumero: '573000000000',
-        whatsappPlantilla: 'Confirmo la asistencia de {invitado} para {pases} persona(s) a {evento}.',
-        esPremium: false,
-        creadoEn: new Date().toISOString(),
-        expiraEn: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000).toISOString(),
-      }
-    )
+    return null
   })
 
-  // 2. Resolver invitado con datos reales (pases asignados, código, estado previo)
+  // 2. Invitado base determinista para SSR y primer render
   const [invitado, setInvitado] = useState<Invitado | null>(() => {
     if (!nombreParam && !tokenParam) return null
-
-    // Intentar buscar en local si ya existe
-    if (typeof window !== 'undefined') {
-      if (tokenParam) {
-        const invLocal = InvitadoRepositorio.obtenerPorCodigoAcceso(evento.id, tokenParam)
-        if (invLocal) return invLocal
-      }
-      if (nombreParam) {
-        const invLocal = InvitadoRepositorio.obtenerPorNombre(evento.id, nombreParam)
-        if (invLocal) return invLocal
-      }
-    }
-
-    // Si aún no está en local, generar objeto con el ID real del evento
     return {
       id: 'inv-temp',
-      eventoId: evento.id,
+      eventoId: eventoInicial?.id || 'demo',
       nombre: nombreParam || 'Invitado de Honor',
       pases: 1,
       esPlural: esPluralParam,
@@ -88,15 +51,39 @@ export function PaginaInvitacionCliente({
 
   // 3. Efecto de hidratación para asegurar que el evento y el invitado estén 100% sincronizados
   useEffect(() => {
-    // Si el evento actual es demo o faltan datos, buscar en local
+    setMontado(true)
+    // Si no tenemos evento o es demo, buscar en almacenamiento local del navegador
     let eventoActual = evento
-    if (evento.id === 'demo' || !evento.id) {
+    if (!eventoActual || eventoActual.id === 'demo') {
       const guardadoLocal = EventoRepositorio.obtenerPorSlug(slug)
       if (guardadoLocal) {
         eventoActual = guardadoLocal
         setEvento(guardadoLocal)
+      } else if (!eventoActual) {
+        const demoEvento: DetalleEvento = {
+          id: 'demo',
+          tokenAdmin: '',
+          slugPublico: slug,
+          tipoEvento: 'corporativo',
+          titulo: 'Convocatoria Oficial',
+          subtitulo: 'Tiene el agrado de invitarle a',
+          anfitriones: 'Comité Organizador',
+          fechaEvento: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+          horaEvento: '7:00 PM',
+          direccion: 'Sede Principal del Evento',
+          enlaceMapa: 'https://maps.google.com',
+          whatsappNumero: '573000000000',
+          whatsappPlantilla: 'Confirmo la asistencia de {invitado} para {pases} persona(s) a {evento}.',
+          esPremium: false,
+          creadoEn: new Date().toISOString(),
+          expiraEn: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000).toISOString(),
+        }
+        eventoActual = demoEvento
+        setEvento(demoEvento)
       }
     }
+
+    if (!eventoActual) return
 
     // Buscar invitado real en local
     if (nombreParam || tokenParam) {
@@ -130,7 +117,19 @@ export function PaginaInvitacionCliente({
           .catch(() => {})
       }
     }
-  }, [slug, nombreParam, tokenParam, evento.id])
+  }, [slug, nombreParam, tokenParam, evento?.id])
+
+  // Estado previo a la resolución del evento (evita cualquier discrepancia de SSR vs cliente)
+  if (!evento) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center select-none">
+        <div className="w-10 h-10 border-2 border-amber-400/80 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-xs text-amber-200/90 font-serif tracking-[0.2em] uppercase">
+          Cargando Pase Protocolario...
+        </p>
+      </div>
+    )
+  }
 
   // Verificación de expiración (Fecha del evento + 7 días)
   const eventoHaCaducado = haExpirado(evento.expiraEn)
@@ -164,11 +163,19 @@ export function PaginaInvitacionCliente({
     )
   }
 
+  const visualActual = evento.configuracionVisual || TEMA_POR_DEFECTO
+
   return (
-    <DynamicInvitationCard
+    <SobreAperturaAnimado
       evento={evento}
-      visual={evento.configuracionVisual || TEMA_POR_DEFECTO}
+      visual={visualActual}
       invitado={invitado}
-    />
+    >
+      <DynamicInvitationCard
+        evento={evento}
+        visual={visualActual}
+        invitado={invitado}
+      />
+    </SobreAperturaAnimado>
   )
 }

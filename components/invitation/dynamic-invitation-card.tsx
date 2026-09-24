@@ -1454,12 +1454,15 @@ export function DynamicInvitationCard({
                             size={14}
                             style={{ color: visual.colorSecundario }}
                           />
-                          <p
-                            className="text-xs font-bold uppercase tracking-wider"
+                          <InlineEditableText
+                            activo={esModoEdicionDirecta}
+                            valor={seccion.titulo || 'Galería de Momentos'}
+                            alGuardar={(val) => alActualizarSeccion?.(seccion.id, 'titulo', val)}
+                            etiqueta="p"
+                            className="text-xs font-bold uppercase tracking-wider block"
                             style={{ color: visual.colorTexto }}
-                          >
-                            {seccion.titulo || 'Galería de Momentos'}
-                          </p>
+                            placeholder="Galería de Momentos"
+                          />
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                           {fotos.map((foto, fIdx) => (
@@ -1484,7 +1487,7 @@ export function DynamicInvitationCard({
                     const mensaje = seccion.datos?.mensaje
                     const autor = seccion.datos?.autorMensaje
 
-                    if (!mensaje) return null
+                    if (!mensaje && !esModoEdicionDirecta) return null
 
                     return (
                       <motion.div
@@ -1507,19 +1510,40 @@ export function DynamicInvitationCard({
                             className="mx-auto mb-2 opacity-30"
                             style={{ color: visual.colorSecundario }}
                           />
-                          <p
-                            className="text-xs sm:text-[13px] leading-relaxed italic opacity-90"
-                            style={{ color: visual.colorTexto }}
-                          >
-                            &ldquo;{mensaje}&rdquo;
-                          </p>
-                          {autor && (
-                            <p
-                              className="text-[10px] uppercase tracking-wider font-semibold opacity-70 mt-2"
-                              style={{ color: visual.colorSecundario }}
-                            >
-                              — {autor}
-                            </p>
+                          <div className="w-full">
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={mensaje || ''}
+                              alGuardar={(nuevoTexto) => {
+                                alActualizarDatosSeccion?.(seccion.id, 'mensaje', nuevoTexto)
+                              }}
+                              multilinea={true}
+                              etiqueta="p"
+                              className="text-xs sm:text-[13px] leading-relaxed italic opacity-90 block"
+                              style={{ color: visual.colorTexto }}
+                              placeholder="Escribe aquí tu frase, dedicatoria o reflexión..."
+                            />
+                          </div>
+                          {(autor || esModoEdicionDirecta) && (
+                            <div className="mt-2 flex items-center justify-center gap-1">
+                              <span
+                                className="text-[10px] uppercase tracking-wider font-semibold opacity-70"
+                                style={{ color: visual.colorSecundario }}
+                              >
+                                —
+                              </span>
+                              <InlineEditableText
+                                activo={esModoEdicionDirecta}
+                                valor={autor || ''}
+                                alGuardar={(nuevoAutor) => {
+                                  alActualizarDatosSeccion?.(seccion.id, 'autorMensaje', nuevoAutor)
+                                }}
+                                etiqueta="span"
+                                className="text-[10px] uppercase tracking-wider font-semibold opacity-70 inline-block"
+                                style={{ color: visual.colorSecundario }}
+                                placeholder="Nombre del autor o anfitriones"
+                              />
+                            </div>
                           )}
                         </div>
                       </motion.div>
@@ -1528,7 +1552,7 @@ export function DynamicInvitationCard({
 
                   case 'hospedaje': {
                     const hoteles = seccion.datos?.hoteles || []
-                    if (hoteles.length === 0) return null
+                    if (hoteles.length === 0 && !esModoEdicionDirecta) return null
 
                     return (
                       <motion.div
@@ -1541,12 +1565,15 @@ export function DynamicInvitationCard({
                       >
                         <div className="flex items-center gap-2 mb-2">
                           <Building2 size={14} style={{ color: visual.colorSecundario }} />
-                          <p
-                            className="text-xs font-bold uppercase tracking-wider"
+                          <InlineEditableText
+                            activo={esModoEdicionDirecta}
+                            valor={seccion.titulo || 'Hospedaje Recomendado'}
+                            alGuardar={(val) => alActualizarSeccion?.(seccion.id, 'titulo', val)}
+                            etiqueta="p"
+                            className="text-xs font-bold uppercase tracking-wider block"
                             style={{ color: visual.colorTexto }}
-                          >
-                            {seccion.titulo || 'Hospedaje Recomendado'}
-                          </p>
+                            placeholder="Hospedaje Recomendado"
+                          />
                         </div>
                         {hoteles.map((h) => (
                           <div
@@ -2126,8 +2153,12 @@ export function DynamicInvitationCard({
                           visual={visual}
                           invitado={invitado}
                           esModoVistaPrevia={esModoVistaPrevia}
+                          esModoEdicionDirecta={esModoEdicionDirecta}
                           urlWhatsApp={urlWhatsApp}
                           subtitulo={seccion.subtitulo}
+                          alActualizarSubtitulo={(nuevoSubtitulo) => {
+                            alActualizarSeccion?.(seccion.id, 'subtitulo', nuevoSubtitulo)
+                          }}
                           metodoConfirmacion={metodoConfirmacion}
                         />
                       </motion.div>

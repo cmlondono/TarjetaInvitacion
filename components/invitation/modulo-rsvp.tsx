@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { DetalleEvento, ConfiguracionVisual, Invitado, EstadoConfirmacion, MetodoConfirmacion } from '@/types/invitation'
 import { InvitadoRepositorio } from '@/lib/storage'
+import { InlineEditableText } from '@/components/editor/inline-editable-text'
 import { Check, X, Users, MessageSquare, Send, CheckCircle2, UserCheck, RefreshCw, MessageCircle } from 'lucide-react'
 
 interface ModuloRsvpProps {
@@ -11,8 +12,10 @@ interface ModuloRsvpProps {
   visual: ConfiguracionVisual
   invitado?: Invitado | null
   esModoVistaPrevia?: boolean
+  esModoEdicionDirecta?: boolean
   urlWhatsApp?: string
   subtitulo?: string
+  alActualizarSubtitulo?: (nuevoSubtitulo: string) => void
   metodoConfirmacion?: MetodoConfirmacion
 }
 
@@ -21,8 +24,10 @@ export function ModuloRsvp({
   visual,
   invitado,
   esModoVistaPrevia = false,
+  esModoEdicionDirecta = false,
   urlWhatsApp = '',
   subtitulo,
+  alActualizarSubtitulo,
   metodoConfirmacion = 'tarjeton',
 }: ModuloRsvpProps) {
   const pasesMaximos = invitado?.pases || 2
@@ -126,13 +131,19 @@ export function ModuloRsvp({
   if (metodoConfirmacion === 'whatsapp') {
     return (
       <div className="w-full px-5 sm:px-8 py-7 flex flex-col items-center">
-        {subtitulo && (
-          <p
-            className="text-center text-xs opacity-75 mb-4 leading-relaxed max-w-sm"
-            style={{ color: visual.colorTexto }}
-          >
-            {subtitulo}
-          </p>
+        {(subtitulo || esModoEdicionDirecta) && (
+          <div className="w-full max-w-sm mb-4 text-center">
+            <InlineEditableText
+              activo={esModoEdicionDirecta}
+              valor={subtitulo || 'Agradecemos confirmar su asistencia a la mayor brevedad posible'}
+              alGuardar={(nuevo) => alActualizarSubtitulo?.(nuevo)}
+              multilinea={true}
+              etiqueta="p"
+              className="text-center text-xs opacity-75 leading-relaxed block"
+              style={{ color: visual.colorTexto }}
+              placeholder="Agradecemos confirmar su asistencia a la mayor brevedad posible"
+            />
+          </div>
         )}
         <div className="w-full max-w-md bg-white/95 backdrop-blur-md rounded-2xl p-5 sm:p-6 shadow-md border border-black/5 text-center space-y-4 text-slate-800">
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200/80 shadow-xs">
@@ -165,13 +176,19 @@ export function ModuloRsvp({
   return (
     <div className="w-full px-5 sm:px-8 py-7 flex flex-col items-center">
       {/* Encabezado editorial de la sección */}
-      {subtitulo && (
-        <p
-          className="text-center text-xs opacity-75 mb-4 leading-relaxed max-w-sm"
-          style={{ color: visual.colorTexto }}
-        >
-          {subtitulo}
-        </p>
+      {(subtitulo || esModoEdicionDirecta) && (
+        <div className="w-full max-w-sm mb-4 text-center">
+          <InlineEditableText
+            activo={esModoEdicionDirecta}
+            valor={subtitulo || 'Agradecemos confirmar su asistencia a la mayor brevedad posible'}
+            alGuardar={(nuevo) => alActualizarSubtitulo?.(nuevo)}
+            multilinea={true}
+            etiqueta="p"
+            className="text-center text-xs opacity-75 leading-relaxed block"
+            style={{ color: visual.colorTexto }}
+            placeholder="Agradecemos confirmar su asistencia a la mayor brevedad posible"
+          />
+        </div>
       )}
 
       <div className="w-full max-w-md bg-white/95 backdrop-blur-md rounded-2xl p-5 sm:p-6 shadow-md border border-black/5 text-slate-800">

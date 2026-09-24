@@ -81,6 +81,20 @@ export function obtenerGradienteLacre(colorLacre?: ColorLacreTipo) {
 }
 
 /**
+ * Determina si un color hexadecimal es claro para asegurar contraste tipográfico perfecto
+ */
+export function esColorClaro(hex: string): boolean {
+  if (!hex || typeof hex !== 'string') return false
+  const limpio = hex.replace('#', '')
+  if (limpio.length < 6) return false
+  const r = parseInt(limpio.substring(0, 2), 16) || 0
+  const g = parseInt(limpio.substring(2, 4), 16) || 0
+  const b = parseInt(limpio.substring(4, 6), 16) || 0
+  const brillo = (r * 299 + g * 587 + b * 114) / 1000
+  return brillo > 165
+}
+
+/**
  * Recortes y formas geométricas según el estilo de sobre
  */
 export function obtenerGeometriaSobre(estilo: EstiloSobreTipo = 'clasico') {
@@ -419,30 +433,68 @@ export function SobreAperturaAnimado({
                   </div>
                 )}
 
-                {/* Caligrafía en el frente del sobre: Nombre del Destinatario */}
-                <div className={`text-center space-y-1 relative z-10 ${estiloSobre === 'gala' ? 'pt-2 pb-6' : 'pt-6'}`}>
-                  {textoImpresoSobre && (
-                    <p className="text-[9px] sm:text-[10px] tracking-[0.25em] uppercase font-medium text-slate-300">
-                      {textoImpresoSobre}
-                    </p>
-                  )}
-                  <p
-                    className="text-lg sm:text-2xl font-serif text-white font-bold tracking-tight drop-shadow-sm line-clamp-1"
-                    style={{
-                      fontFamily:
-                        visual.fuenteTitulo === 'greatvibes' || visual.fuenteTitulo === 'alexbrush'
-                          ? 'var(--font-serif), serif'
-                          : undefined,
-                    }}
-                  >
-                    {invitado?.nombre || 'Distinguido(a) Invitado(a)'}
-                  </p>
-                  {invitado?.pases && invitado.pases > 1 && (
-                    <p className="text-[10px] text-slate-300 font-medium tracking-wider">
-                      Válido para {invitado.pases} personas
-                    </p>
-                  )}
-                </div>
+                {/* Cartela Caligráfica de Alta Costura: Nombre del Invitado */}
+                {(() => {
+                  const esClaro = esColorClaro(colorSobre)
+                  const colorTextoDestacado = esClaro ? '#0F172A' : '#FFFFFF'
+                  const colorSubtexto = esClaro ? '#475569' : 'rgba(255, 255, 255, 0.85)'
+                  const bordeCartela = esClaro ? '1px solid rgba(15, 23, 42, 0.15)' : '1px solid rgba(212, 175, 55, 0.5)'
+                  const fondoCartela = esClaro
+                    ? 'rgba(255, 255, 255, 0.90)'
+                    : 'rgba(15, 23, 42, 0.65)'
+
+                  const nombreMostrar = invitado?.nombre || 'Distinguido(a) Invitado(a)'
+                  const esDemo = !invitado || invitado.id === 'preview-invitado' || invitado.id === 'inv-temp'
+
+                  return (
+                    <div
+                      className="w-full max-w-[94%] sm:max-w-[88%] text-center relative z-10 px-3 py-2 sm:py-2.5 rounded-xl backdrop-blur-md shadow-lg mb-2 border transition-all"
+                      style={{
+                        background: fondoCartela,
+                        border: bordeCartela,
+                      }}
+                    >
+                      {textoImpresoSobre && (
+                        <p
+                          className="text-[8px] sm:text-[9px] tracking-[0.25em] uppercase font-bold mb-0.5 line-clamp-1"
+                          style={{ color: visual.colorSecundario || (esClaro ? '#B45309' : '#FDE047') }}
+                        >
+                          {textoImpresoSobre}
+                        </p>
+                      )}
+                      <p
+                        className="text-base sm:text-2xl font-serif font-bold tracking-tight line-clamp-1 drop-shadow-xs"
+                        style={{
+                          color: colorTextoDestacado,
+                          fontFamily:
+                            visual.fuenteTitulo === 'greatvibes' || visual.fuenteTitulo === 'alexbrush'
+                              ? 'var(--font-serif), serif'
+                              : undefined,
+                        }}
+                      >
+                        {nombreMostrar}
+                      </p>
+                      <div className="flex items-center justify-center gap-2 mt-0.5">
+                        <span
+                          className="text-[9px] sm:text-[10px] font-semibold tracking-wider"
+                          style={{ color: colorSubtexto }}
+                        >
+                          {invitado?.pases && invitado.pases > 1
+                            ? `Válido para ${invitado.pases} personas`
+                            : 'Pase Protocolario Personal'}
+                        </span>
+                      </div>
+                      {esDemo && (
+                        <span
+                          className="text-[8px] tracking-wide mt-0.5 block opacity-75 font-sans"
+                          style={{ color: colorSubtexto }}
+                        >
+                          (Nombre de ejemplo — cada invitado recibirá su sobre personalizado)
+                        </span>
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
 
               {/* Solapa Superior 3D con Sello de Cera */}

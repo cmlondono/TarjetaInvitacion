@@ -12,6 +12,7 @@ import {
   obtenerGeometriaSobre,
   obtenerGradienteLacre,
   ForroInteriorDecorativo,
+  esColorClaro,
 } from '@/components/invitation/sobre-apertura-animado'
 import {
   Mail,
@@ -570,17 +571,47 @@ export const ModalPersonalizadorSobre = React.memo(function ModalPersonalizadorS
                       }}
                     />
 
-                    {/* Caligrafía en el frente del sobre */}
-                    <div className="text-center space-y-0.5 relative z-10 pt-4">
-                      {localTextoImpreso && (
-                        <p className="text-[8px] tracking-[0.25em] uppercase font-medium text-slate-300">
-                          {localTextoImpreso}
-                        </p>
-                      )}
-                      <p className="text-sm font-serif text-white font-bold tracking-tight drop-shadow-sm line-clamp-1">
-                        Familia Ramírez Gómez
-                      </p>
-                    </div>
+                    {/* Cartela Caligráfica en el frente del sobre */}
+                    {(() => {
+                      const esClaro = esColorClaro(localColor)
+                      const colorTextoDestacado = esClaro ? '#0F172A' : '#FFFFFF'
+                      const colorSubtexto = esClaro ? '#475569' : 'rgba(255, 255, 255, 0.85)'
+                      const bordeCartela = esClaro ? '1px solid rgba(15, 23, 42, 0.15)' : '1px solid rgba(212, 175, 55, 0.5)'
+                      const fondoCartela = esClaro
+                        ? 'rgba(255, 255, 255, 0.90)'
+                        : 'rgba(15, 23, 42, 0.65)'
+
+                      return (
+                        <div
+                          className="w-full max-w-[92%] text-center relative z-10 px-3 py-1.5 rounded-lg backdrop-blur-md shadow-md mb-1 border"
+                          style={{
+                            background: fondoCartela,
+                            border: bordeCartela,
+                          }}
+                        >
+                          {localTextoImpreso && (
+                            <p
+                              className="text-[7.5px] tracking-[0.25em] uppercase font-bold mb-0.5 line-clamp-1"
+                              style={{ color: visual.colorSecundario || (esClaro ? '#B45309' : '#FDE047') }}
+                            >
+                              {localTextoImpreso}
+                            </p>
+                          )}
+                          <p
+                            className="text-xs sm:text-sm font-serif font-bold tracking-tight line-clamp-1 drop-shadow-xs"
+                            style={{ color: colorTextoDestacado }}
+                          >
+                            Familia Ramírez Gómez
+                          </p>
+                          <span
+                            className="text-[7.5px] tracking-wide block opacity-75 font-sans mt-0.5"
+                            style={{ color: colorSubtexto }}
+                          >
+                            (Nombre de ejemplo — demostración)
+                          </span>
+                        </div>
+                      )
+                    })()}
                   </div>
 
                   {/* Solapa Superior 3D con Sello de Cera */}

@@ -27,6 +27,7 @@ interface EventCountdownProps {
   colorTexto: string
   colorAcento: string
   compacto?: boolean
+  esModoEdicionDirecta?: boolean
 }
 
 export function EventCountdown({
@@ -34,12 +35,15 @@ export function EventCountdown({
   colorTexto,
   colorAcento,
   compacto = true,
+  esModoEdicionDirecta = false,
 }: EventCountdownProps) {
   const [tiempo, setTiempo] = useState<TimeLeft>(() => calcularTiempoRestante(fechaIso))
   const [montado, setMontado] = useState(false)
 
+  // Actualización inmediata al cambiar fechaIso (0ms latencia)
   useEffect(() => {
     setMontado(true)
+    setTiempo(calcularTiempoRestante(fechaIso))
     const id = setInterval(() => {
       setTiempo(calcularTiempoRestante(fechaIso))
     }, 1000)
@@ -53,9 +57,11 @@ export function EventCountdown({
 
   if (esFinalizado) {
     return (
-      <div className="text-center py-2">
-        <p className="font-semibold text-sm" style={{ color: colorTexto }}>
-          ¡El evento ya está sucediendo o ha finalizado! 🎉
+      <div className="text-center py-2 px-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+        <p className="font-semibold text-xs" style={{ color: colorTexto }}>
+          {esModoEdicionDirecta
+            ? '⏳ La fecha configurada ya pasó o es hoy. Ajusta la fecha más adelante para ver el contador regresivo en marcha.'
+            : '¡El evento ya está sucediendo o ha finalizado! 🎉'}
         </p>
       </div>
     )

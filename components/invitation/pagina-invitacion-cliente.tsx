@@ -52,34 +52,43 @@ export function PaginaInvitacionCliente({
   // 3. Efecto de hidratación para asegurar que el evento y el invitado estén 100% sincronizados
   useEffect(() => {
     setMontado(true)
-    // Si no tenemos evento o es demo, buscar en almacenamiento local del navegador
+    // Si no tenemos evento o es demo, buscar en almacenamiento local del navegador o consultar API del servidor
     let eventoActual = evento
     if (!eventoActual || eventoActual.id === 'demo') {
       const guardadoLocal = EventoRepositorio.obtenerPorSlug(slug)
       if (guardadoLocal) {
         eventoActual = guardadoLocal
         setEvento(guardadoLocal)
-      } else if (!eventoActual) {
-        const demoEvento: DetalleEvento = {
-          id: 'demo',
-          tokenAdmin: '',
-          slugPublico: slug,
-          tipoEvento: 'corporativo',
-          titulo: 'Convocatoria Oficial',
-          subtitulo: 'Tiene el agrado de invitarle a',
-          anfitriones: 'Comité Organizador',
-          fechaEvento: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-          horaEvento: '7:00 PM',
-          direccion: 'Sede Principal del Evento',
-          enlaceMapa: 'https://maps.google.com',
-          whatsappNumero: '573000000000',
-          whatsappPlantilla: 'Confirmo la asistencia de {invitado} para {pases} persona(s) a {evento}.',
-          esPremium: false,
-          creadoEn: new Date().toISOString(),
-          expiraEn: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000).toISOString(),
-        }
-        eventoActual = demoEvento
-        setEvento(demoEvento)
+      } else {
+        // Consultar la API del servidor (fundamental para visualización desde celulares y otros dispositivos)
+        fetch(`/api/eventos?slug=${encodeURIComponent(slug)}`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (data?.evento) {
+              setEvento(data.evento)
+            } else if (!eventoActual) {
+              const demoEvento: DetalleEvento = {
+                id: 'demo',
+                tokenAdmin: '',
+                slugPublico: slug,
+                tipoEvento: 'corporativo',
+                titulo: 'Convocatoria Oficial',
+                subtitulo: 'Tiene el agrado de invitarle a',
+                anfitriones: 'Comité Organizador',
+                fechaEvento: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+                horaEvento: '7:00 PM',
+                direccion: 'Sede Principal del Evento',
+                enlaceMapa: 'https://maps.google.com',
+                whatsappNumero: '573000000000',
+                whatsappPlantilla: 'Confirmo la asistencia de {invitado} para {pases} persona(s) a {evento}.',
+                esPremium: false,
+                creadoEn: new Date().toISOString(),
+                expiraEn: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000).toISOString(),
+              }
+              setEvento(demoEvento)
+            }
+          })
+          .catch(() => {})
       }
     }
 

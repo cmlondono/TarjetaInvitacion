@@ -10,6 +10,7 @@ import {
   EfectoFondo,
   SeccionModular,
   TipoSeccion,
+  TipoEvento,
   MetodoConfirmacion,
   FormaTarjeta,
 } from '@/types/invitation'
@@ -305,19 +306,40 @@ export function VisualCustomizer({
     const hoy = new Date()
     const fechaPorDefecto = new Date(hoy.setDate(hoy.getDate() + 30)).toISOString().split('T')[0]
 
+    const tipoQuery = (searchParams?.get('tipo') as TipoEvento) || null
+    const plantillaQueryId = searchParams?.get('plantilla')
+    const plantillaEncontrada = plantillaQueryId
+      ? PLANTILLAS_TEMAS.find((p) => p.id === plantillaQueryId)
+      : tipoQuery
+      ? PLANTILLAS_TEMAS.find((p) => p.tipoEvento === tipoQuery)
+      : null
+
+    const datosBase = plantillaEncontrada?.datosEvento || {
+      titulo: 'Cumbre de Innovación & Liderazgo 2026',
+      subtitulo: 'Sesión Plenaria & Cóctel de Honor',
+      anfitriones: 'Comité Directivo & Socios Estratégicos',
+      textoBadge: 'Convocatoria Oficial',
+      codigoVestimenta: 'Traje Formal / Corbata Oscura',
+      imagenPortada: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=80',
+    }
+
     return {
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'temp-id',
       tokenAdmin: generarTokenAdmin(),
       slugPublico: '',
-      tipoEvento: 'corporativo',
-      titulo: 'Cumbre de Innovación & Liderazgo 2026',
-      subtitulo: 'Sesión Plenaria & Cóctel de Honor',
-      anfitriones: 'Comité Directivo & Socios Estratégicos',
+      tipoEvento: plantillaEncontrada?.tipoEvento || 'corporativo',
+      titulo: datosBase.titulo,
+      subtitulo: datosBase.subtitulo,
+      anfitriones: datosBase.anfitriones,
+      textoBadge: datosBase.textoBadge,
+      mostrarBadge: true,
+      mostrarFotoRetrato: true,
+      imagenPortada: datosBase.imagenPortada,
       fechaEvento: `${fechaPorDefecto}T18:30:00`,
       horaEvento: '6:30 PM',
       direccion: 'Centro de Convenciones Metropolitano, Auditorio Principal',
       enlaceMapa: 'https://maps.google.com',
-      codigoVestimenta: 'Traje Formal / Corbata Oscura',
+      codigoVestimenta: datosBase.codigoVestimenta || 'Traje Formal / Corbata Oscura',
       whatsappNumero: '573001234567',
       whatsappPlantilla:
         'Estimado Comité: Confirmo la asistencia de {invitado} para {pases} persona(s) a {evento}.',
@@ -336,7 +358,15 @@ export function VisualCustomizer({
 
   // Estado de la Configuración Visual
   const [visual, setVisual] = useState<ConfiguracionVisual>(() => {
-    return eventoInicial?.configuracionVisual || visualInicial
+    if (eventoInicial?.configuracionVisual) return eventoInicial.configuracionVisual
+    const plantillaQueryId = searchParams?.get('plantilla')
+    const tipoQuery = searchParams?.get('tipo') as TipoEvento
+    const plantilla = plantillaQueryId
+      ? PLANTILLAS_TEMAS.find((p) => p.id === plantillaQueryId)
+      : tipoQuery
+      ? PLANTILLAS_TEMAS.find((p) => p.tipoEvento === tipoQuery)
+      : null
+    return plantilla?.visual || visualInicial
   })
 
   // Estado de las Secciones Modulares
@@ -427,6 +457,47 @@ export function VisualCustomizer({
     if (plantilla) {
       setVisual(plantilla.visual)
       actualizarEvento('tipoEvento', plantilla.tipoEvento)
+      if (plantilla.datosEvento) {
+        actualizarEvento('titulo', plantilla.datosEvento.titulo)
+        actualizarEvento('subtitulo', plantilla.datosEvento.subtitulo)
+        actualizarEvento('anfitriones', plantilla.datosEvento.anfitriones)
+        actualizarEvento('textoBadge', plantilla.datosEvento.textoBadge)
+        actualizarEvento('mostrarBadge', true)
+        if (plantilla.datosEvento.codigoVestimenta) {
+          actualizarEvento('codigoVestimenta', plantilla.datosEvento.codigoVestimenta)
+        }
+        if (plantilla.datosEvento.imagenPortada) {
+          actualizarEvento('imagenPortada', plantilla.datosEvento.imagenPortada)
+        }
+        // Sincronizar inmediatamente la cabecera y el código de vestimenta en la tarjeta
+        setSecciones((prev) =>
+          prev.map((sec) => {
+            if (sec.tipo === 'cabecera') {
+              return {
+                ...sec,
+                titulo: plantilla.datosEvento!.titulo,
+                subtitulo: plantilla.datosEvento!.subtitulo,
+                datos: {
+                  ...sec.datos,
+                  imagenPortada: plantilla.datosEvento!.imagenPortada || sec.datos?.imagenPortada,
+                  textoBadge: plantilla.datosEvento!.textoBadge,
+                  mostrarBadge: true,
+                },
+              }
+            }
+            if (sec.tipo === 'codigo_vestimenta' && plantilla.datosEvento?.codigoVestimenta) {
+              return {
+                ...sec,
+                datos: {
+                  ...sec.datos,
+                  etiqueta: plantilla.datosEvento.codigoVestimenta,
+                },
+              }
+            }
+            return sec
+          })
+        )
+      }
     }
   }
 
@@ -473,7 +544,7 @@ export function VisualCustomizer({
     setMostrarModalPago(false)
   }
 
-  const handleGuardarYPublicar = () => {
+  const handleGuardarYPublicar = async () => {
     setGuardando(true)
     try {
       const slug = evento.slugPublico || generarSlug(evento.titulo)
@@ -501,15 +572,18 @@ export function VisualCustomizer({
           }
           return s
         }),
-        imagenPortada: cabecera?.datos?.imagenPortada || evento.imagenPortada,
-        imagenRetrato: cabecera?.datos?.imagenRetrato || evento.imagenRetrato,
+        imagenPortada: cabecera?.datos?.imagenPortada !== undefined ? cabecera.datos.imagenPortada : evento.imagenPortada,
+        imagenRetrato: cabecera?.datos?.imagenRetrato !== undefined ? cabecera.datos.imagenRetrato : evento.imagenRetrato,
+        mostrarFotoRetrato: cabecera?.datos?.mostrarFotoRetrato !== undefined ? cabecera.datos.mostrarFotoRetrato : evento.mostrarFotoRetrato,
+        mostrarBadge: cabecera?.datos?.mostrarBadge !== undefined ? cabecera.datos.mostrarBadge : evento.mostrarBadge,
+        textoBadge: cabecera?.datos?.textoBadge !== undefined ? cabecera.datos.textoBadge : evento.textoBadge,
       }
 
       setHaGuardado(true)
-      EventoRepositorio.guardar(eventoGuardado)
+      await EventoRepositorio.guardarAsync(eventoGuardado)
       router.push(`/gestionar/${eventoGuardado.tokenAdmin}`)
     } catch (e) {
-      console.error(e)
+      console.error('Error al guardar el evento:', e)
       setGuardando(false)
     }
   }
@@ -1286,6 +1360,32 @@ export function VisualCustomizer({
               <div className="space-y-3">
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
+                    Tipo de Celebración / Acto
+                  </label>
+                  <select
+                    value={evento.tipoEvento}
+                    onChange={(e) => {
+                      const nuevoTipo = e.target.value as TipoEvento
+                      actualizarEvento('tipoEvento', nuevoTipo)
+                      const plantilla = PLANTILLAS_TEMAS.find((p) => p.tipoEvento === nuevoTipo)
+                      if (plantilla) {
+                        aplicarPlantilla(plantilla.id)
+                      }
+                    }}
+                    className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg font-medium cursor-pointer"
+                  >
+                    <option value="corporativo">Acto Corporativo / Cumbre / Gala Oficial</option>
+                    <option value="grado">Ceremonia de Grado Académico</option>
+                    <option value="boda">Boda / Matrimonio</option>
+                    <option value="quince_anos">Quince Años (XV)</option>
+                    <option value="cumpleanos">Fiesta de Cumpleaños / Aniversario</option>
+                    <option value="baby_shower">Baby Shower / Bautizo</option>
+                    <option value="otro">Reunión Familiar / Asado / Social</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
                     Título del Acto
                   </label>
                   <input
@@ -1764,10 +1864,10 @@ export function VisualCustomizer({
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                   <div className="min-w-0">
                     <p className="font-bold text-xs truncate">
-                      Modo Diseñador (Edición en Vivo)
+                      Modo Diseñador (Edición Directa en Vivo)
                     </p>
-                    <p className="text-[11px] text-slate-300 hidden sm:block truncate">
-                      Haz clic en cualquier texto, foto o bloque para editar tu tarjeta.
+                    <p className="text-[11px] text-emerald-200 hidden sm:block truncate">
+                      💡 Los textos, fotos y fechas son de demostración. Haz clic en cualquiera de ellos para personalizar con tus datos reales.
                     </p>
                   </div>
                 </>

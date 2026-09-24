@@ -10,6 +10,7 @@ import {
 import { SelectorIcono } from './selector-icono'
 import { IconoDinamico } from '@/components/ui/icono-dinamico'
 import { IMAGENES_CURADAS } from '@/lib/modular-defaults'
+import { comprimirImagen } from '@/lib/image-compression'
 import {
   ArrowUp,
   ArrowDown,
@@ -69,19 +70,24 @@ export function SeccionItemEditor({
   const inputFileGaleriaRef = useRef<HTMLInputElement>(null)
   const inputFileImagenLibreRef = useRef<HTMLInputElement>(null)
 
-  const handleSubirArchivo = (
+  const handleSubirArchivo = async (
     e: React.ChangeEvent<HTMLInputElement>,
     onComplete: (url: string) => void
   ) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        onComplete(reader.result)
+    try {
+      const urlComprimida = await comprimirImagen(file)
+      onComplete(urlComprimida)
+    } catch {
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          onComplete(reader.result)
+        }
       }
+      reader.readAsDataURL(file)
     }
-    reader.readAsDataURL(file)
   }
 
   // Manejo de hitos en itinerario
@@ -364,62 +370,202 @@ export function SeccionItemEditor({
                 </div>
               </div>
 
-              {/* Logotipo / Monograma Central */}
-              <div className="space-y-2">
+              {/* Distintivo Superior (Badge / Convocatoria Oficial) */}
+              <div className="space-y-2 p-3 rounded-xl bg-slate-50 border border-slate-200">
                 <div className="flex items-center justify-between">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-                    <Sparkles size={12} /> Logotipo, Emblema o Retrato de Anfitrión
+                    <Sparkles size={12} className="text-slate-600" /> Distintivo Superior (Badge)
                   </label>
                   <button
                     type="button"
-                    onClick={() => inputFileRetratoRef.current?.click()}
-                    className="text-[10px] text-slate-700 hover:text-slate-900 font-semibold flex items-center gap-1 cursor-pointer"
+                    onClick={() => {
+                      const nuevoEstado = seccion.datos?.mostrarBadge === false
+                      alActualizarDatos('mostrarBadge', nuevoEstado)
+                      if (nuevoEstado && !seccion.datos?.textoBadge) {
+                        alActualizarDatos('textoBadge', 'Convocatoria Oficial')
+                      }
+                    }}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors cursor-pointer ${
+                      seccion.datos?.mostrarBadge !== false
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white text-slate-500 border-slate-300'
+                    }`}
                   >
-                    <Upload size={11} /> Subir archivo local
+                    {seccion.datos?.mostrarBadge !== false ? 'Visible' : 'Oculto'}
                   </button>
-                  <input
-                    ref={inputFileRetratoRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) =>
-                      handleSubirArchivo(e, (url) => alActualizarDatos('imagenRetrato', url))
-                    }
-                  />
                 </div>
 
-                <input
-                  type="url"
-                  value={seccion.datos?.imagenRetrato || ''}
-                  onChange={(e) => alActualizarDatos('imagenRetrato', e.target.value)}
-                  placeholder="https://... URL del logotipo o fotografía central"
-                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg"
-                />
+                {seccion.datos?.mostrarBadge !== false ? (
+                  <div className="space-y-2 pt-1">
+                    <input
+                      type="text"
+                      value={seccion.datos?.textoBadge !== undefined ? seccion.datos.textoBadge : 'Convocatoria Oficial'}
+                      onChange={(e) => alActualizarDatos('textoBadge', e.target.value)}
+                      placeholder="Ej: Convocatoria Oficial, Pase Protocolario, etc."
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-slate-900"
+                    />
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                      <span className="text-[9px] text-slate-500 uppercase shrink-0">Sugerencias:</span>
+                      {[
+                        'Convocatoria Oficial',
+                        'Pase Protocolario Personal',
+                        'Invitación de Gala',
+                        'Nuestra Boda',
+                        'Celebración Especial',
+                      ].map((sug, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => alActualizarDatos('textoBadge', sug)}
+                          className="px-2 py-0.5 rounded bg-slate-200/80 hover:bg-slate-300 text-slate-800 text-[9px] font-medium shrink-0 cursor-pointer"
+                        >
+                          {sug}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          alActualizarDatos('mostrarBadge', false)
+                          alActualizarDatos('textoBadge', '')
+                        }}
+                        className="px-2 py-0.5 rounded bg-rose-100 hover:bg-rose-200 text-rose-700 text-[9px] font-medium shrink-0 cursor-pointer"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-500">
+                    El distintivo está oculto. Pulsa &quot;Oculto&quot; para activarlo nuevamente en la tarjeta.
+                  </p>
+                )}
+              </div>
 
-                {/* Presets de Retrato */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-                  <span className="text-[9px] text-slate-500 uppercase shrink-0">Sugerencias:</span>
-                  {IMAGENES_CURADAS.retratos.map((img, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => alActualizarDatos('imagenRetrato', img.url)}
-                      className="px-2 py-1 rounded bg-slate-200/80 hover:bg-slate-300 text-slate-800 text-[9px] font-medium shrink-0 cursor-pointer"
-                      title={img.titulo}
-                    >
-                      {img.titulo}
-                    </button>
-                  ))}
-                  {seccion.datos?.imagenRetrato && (
-                    <button
-                      type="button"
-                      onClick={() => alActualizarDatos('imagenRetrato', '')}
-                      className="px-2 py-1 rounded bg-rose-100 hover:bg-rose-200 text-rose-700 text-[9px] font-medium shrink-0 cursor-pointer"
-                    >
-                      Quitar
-                    </button>
-                  )}
+              {/* Logotipo / Monograma Central / Retrato */}
+              <div className="space-y-2 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                    <Camera size={12} className="text-slate-600" /> Círculo de Foto / Logotipo
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nuevoEstado = seccion.datos?.mostrarFotoRetrato === false
+                      alActualizarDatos('mostrarFotoRetrato', nuevoEstado)
+                    }}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition-colors cursor-pointer ${
+                      seccion.datos?.mostrarFotoRetrato !== false
+                        ? 'bg-slate-900 text-white border-slate-900'
+                        : 'bg-white text-slate-500 border-slate-300'
+                    }`}
+                  >
+                    {seccion.datos?.mostrarFotoRetrato !== false ? 'Activo' : 'Oculto'}
+                  </button>
                 </div>
+
+                {seccion.datos?.mostrarFotoRetrato !== false ? (
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] text-slate-600">Subir imagen o logotipo central:</span>
+                      <button
+                        type="button"
+                        onClick={() => inputFileRetratoRef.current?.click()}
+                        className="text-[10px] text-slate-700 hover:text-slate-900 font-semibold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Upload size={11} /> Subir archivo local
+                      </button>
+                      <input
+                        ref={inputFileRetratoRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) =>
+                          handleSubirArchivo(e, (url) => {
+                            alActualizarDatos('imagenRetrato', url)
+                            alActualizarDatos('mostrarFotoRetrato', true)
+                          })
+                        }
+                      />
+                    </div>
+
+                    <input
+                      type="url"
+                      value={seccion.datos?.imagenRetrato || ''}
+                      onChange={(e) => alActualizarDatos('imagenRetrato', e.target.value)}
+                      placeholder="https://... URL del logotipo o fotografía central"
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg"
+                    />
+
+                    {/* Presets de Retrato */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
+                      <span className="text-[9px] text-slate-500 uppercase shrink-0">Sugerencias:</span>
+                      {IMAGENES_CURADAS.retratos.map((img, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            alActualizarDatos('imagenRetrato', img.url)
+                            alActualizarDatos('mostrarFotoRetrato', true)
+                          }}
+                          className="px-2 py-1 rounded bg-slate-200/80 hover:bg-slate-300 text-slate-800 text-[9px] font-medium shrink-0 cursor-pointer"
+                          title={img.titulo}
+                        >
+                          {img.titulo}
+                        </button>
+                      ))}
+                      {seccion.datos?.imagenRetrato && (
+                        <button
+                          type="button"
+                          onClick={() => alActualizarDatos('imagenRetrato', '')}
+                          className="px-2 py-1 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 text-[9px] font-medium shrink-0 cursor-pointer"
+                        >
+                          Quitar foto
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          alActualizarDatos('imagenRetrato', '')
+                          alActualizarDatos('mostrarFotoRetrato', false)
+                        }}
+                        className="px-2 py-1 rounded bg-rose-100 hover:bg-rose-200 text-rose-700 text-[9px] font-medium shrink-0 cursor-pointer"
+                        title="Ocultar el círculo por completo si no deseas foto"
+                      >
+                        Quitar círculo
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-500">
+                    El círculo de foto está desactivado (no aparece en la tarjeta). Pulsa &quot;Oculto&quot; para activarlo.
+                  </p>
+                )}
+              </div>
+
+              {/* Filete Divisorio Inferior de Cabecera */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-800">
+                    Filete Divisorio Inferior
+                  </p>
+                  <p className="text-[10px] text-slate-500 truncate">
+                    Línea con icono decorativo al pie de la cabecera
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nuevoEstado = seccion.datos?.mostrarSeparador === false
+                    alActualizarDatos('mostrarSeparador', nuevoEstado)
+                  }}
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-colors cursor-pointer shrink-0 ${
+                    seccion.datos?.mostrarSeparador !== false
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-white text-slate-500 border-slate-300'
+                  }`}
+                >
+                  {seccion.datos?.mostrarSeparador !== false ? 'Visible' : 'Oculto'}
+                </button>
               </div>
             </div>
           )}
@@ -1025,12 +1171,14 @@ export function SeccionItemEditor({
               <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800 block">
                 Diseño del Separador
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {[
                   { id: 'linea_dorada', label: 'Filete Dorado ◈', preview: '─── ◈ ───' },
                   { id: 'botanico', label: 'Corona Laurel', preview: '🌿 ✧ 🌿' },
                   { id: 'onda', label: 'Onda Sutil', preview: '∿∿∿' },
-                  { id: 'puntos', label: 'Tres Destellos', preview: '✦ ✦ ✦' },
+                  { id: 'diamantes', label: 'Tres Destellos', preview: '✦ ✦ ✦' },
+                  { id: 'editorial_icono', label: 'Filete & Icono', preview: '── ✧ ──' },
+                  { id: 'linea_simple', label: 'Línea Sutil', preview: '───────' },
                 ].map((sep) => (
                   <button
                     key={sep.id}
@@ -1046,6 +1194,18 @@ export function SeccionItemEditor({
                     <span className="text-[10px] font-medium opacity-80">{sep.label}</span>
                   </button>
                 ))}
+              </div>
+
+              {/* Botón directo de eliminar separador */}
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={alEliminar}
+                  className="px-3 py-1.5 rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <Trash2 size={13} />
+                  <span>Eliminar este separador</span>
+                </button>
               </div>
             </div>
           )}

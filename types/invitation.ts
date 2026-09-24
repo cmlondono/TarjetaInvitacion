@@ -167,6 +167,10 @@ export interface SeccionModular {
     // Cabecera / Imágenes
     imagenPortada?: string // URL de imagen de fondo o banner superior
     imagenRetrato?: string // URL de fotografía o logo central
+    mostrarFotoRetrato?: boolean // Permite ocultar o eliminar el círculo de foto/logo
+    mostrarBadge?: boolean // Permite ocultar o eliminar el distintivo ("Convocatoria Oficial")
+    textoBadge?: string // Texto editable para el distintivo/badge superior
+    mostrarSeparador?: boolean // Permite ocultar o eliminar el separador de cabecera
     // Itinerario
     itinerario?: ElementoItinerario[]
     // Vestimenta
@@ -212,7 +216,15 @@ export interface SeccionModular {
     estiloBoton?: 'primario' | 'secundario' | 'dorado' | 'borde'
     iconoBoton?: NombreIcono
     // Separador Ornamental
-    estiloSeparador?: 'linea_dorada' | 'rombo' | 'botanico' | 'onda' | 'puntos'
+    estiloSeparador?:
+      | 'linea_dorada'
+      | 'rombo'
+      | 'botanico'
+      | 'onda'
+      | 'puntos'
+      | 'diamantes'
+      | 'editorial_icono'
+      | 'linea_simple'
   }
 }
 
@@ -304,6 +316,9 @@ export interface DetalleEvento {
   fotosGaleria?: string[]
   imagenPortada?: string // Banner o fotografía superior
   imagenRetrato?: string // Fotografía central o logotipo de anfitrión
+  mostrarFotoRetrato?: boolean
+  mostrarBadge?: boolean
+  textoBadge?: string
   esPremium: boolean // Si pagó por invitados ilimitados / sin anuncios
   creadoEn: string
   expiraEn: string // Fecha evento + 7 días

@@ -121,7 +121,7 @@ export function InlineEditableText({
   return (
     <Etiqueta
       onClick={iniciarEdicion}
-      title="Haz clic para editar este texto"
+      title="Texto de ejemplo — Haz clic para escribir tu información real"
       className={`relative group/editable cursor-pointer transition-all rounded-lg px-1.5 py-0.5 inline-block max-w-full ${className} ${
         esVacio
           ? 'italic opacity-60 bg-amber-400/10 border border-dashed border-amber-400/50'
@@ -130,8 +130,9 @@ export function InlineEditableText({
       style={style}
     >
       <span>{valor || placeholder}</span>
-      <span className="inline-block ml-1 opacity-0 group-hover/editable:opacity-100 text-amber-600 transition-opacity align-middle">
-        <Pencil size={11} className="inline drop-shadow-sm" />
+      <span className="inline-flex items-center ml-1.5 opacity-0 group-hover/editable:opacity-100 bg-slate-900 text-white text-[9px] font-sans font-bold px-1.5 py-0.5 rounded shadow-sm transition-opacity align-middle pointer-events-none select-none">
+        <Pencil size={9} className="mr-0.5" />
+        <span>Editar</span>
       </span>
     </Etiqueta>
   )

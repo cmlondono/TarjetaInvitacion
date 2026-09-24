@@ -70,3 +70,63 @@ export async function GET(req: NextRequest) {
     )
   }
 }
+
+/**
+ * POST /api/invitados
+ * Agrega o actualiza invitados en el servidor y Supabase
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const cuerpo = await req.json()
+    const { eventoId, invitado, invitados } = cuerpo
+
+    if (!eventoId) {
+      return NextResponse.json(
+        { exito: false, error: 'eventoId es requerido' },
+        { status: 400 }
+      )
+    }
+
+    const lista: Invitado[] = invitados ? invitados : invitado ? [invitado] : []
+
+    // 1. Guardar en memoria de servidor
+    lista.forEach((inv) => {
+      ServidorAlmacen.guardarInvitado(eventoId, inv)
+    })
+
+    // 2. Sincronizar en Supabase si está disponible
+    const supabase = obtenerClienteSupabase()
+    if (supabase && eventoId !== 'demo' && lista.length > 0) {
+      for (const inv of lista) {
+        try {
+          await supabase.from('invitados').upsert({
+            id: inv.id,
+            evento_id: eventoId,
+            nombre: inv.nombre,
+            pases: inv.pases || 1,
+            es_plural: Boolean(inv.esPlural),
+            telefono: inv.telefono || null,
+            codigo_acceso: inv.codigoAcceso,
+            confirmado: Boolean(inv.confirmado),
+            estado_confirmacion: inv.estadoConfirmacion || 'pendiente',
+            cupos_confirmados: inv.cuposConfirmados || 0,
+            mensaje_confirmacion: inv.mensajeConfirmacion || null,
+            fecha_confirmacion: inv.fechaConfirmacion || null,
+            enviado_por_whatsapp: Boolean(inv.enviadoPorWhatsApp),
+            fecha_envio_whatsapp: inv.fechaEnvioWhatsApp || null,
+          })
+        } catch (dbErr) {
+          console.warn('Aviso sincronizando invitado con Supabase:', dbErr)
+        }
+      }
+    }
+
+    return NextResponse.json({ exito: true, total: lista.length })
+  } catch (err: any) {
+    console.error('Error en POST /api/invitados:', err)
+    return NextResponse.json(
+      { exito: false, error: err.message },
+      { status: 500 }
+    )
+  }
+}

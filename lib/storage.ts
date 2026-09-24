@@ -9,6 +9,25 @@ const LOCAL_STORAGE_KEY_INVITADOS = 'plataforma_invitaciones_invitados'
  * Convierte una fila de la base de datos Supabase al tipo DetalleEvento
  */
 export function mapearEventoDesdeDb(fila: any): DetalleEvento {
+  const secciones = Array.isArray(fila.secciones) ? fila.secciones : []
+  const cabeceraSec = secciones.find((s: any) => s.tipo === 'cabecera')
+
+  const imagenPortada = fila.imagen_portada || cabeceraSec?.datos?.imagenPortada || undefined
+  const imagenRetrato = fila.imagen_retrato || cabeceraSec?.datos?.imagenRetrato || undefined
+  const mostrarFotoRetrato =
+    fila.mostrar_foto_retrato !== undefined
+      ? fila.mostrar_foto_retrato
+      : cabeceraSec?.datos?.mostrarFotoRetrato !== undefined
+      ? cabeceraSec.datos.mostrarFotoRetrato
+      : true
+  const mostrarBadge =
+    fila.mostrar_badge !== undefined
+      ? fila.mostrar_badge
+      : cabeceraSec?.datos?.mostrarBadge !== undefined
+      ? cabeceraSec.datos.mostrarBadge
+      : true
+  const textoBadge = fila.texto_badge || cabeceraSec?.datos?.textoBadge || undefined
+
   return {
     id: fila.id,
     tokenAdmin: fila.token_admin,
@@ -27,13 +46,16 @@ export function mapearEventoDesdeDb(fila: any): DetalleEvento {
     whatsappNumero: fila.whatsapp_numero,
     whatsappPlantilla: fila.whatsapp_plantilla,
     fotosGaleria: fila.fotos_galeria || [],
-    imagenPortada: fila.imagen_portada || undefined,
-    imagenRetrato: fila.imagen_retrato || undefined,
+    imagenPortada,
+    imagenRetrato,
+    mostrarFotoRetrato,
+    mostrarBadge,
+    textoBadge,
     esPremium: fila.es_premium || false,
     creadoEn: fila.creado_en,
     expiraEn: fila.expira_en,
     configuracionVisual: fila.configuracion_visual || undefined,
-    secciones: fila.secciones || [],
+    secciones,
     metodoConfirmacion: fila.metodo_confirmacion || undefined,
   }
 }
@@ -117,6 +139,20 @@ export const EventoRepositorio = {
       console.warn('Error consultando evento por token en Supabase:', e)
     }
 
+    // Intentar consultar API del servidor si estamos en el navegador
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch(`/api/eventos?token=${encodeURIComponent(tokenAdmin)}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data?.evento) {
+            ServidorAlmacen.guardarEvento(data.evento)
+            return data.evento
+          }
+        }
+      } catch {}
+    }
+
     return this.obtenerPorTokenAdmin(tokenAdmin)
   },
 
@@ -153,24 +189,49 @@ export const EventoRepositorio = {
       console.warn('Error consultando evento por slug en Supabase:', e)
     }
 
+    // Intentar consultar API del servidor si estamos en el navegador
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch(`/api/eventos?slug=${encodeURIComponent(slugPublico)}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data?.evento) {
+            ServidorAlmacen.guardarEvento(data.evento)
+            return data.evento
+          }
+        }
+      } catch {}
+    }
+
     return this.obtenerPorSlug(slugPublico)
   },
 
   /**
-   * Guardar o actualizar un evento
+   * Guardar o actualizar un evento síncronamente (con sincronización en segundo plano)
    */
   guardar(evento: DetalleEvento): DetalleEvento {
     // 1. Guardar en memoria de servidor para disponibilidad inmediata
     ServidorAlmacen.guardarEvento(evento)
 
-    // 2. Guardar en navegador si está disponible
+    // 2. Guardar en navegador protegiendo contra límite de cuota (QuotaExceededError)
     if (typeof window !== 'undefined') {
-      const eventos = this.obtenerTodos().filter((e) => e.id !== evento.id)
-      eventos.push(evento)
-      localStorage.setItem(LOCAL_STORAGE_KEY_EVENTOS, JSON.stringify(eventos))
+      try {
+        const eventos = this.obtenerTodos().filter((e) => e.id !== evento.id)
+        eventos.push(evento)
+        localStorage.setItem(LOCAL_STORAGE_KEY_EVENTOS, JSON.stringify(eventos))
+      } catch (e) {
+        console.warn('Advertencia guardando en localStorage:', e)
+      }
+
+      // Sincronización en segundo plano con la API del servidor
+      fetch('/api/eventos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(evento),
+      }).catch((e) => console.warn('Aviso sincronizando con /api/eventos:', e))
     }
 
-    // 3. Sincronización asíncrona con base de datos Supabase PostgreSQL
+    // 3. Sincronización directa con base de datos Supabase PostgreSQL
     try {
       const supabase = obtenerClienteSupabase()
       if (supabase) {
@@ -182,21 +243,21 @@ export const EventoRepositorio = {
             slug_publico: evento.slugPublico,
             tipo_evento: evento.tipoEvento,
             titulo: evento.titulo,
-            subtitulo: evento.subtitulo,
+            subtitulo: evento.subtitulo || null,
             anfitriones: evento.anfitriones,
             fecha_evento: evento.fechaEvento,
-            hora_evento: evento.horaEvento,
+            hora_evento: evento.horaEvento || '',
             direccion: evento.direccion,
-            enlace_mapa: evento.enlaceMapa,
-            codigo_vestimenta: evento.codigoVestimenta,
+            enlace_mapa: evento.enlaceMapa || '',
+            codigo_vestimenta: evento.codigoVestimenta || null,
             paleta_vestimenta: evento.paletaVestimenta || [],
             datos_bancarios: evento.datosBancarios || {},
             whatsapp_numero: evento.whatsappNumero,
             whatsapp_plantilla: evento.whatsappPlantilla,
             fotos_galeria: evento.fotosGaleria || [],
-            imagen_portada: evento.imagenPortada,
-            imagen_retrato: evento.imagenRetrato,
-            es_premium: evento.esPremium,
+            imagen_portada: evento.imagenPortada || null,
+            imagen_retrato: evento.imagenRetrato || null,
+            es_premium: Boolean(evento.esPremium),
             configuracion_visual: evento.configuracionVisual || {},
             secciones: evento.secciones || [],
             expira_en: evento.expiraEn,
@@ -207,6 +268,34 @@ export const EventoRepositorio = {
       }
     } catch (err) {
       console.error('Error en conexión Supabase:', err)
+    }
+
+    return evento
+  },
+
+  /**
+   * Guardar o actualizar un evento de manera ASÍNCRONA.
+   * Espera la confirmación del servidor para garantizar que la invitación exista
+   * en la nube antes de que el usuario comparta el enlace o lo abra en el celular.
+   */
+  async guardarAsync(evento: DetalleEvento): Promise<DetalleEvento> {
+    // 1. Guardar local y en memoria
+    this.guardar(evento)
+
+    // 2. Esperar confirmación de la API del servidor
+    if (typeof window !== 'undefined') {
+      try {
+        const respuesta = await fetch('/api/eventos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(evento),
+        })
+        if (!respuesta.ok) {
+          console.warn('La API de eventos respondió con estado no exitoso:', respuesta.status)
+        }
+      } catch (err) {
+        console.error('Error esperando persistencia en /api/eventos:', err)
+      }
     }
 
     return evento
@@ -332,11 +421,22 @@ export const InvitadoRepositorio = {
     // 1. Guardar en memoria de servidor
     ServidorAlmacen.guardarInvitado(evento.id, nuevoInvitado)
 
-    // 2. Guardar en almacenamiento del navegador
+    // 2. Guardar en almacenamiento del navegador y sincronizar con servidor
     if (typeof window !== 'undefined') {
-      const todos = this.obtenerTodos()
-      todos.push(nuevoInvitado)
-      localStorage.setItem(LOCAL_STORAGE_KEY_INVITADOS, JSON.stringify(todos))
+      try {
+        const todos = this.obtenerTodos()
+        todos.push(nuevoInvitado)
+        localStorage.setItem(LOCAL_STORAGE_KEY_INVITADOS, JSON.stringify(todos))
+      } catch (err) {
+        console.warn('Advertencia guardando invitados en localStorage:', err)
+      }
+
+      // Sincronizar en segundo plano con la API del servidor
+      fetch('/api/invitados', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventoId: evento.id, invitado: nuevoInvitado }),
+      }).catch((e) => console.warn('Aviso sincronizando con /api/invitados:', e))
     }
 
     // 3. Sincronizar con Supabase si está disponible

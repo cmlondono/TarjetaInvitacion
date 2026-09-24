@@ -101,8 +101,8 @@ export const CATALOGO_SECCIONES: MetaSeccion[] = [
   },
   {
     tipo: 'separador_ornamental',
-    nombre: 'Separador Ornamental',
-    descripcion: 'Filete dorado, rombo, adorno botánico u ondas decorativas de papelería fina',
+    nombre: 'Separador Ornamental / Divisorio',
+    descripcion: 'Filete dorado, floral, ondas, monograma o línea sutil de papelería fina',
     iconoDefecto: 'sparkles',
     tituloDefecto: 'Separador',
   },
@@ -208,6 +208,10 @@ export function generarSeccionesPorDefecto(evento: DetalleEvento): SeccionModula
       datos: {
         imagenPortada: evento.imagenPortada || IMAGENES_CURADAS.portadas[0].url,
         imagenRetrato: evento.imagenRetrato,
+        mostrarFotoRetrato: evento.mostrarFotoRetrato !== false,
+        mostrarBadge: evento.mostrarBadge !== false,
+        textoBadge: evento.textoBadge || 'Convocatoria Oficial',
+        mostrarSeparador: true,
       },
     },
     {

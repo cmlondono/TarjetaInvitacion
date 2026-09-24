@@ -14,6 +14,7 @@ import { EventCountdown } from './event-countdown'
 import { BackgroundEffects } from './background-effects'
 import { construirUrlWhatsApp } from '@/lib/event-utils'
 import { generarSeccionesPorDefecto, IMAGENES_CURADAS } from '@/lib/modular-defaults'
+import { comprimirImagen } from '@/lib/image-compression'
 import { IconoDinamico } from '@/components/ui/icono-dinamico'
 import { ModuloRsvp } from './modulo-rsvp'
 import { InlineEditableText } from '@/components/editor/inline-editable-text'
@@ -44,6 +45,7 @@ import {
   Link as LinkIcon,
   Trash2,
   Wand2,
+  X,
 } from 'lucide-react'
 
 interface DynamicInvitationCardProps {
@@ -105,19 +107,24 @@ export function DynamicInvitationCard({
   const esPlural = invitado ? invitado.esPlural : false
   const nombreInvitado = invitado?.nombre || 'Invitado de Honor'
 
-  const manejarSubidaArchivo = (
+  const manejarSubidaArchivo = async (
     e: React.ChangeEvent<HTMLInputElement>,
     alCompletar: (url: string) => void
   ) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        alCompletar(reader.result)
+    try {
+      const urlComprimida = await comprimirImagen(file)
+      alCompletar(urlComprimida)
+    } catch {
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          alCompletar(reader.result)
+        }
       }
+      reader.readAsDataURL(file)
     }
-    reader.readAsDataURL(file)
   }
 
   // Mapeo tipográfico especializado para tarjetas de invitación
@@ -294,8 +301,15 @@ export function DynamicInvitationCard({
                 const renderizarBloque = () => {
                   switch (seccion.tipo) {
                   case 'cabecera': {
-                    const imagenPortada = seccion.datos?.imagenPortada || evento.imagenPortada
-                    const imagenRetrato = seccion.datos?.imagenRetrato || evento.imagenRetrato
+                    const imagenPortada = seccion.datos?.imagenPortada !== undefined ? seccion.datos.imagenPortada : evento.imagenPortada
+                    const imagenRetrato = (seccion.datos?.imagenRetrato !== undefined ? seccion.datos.imagenRetrato : evento.imagenRetrato) || ''
+                    const tieneFotoValida = Boolean(imagenRetrato && imagenRetrato.trim() !== '')
+                    const mostrarFotoRetrato = seccion.datos?.mostrarFotoRetrato !== false && evento.mostrarFotoRetrato !== false
+                    const mostrarBadge = seccion.datos?.mostrarBadge !== false && evento.mostrarBadge !== false
+                    const textoBadge = seccion.datos?.textoBadge !== undefined
+                      ? seccion.datos.textoBadge
+                      : (evento.textoBadge !== undefined ? evento.textoBadge : (invitado ? 'Pase Protocolario Personal' : 'Convocatoria Oficial'))
+                    const mostrarSeparadorCabecera = seccion.datos?.mostrarSeparador !== false
 
                     return (
                       <div
@@ -392,22 +406,63 @@ export function DynamicInvitationCard({
 
                         <div className={`px-4 sm:px-8 pb-7 flex flex-col items-center w-full ${imagenPortada ? 'pt-3' : 'pt-8'}`}>
                           {/* Fotografía / Logotipo Central si está configurado */}
-                          {imagenRetrato ? (
-                            <div className={`relative group/retrato ${imagenPortada ? '-mt-8 sm:-mt-10' : 'mt-0'} z-10`}>
-                              <div
-                                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 shadow-md mb-3 bg-white"
-                                style={{ borderColor: 'var(--color-primario-live, ' + (visual.colorPrimario || '#0F172A') + ')' }}
-                              >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={imagenRetrato}
-                                  alt="Anfitrión"
-                                  className="w-full h-full object-cover"
-                                />
+                          {mostrarFotoRetrato ? (
+                            tieneFotoValida ? (
+                              <div className={`relative group/retrato ${imagenPortada ? '-mt-8 sm:-mt-10' : 'mt-0'} z-10 mb-3`}>
+                                <div
+                                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 shadow-md bg-white"
+                                  style={{ borderColor: 'var(--color-primario-live, ' + (visual.colorPrimario || '#0F172A') + ')' }}
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={imagenRetrato}
+                                    alt="Anfitrión"
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                {esModoEdicionDirecta && (
+                                  <div className="absolute inset-0 rounded-full bg-slate-950/70 opacity-0 group-hover/retrato:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                    <label className="p-1.5 rounded-full bg-white/20 hover:bg-white text-white hover:text-slate-900 transition-all cursor-pointer" title="Cambiar fotografía">
+                                      <Camera size={14} />
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="sr-only"
+                                        onChange={(e) =>
+                                          manejarSubidaArchivo(e, (url) => {
+                                            alActualizarDatosSeccion?.(seccion.id, 'imagenRetrato', url)
+                                            alActualizarDatosSeccion?.(seccion.id, 'mostrarFotoRetrato', true)
+                                            alActualizarEvento?.('imagenRetrato', url)
+                                            alActualizarEvento?.('mostrarFotoRetrato', true)
+                                          })
+                                        }
+                                      />
+                                    </label>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault()
+                                        e.stopPropagation()
+                                        alActualizarDatosSeccion?.(seccion.id, 'imagenRetrato', '')
+                                        alActualizarDatosSeccion?.(seccion.id, 'mostrarFotoRetrato', false)
+                                        alActualizarEvento?.('imagenRetrato', '')
+                                        alActualizarEvento?.('mostrarFotoRetrato', false)
+                                      }}
+                                      className="p-1.5 rounded-full bg-rose-600/80 hover:bg-rose-600 text-white transition-all cursor-pointer"
+                                      title="Eliminar foto y quitar círculo"
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
+                                  </div>
+                                )}
                               </div>
-                              {esModoEdicionDirecta && (
-                                <label className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover/retrato:opacity-100 transition-opacity flex items-center justify-center cursor-pointer mb-3">
-                                  <Camera size={16} className="text-white" />
+                            ) : esModoEdicionDirecta ? (
+                              <div className="relative group/circulo-vacio mb-3 z-10">
+                                <label
+                                  className="w-12 h-12 rounded-full border-2 border-dashed border-slate-300 hover:border-slate-600 bg-slate-100/60 hover:bg-slate-100 flex items-center justify-center cursor-pointer transition-colors shadow-2xs"
+                                  title="Subir foto de anfitrión o logotipo"
+                                >
+                                  <Camera size={15} className="text-slate-600" />
                                   <input
                                     type="file"
                                     accept="image/*"
@@ -415,51 +470,118 @@ export function DynamicInvitationCard({
                                     onChange={(e) =>
                                       manejarSubidaArchivo(e, (url) => {
                                         alActualizarDatosSeccion?.(seccion.id, 'imagenRetrato', url)
+                                        alActualizarDatosSeccion?.(seccion.id, 'mostrarFotoRetrato', true)
                                         alActualizarEvento?.('imagenRetrato', url)
+                                        alActualizarEvento?.('mostrarFotoRetrato', true)
                                       })
                                     }
                                   />
                                 </label>
-                              )}
-                            </div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    alActualizarDatosSeccion?.(seccion.id, 'mostrarFotoRetrato', false)
+                                    alActualizarDatosSeccion?.(seccion.id, 'imagenRetrato', '')
+                                    alActualizarEvento?.('mostrarFotoRetrato', false)
+                                    alActualizarEvento?.('imagenRetrato', '')
+                                  }}
+                                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-slate-800 hover:bg-rose-600 text-white flex items-center justify-center shadow-md cursor-pointer transition-all border border-white"
+                                  title="Eliminar círculo de foto (no poner foto)"
+                                >
+                                  <X size={11} strokeWidth={2.5} />
+                                </button>
+                              </div>
+                            ) : null
                           ) : esModoEdicionDirecta ? (
-                            <label className="w-12 h-12 rounded-full border-2 border-dashed border-slate-300 hover:border-slate-500 bg-slate-100/50 flex items-center justify-center cursor-pointer mb-2 transition-colors" title="Añadir foto de anfitrión o logo">
-                              <Camera size={14} className="text-slate-600" />
-                              <input
-                                type="file"
-                                accept="image/*"
-                                className="sr-only"
-                                onChange={(e) =>
-                                  manejarSubidaArchivo(e, (url) => {
-                                    alActualizarDatosSeccion?.(seccion.id, 'imagenRetrato', url)
-                                    alActualizarEvento?.('imagenRetrato', url)
-                                  })
-                                }
-                              />
-                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                alActualizarDatosSeccion?.(seccion.id, 'mostrarFotoRetrato', true)
+                                alActualizarEvento?.('mostrarFotoRetrato', true)
+                              }}
+                              className="mb-2 text-[10px] text-slate-500 hover:text-slate-800 bg-slate-100/70 hover:bg-slate-100 border border-dashed border-slate-300 px-2.5 py-0.5 rounded-full transition-colors flex items-center gap-1 cursor-pointer opacity-70 hover:opacity-100"
+                              title="Restaurar el círculo de fotografía o logotipo"
+                            >
+                              <Plus size={11} />
+                              <span>Añadir foto / logo central</span>
+                            </button>
                           ) : null}
 
-                          {/* Badge institucional de convocatoria */}
-                          <motion.div
-                            custom={index}
-                            initial="oculto"
-                            animate="visible"
-                            variants={animacionAparicion}
-                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border mb-3"
-                            style={{
-                              borderColor: `${visual.colorSecundario}55`,
-                              backgroundColor: `${visual.colorSecundario}12`,
-                              color: visual.colorTexto,
-                            }}
-                          >
-                            <span
-                              className="w-1.5 h-1.5 rounded-full"
-                              style={{ backgroundColor: visual.colorSecundario }}
-                            />
-                            <span className="text-[10px] uppercase tracking-[0.25em] font-semibold">
-                              {invitado ? 'Pase Protocolario Personal' : 'Convocatoria Oficial'}
-                            </span>
-                          </motion.div>
+                          {/* Badge institucional de convocatoria / distintivo editable */}
+                          {mostrarBadge ? (
+                            <motion.div
+                              custom={index}
+                              initial="oculto"
+                              animate="visible"
+                              variants={animacionAparicion}
+                              className="relative group/badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full border mb-3 transition-all"
+                              style={{
+                                borderColor: `${visual.colorSecundario}55`,
+                                backgroundColor: `${visual.colorSecundario}12`,
+                                color: visual.colorTexto,
+                              }}
+                            >
+                              <span
+                                className="w-1.5 h-1.5 rounded-full shrink-0"
+                                style={{ backgroundColor: visual.colorSecundario }}
+                              />
+                              <InlineEditableText
+                                activo={esModoEdicionDirecta}
+                                valor={textoBadge}
+                                alGuardar={(nuevoTexto) => {
+                                  const val = nuevoTexto.trim()
+                                  if (!val) {
+                                    alActualizarDatosSeccion?.(seccion.id, 'mostrarBadge', false)
+                                    alActualizarDatosSeccion?.(seccion.id, 'textoBadge', '')
+                                    alActualizarEvento?.('mostrarBadge', false)
+                                    alActualizarEvento?.('textoBadge', '')
+                                  } else {
+                                    alActualizarDatosSeccion?.(seccion.id, 'textoBadge', val)
+                                    alActualizarDatosSeccion?.(seccion.id, 'mostrarBadge', true)
+                                    alActualizarEvento?.('textoBadge', val)
+                                    alActualizarEvento?.('mostrarBadge', true)
+                                  }
+                                }}
+                                etiqueta="span"
+                                className="text-[10px] uppercase tracking-[0.25em] font-semibold"
+                                style={{ color: visual.colorTexto }}
+                                placeholder="Convocatoria Oficial"
+                              />
+                              {esModoEdicionDirecta && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    alActualizarDatosSeccion?.(seccion.id, 'mostrarBadge', false)
+                                    alActualizarDatosSeccion?.(seccion.id, 'textoBadge', '')
+                                    alActualizarEvento?.('mostrarBadge', false)
+                                    alActualizarEvento?.('textoBadge', '')
+                                  }}
+                                  className="ml-0.5 w-4 h-4 rounded-full bg-slate-900/10 hover:bg-rose-600 hover:text-white text-slate-500 opacity-50 group-hover/badge:opacity-100 flex items-center justify-center transition-all cursor-pointer"
+                                  title="Eliminar este distintivo"
+                                >
+                                  <X size={10} strokeWidth={2.5} />
+                                </button>
+                              )}
+                            </motion.div>
+                          ) : esModoEdicionDirecta ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                alActualizarDatosSeccion?.(seccion.id, 'mostrarBadge', true)
+                                alActualizarDatosSeccion?.(seccion.id, 'textoBadge', 'Convocatoria Oficial')
+                                alActualizarEvento?.('mostrarBadge', true)
+                                alActualizarEvento?.('textoBadge', 'Convocatoria Oficial')
+                              }}
+                              className="mb-3 text-[10px] text-slate-500 hover:text-slate-800 bg-slate-100/70 hover:bg-slate-100 border border-dashed border-slate-300 px-2.5 py-0.5 rounded-full transition-colors flex items-center gap-1 cursor-pointer opacity-70 hover:opacity-100"
+                              title="Restaurar el distintivo superior"
+                            >
+                              <Plus size={11} />
+                              <span>Añadir distintivo (ej: Convocatoria Oficial)</span>
+                            </button>
+                          ) : null}
 
                           {/* Nombre del Invitado o Título Principal con Edición Directa */}
                           <div className="w-full text-center">
@@ -526,12 +648,45 @@ export function DynamicInvitationCard({
                             />
                           </div>
 
-                          {/* Filete divisorio editorial */}
-                          <div className="mt-5 flex items-center justify-center gap-3 w-full opacity-30">
-                            <div className="h-px flex-1 bg-current" style={{ color: visual.colorTexto }} />
-                            <IconoDinamico nombre={seccion.icono || 'sparkles'} size={12} />
-                            <div className="h-px flex-1 bg-current" style={{ color: visual.colorTexto }} />
-                          </div>
+                          {/* Filete divisorio editorial de cabecera */}
+                          {mostrarSeparadorCabecera ? (
+                            <div className="mt-5 relative group/separador-cabecera w-full">
+                              <div className="flex items-center justify-center gap-3 w-full opacity-30">
+                                <div className="h-px flex-1 bg-current" style={{ color: visual.colorTexto }} />
+                                <IconoDinamico nombre={seccion.icono || 'sparkles'} size={12} />
+                                <div className="h-px flex-1 bg-current" style={{ color: visual.colorTexto }} />
+                              </div>
+                              {esModoEdicionDirecta && (
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/separador-cabecera:opacity-100 transition-opacity pointer-events-none">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      alActualizarDatosSeccion?.(seccion.id, 'mostrarSeparador', false)
+                                    }}
+                                    className="pointer-events-auto px-2 py-0.5 rounded-full bg-slate-900/90 text-rose-300 hover:bg-rose-600 hover:text-white text-[10px] font-semibold shadow-md flex items-center gap-1 cursor-pointer transition-colors"
+                                    title="Eliminar este separador"
+                                  >
+                                    <Trash2 size={11} />
+                                    <span>Eliminar separador</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ) : esModoEdicionDirecta ? (
+                            <div className="mt-3 flex justify-center w-full">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  alActualizarDatosSeccion?.(seccion.id, 'mostrarSeparador', true)
+                                }}
+                                className="text-[10px] text-slate-400 hover:text-slate-700 hover:bg-slate-100 px-2 py-0.5 rounded-full transition-colors flex items-center gap-1 cursor-pointer opacity-60 hover:opacity-100"
+                                title="Restaurar separador inferior de cabecera"
+                              >
+                                <Plus size={10} />
+                                <span>Añadir separador de cabecera</span>
+                              </button>
+                            </div>
+                          ) : null}
                         </div>
                       </div>
                     )
@@ -567,7 +722,70 @@ export function DynamicInvitationCard({
                           fechaIso={evento.fechaEvento}
                           colorTexto={visual.colorTexto}
                           colorAcento={visual.colorSecundario}
+                          esModoEdicionDirecta={esModoEdicionDirecta}
                         />
+
+                        {esModoEdicionDirecta && (
+                          <div className="mt-3 pt-2.5 border-t border-black/[0.06] flex flex-col items-center gap-1.5 w-full bg-slate-500/5 p-2 rounded-xl border border-dashed border-slate-400/40">
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                              <Calendar size={12} style={{ color: visual.colorSecundario }} />
+                              <span>Ajustar Fecha & Hora del Contador (En Vivo):</span>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-center gap-2 w-full">
+                              <input
+                                type="date"
+                                value={evento.fechaEvento ? evento.fechaEvento.split('T')[0] : ''}
+                                onChange={(e) => {
+                                  const nuevaFecha = e.target.value
+                                  if (nuevaFecha) {
+                                    const hora =
+                                      evento.fechaEvento && evento.fechaEvento.includes('T')
+                                        ? evento.fechaEvento.split('T')[1]
+                                        : '19:00:00'
+                                    alActualizarEvento?.('fechaEvento', `${nuevaFecha}T${hora}`)
+                                  }
+                                }}
+                                className="px-2.5 py-1 text-xs font-bold text-center bg-white border border-slate-300 rounded-lg shadow-2xs outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
+                                style={{ color: visual.colorTexto }}
+                                title="El contador regresivo se recalculará inmediatamente al elegir una fecha futura"
+                              />
+                              <input
+                                type="time"
+                                value={
+                                  evento.fechaEvento && evento.fechaEvento.includes('T')
+                                    ? evento.fechaEvento.split('T')[1].substring(0, 5)
+                                    : '19:00'
+                                }
+                                onChange={(e) => {
+                                  const nuevaHora = e.target.value
+                                  if (nuevaHora) {
+                                    const fecha = evento.fechaEvento
+                                      ? evento.fechaEvento.split('T')[0]
+                                      : new Date().toISOString().split('T')[0]
+                                    alActualizarEvento?.('fechaEvento', `${fecha}T${nuevaHora}:00`)
+                                    const [h, m] = nuevaHora.split(':').map(Number)
+                                    const ampm = h >= 12 ? 'PM' : 'AM'
+                                    const h12 = h % 12 || 12
+                                    alActualizarEvento?.('horaEvento', `${h12}:${m < 10 ? '0' + m : m} ${ampm}`)
+                                  }
+                                }}
+                                className="px-2 py-1 text-xs font-bold text-center bg-white border border-slate-300 rounded-lg shadow-2xs outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
+                                style={{ color: visual.colorTexto }}
+                                title="Cambiar hora de inicio del evento"
+                              />
+                            </div>
+                            <span className="text-[9px] text-slate-500 font-medium">
+                              {evento.fechaEvento
+                                ? new Date(evento.fechaEvento).toLocaleDateString('es-ES', {
+                                    weekday: 'long',
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  })
+                                : 'Sin fecha configurada'}
+                            </span>
+                          </div>
+                        )}
                       </motion.div>
                     )
                   }
@@ -583,11 +801,27 @@ export function DynamicInvitationCard({
                         variants={animacionAparicion}
                         className="px-6 sm:px-8 py-5 border-b border-black/[0.04] space-y-3"
                       >
+                        {/* Cabecera del bloque Fecha & Horario */}
+                        <div className="flex items-center justify-center gap-1.5 mb-2">
+                          <IconoDinamico
+                            nombre={seccion.icono || 'calendar'}
+                            size={12}
+                            style={{ color: visual.colorSecundario }}
+                          />
+                          <InlineEditableText
+                            activo={esModoEdicionDirecta}
+                            valor={seccion.titulo || 'Fecha & Horario'}
+                            alGuardar={(val) => alActualizarSeccion?.(seccion.id, 'titulo', val)}
+                            etiqueta="p"
+                            className="text-[10px] tracking-[0.25em] uppercase font-semibold opacity-60 text-center"
+                            style={{ color: visual.colorTexto }}
+                            placeholder="Fecha & Horario"
+                          />
+                        </div>
+
                         <div className="grid grid-cols-2 gap-2.5 w-full">
                           <div
-                            className={`flex flex-col items-center justify-center p-3 rounded-xl text-center border relative group transition-all ${
-                              esModoEdicionDirecta ? 'cursor-pointer hover:border-amber-400 hover:bg-amber-50/50' : ''
-                            }`}
+                            className="flex flex-col items-center justify-center p-3 rounded-xl text-center border relative transition-all"
                             style={{
                               backgroundColor: `${visual.colorPrimario}05`,
                               borderColor: `${visual.colorPrimario}18`,
@@ -599,37 +833,52 @@ export function DynamicInvitationCard({
                               style={{ color: visual.colorSecundario }}
                             />
                             <span className="text-[9px] uppercase tracking-widest font-semibold opacity-60">
-                              Fecha {esModoEdicionDirecta && '✏️'}
+                              Fecha
                             </span>
-                            <span
-                              className="text-xs font-semibold mt-0.5 capitalize"
-                              style={{ color: visual.colorTexto }}
-                            >
-                              {evento.fechaEvento
-                                ? new Date(evento.fechaEvento).toLocaleDateString('es-ES', {
-                                    weekday: 'short',
-                                    day: 'numeric',
-                                    month: 'short',
-                                    year: 'numeric',
-                                  })
-                                : 'Por confirmar'}
-                            </span>
-                            {esModoEdicionDirecta && (
-                              <input
-                                type="date"
-                                value={evento.fechaEvento ? evento.fechaEvento.split('T')[0] : ''}
-                                onChange={(e) => {
-                                  const nueva = e.target.value
-                                  if (nueva) {
-                                    const horaActual = evento.fechaEvento && evento.fechaEvento.includes('T')
-                                      ? evento.fechaEvento.split('T')[1]
-                                      : '18:00:00'
-                                    alActualizarEvento?.('fechaEvento', `${nueva}T${horaActual}`)
-                                  }
-                                }}
-                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                                title="Haz clic para cambiar la fecha directamente"
-                              />
+
+                            {esModoEdicionDirecta ? (
+                              <div className="w-full flex flex-col items-center mt-1 z-20">
+                                <input
+                                  type="date"
+                                  value={evento.fechaEvento ? evento.fechaEvento.split('T')[0] : ''}
+                                  onChange={(e) => {
+                                    const nueva = e.target.value
+                                    if (nueva) {
+                                      const horaActual = evento.fechaEvento && evento.fechaEvento.includes('T')
+                                        ? evento.fechaEvento.split('T')[1]
+                                        : '18:00:00'
+                                      alActualizarEvento?.('fechaEvento', `${nueva}T${horaActual}`)
+                                    }
+                                  }}
+                                  className="w-full max-w-[145px] px-2 py-1 text-xs font-bold text-center bg-white border border-slate-300 rounded-lg shadow-2xs outline-none focus:ring-2 focus:ring-slate-900 cursor-pointer"
+                                  style={{ color: visual.colorTexto }}
+                                  title="Selecciona la fecha del evento"
+                                />
+                                <span className="text-[9px] text-slate-500 mt-1 capitalize font-medium">
+                                  {evento.fechaEvento
+                                    ? new Date(evento.fechaEvento).toLocaleDateString('es-ES', {
+                                        weekday: 'short',
+                                        day: 'numeric',
+                                        month: 'short',
+                                        year: 'numeric',
+                                      })
+                                    : 'Sin fecha'}
+                                </span>
+                              </div>
+                            ) : (
+                              <span
+                                className="text-xs font-semibold mt-0.5 capitalize"
+                                style={{ color: visual.colorTexto }}
+                              >
+                                {evento.fechaEvento
+                                  ? new Date(evento.fechaEvento).toLocaleDateString('es-ES', {
+                                      weekday: 'short',
+                                      day: 'numeric',
+                                      month: 'short',
+                                      year: 'numeric',
+                                    })
+                                  : 'Por confirmar'}
+                              </span>
                             )}
                           </div>
 
@@ -1780,41 +2029,53 @@ export function DynamicInvitationCard({
                     const estilo = seccion.datos?.estiloSeparador || 'linea_dorada'
 
                     return (
-                      <div key={seccion.id} className="px-6 sm:px-8 py-3 flex flex-col items-center justify-center gap-2 opacity-80">
-                        {estilo === 'linea_dorada' ? (
-                          <div className="flex items-center gap-3 w-full max-w-[220px]">
-                            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-amber-400" />
-                            <span className="text-amber-500 text-xs">◈</span>
-                            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-amber-400" />
-                          </div>
-                        ) : estilo === 'botanico' ? (
-                          <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
-                            <span className="text-sm">🌿</span>
-                            <div className="h-px w-16 bg-current opacity-30" />
-                            <span className="text-xs tracking-widest uppercase font-serif">✧</span>
-                            <div className="h-px w-16 bg-current opacity-30" />
-                            <span className="text-sm scale-x-[-1] inline-block">🌿</span>
-                          </div>
-                        ) : estilo === 'onda' ? (
-                          <svg width="80" height="12" viewBox="0 0 80 12" fill="none" className="opacity-50">
-                            <path d="M0 6C10 0 10 12 20 6C30 0 30 12 40 6C50 0 50 12 60 6C70 0 70 12 80 6" stroke={visual.colorSecundario} strokeWidth="1.5" />
-                          </svg>
-                        ) : (
-                          <div className="flex items-center gap-2 text-xs tracking-widest text-amber-500">
-                            <span>✦</span>
-                            <span>✦</span>
-                            <span>✦</span>
-                          </div>
-                        )}
+                      <div key={seccion.id} className="relative group/separador-bloque px-6 sm:px-8 py-3 flex flex-col items-center justify-center gap-2">
+                        <div className="flex items-center justify-center w-full">
+                          {estilo === 'linea_dorada' ? (
+                            <div className="flex items-center gap-3 w-full max-w-[220px] opacity-80">
+                              <div className="h-px flex-1 bg-gradient-to-r from-transparent to-amber-400" />
+                              <span className="text-amber-500 text-xs">◈</span>
+                              <div className="h-px flex-1 bg-gradient-to-l from-transparent to-amber-400" />
+                            </div>
+                          ) : estilo === 'botanico' ? (
+                            <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 opacity-80">
+                              <span className="text-sm">🌿</span>
+                              <div className="h-px w-16 bg-current opacity-30" />
+                              <span className="text-xs tracking-widest uppercase font-serif">✧</span>
+                              <div className="h-px w-16 bg-current opacity-30" />
+                              <span className="text-sm scale-x-[-1] inline-block">🌿</span>
+                            </div>
+                          ) : estilo === 'onda' ? (
+                            <svg width="80" height="12" viewBox="0 0 80 12" fill="none" className="opacity-50">
+                              <path d="M0 6C10 0 10 12 20 6C30 0 30 12 40 6C50 0 50 12 60 6C70 0 70 12 80 6" stroke={visual.colorSecundario} strokeWidth="1.5" />
+                            </svg>
+                          ) : estilo === 'editorial_icono' ? (
+                            <div className="flex items-center justify-center gap-3 w-full max-w-[240px] opacity-40">
+                              <div className="h-px flex-1 bg-current" style={{ color: visual.colorTexto }} />
+                              <IconoDinamico nombre={seccion.icono || 'sparkles'} size={12} />
+                              <div className="h-px flex-1 bg-current" style={{ color: visual.colorTexto }} />
+                            </div>
+                          ) : estilo === 'linea_simple' ? (
+                            <div className="w-full max-w-[220px] h-px bg-current opacity-25" style={{ color: visual.colorTexto }} />
+                          ) : (
+                            <div className="flex items-center gap-2 text-xs tracking-widest text-amber-500 opacity-80">
+                              <span>✦</span>
+                              <span>✦</span>
+                              <span>✦</span>
+                            </div>
+                          )}
+                        </div>
 
-                        {/* Selector de estilo de adorno en modo edición directa */}
+                        {/* Barra de control y eliminación directa */}
                         {esModoEdicionDirecta && (
-                          <div className="flex items-center gap-1 text-[9px]">
+                          <div className="flex flex-wrap items-center justify-center gap-1 text-[9px] pt-1 z-20">
                             {[
                               { id: 'linea_dorada', label: '◈ Dorado' },
                               { id: 'botanico', label: '🌿 Laurel' },
                               { id: 'onda', label: '〰 Onda' },
                               { id: 'diamantes', label: '✦ Diamantes' },
+                              { id: 'editorial_icono', label: '✧ Filete' },
+                              { id: 'linea_simple', label: '─ Sutil' },
                             ].map((s) => (
                               <button
                                 key={s.id}
@@ -1822,13 +2083,24 @@ export function DynamicInvitationCard({
                                 onClick={() => alActualizarDatosSeccion?.(seccion.id, 'estiloSeparador', s.id)}
                                 className={`px-2 py-0.5 rounded-full border cursor-pointer transition-colors ${
                                   estilo === s.id
-                                    ? 'bg-slate-900 text-white border-slate-900'
+                                    ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
                                     : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600'
                                 }`}
                               >
                                 {s.label}
                               </button>
                             ))}
+
+                            {/* Botón directo de eliminación de separador */}
+                            <button
+                              type="button"
+                              onClick={() => alEliminarSeccion?.(seccion.id)}
+                              className="px-2.5 py-0.5 rounded-full bg-rose-50 hover:bg-rose-600 border border-rose-200 hover:border-rose-600 text-rose-600 hover:text-white transition-colors cursor-pointer flex items-center gap-1 font-bold shadow-2xs"
+                              title="Eliminar este separador de la invitación"
+                            >
+                              <Trash2 size={10} />
+                              <span>Eliminar</span>
+                            </button>
                           </div>
                         )}
                       </div>

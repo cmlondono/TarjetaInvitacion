@@ -15,6 +15,7 @@ import { PLANTILLAS_TEMAS } from '@/lib/theme-presets'
 import { CATALOGO_SECCIONES } from '@/lib/modular-defaults'
 import { LISTA_ICONOS_DISPONIBLES, IconoDinamico } from '@/components/ui/icono-dinamico'
 import { SelectorColorTonal } from './selector-color-tonal'
+import { TarjetonIcon } from '@/components/ui/tarjeton-logo'
 import {
   LayoutTemplate,
   Sparkles,
@@ -170,10 +171,8 @@ export function CanvaStudioDrawer({
       <div className="fixed inset-y-0 left-0 z-50 flex shadow-2xl animate-in slide-in-from-left duration-300 max-w-full">
         {/* ── BARRA VERTICAL DE ICONOS (CANVA DOCK) ── */}
         <div className="w-16 sm:w-20 bg-slate-900 text-white flex flex-col items-center py-4 border-r border-slate-800 shrink-0 z-10 select-none">
-          <div className="mb-4">
-            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 font-black text-sm flex items-center justify-center shadow-lg">
-              ✦
-            </span>
+          <div className="mb-4 flex items-center justify-center" title="Estudio Tarjetón">
+            <TarjetonIcon size={36} className="shadow-lg rounded-xl" />
           </div>
 
           <nav className="flex flex-col gap-1 w-full px-1 flex-1 overflow-y-auto">

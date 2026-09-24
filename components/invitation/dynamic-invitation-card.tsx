@@ -1908,13 +1908,24 @@ export function DynamicInvitationCard({
 
             {/* Pie de página institucional */}
             <div className="pb-6 text-center opacity-40 hover:opacity-80 transition-opacity">
-              <a
-                href="/"
-                className="text-[10px] uppercase tracking-[0.25em] font-medium"
-                style={{ color: visual.colorTexto }}
-              >
-                Tarjetón Studio
-              </a>
+              {esModoEdicionDirecta ? (
+                <span
+                  className="text-[10px] uppercase tracking-[0.25em] font-medium"
+                  style={{ color: visual.colorTexto }}
+                >
+                  Tarjetón Studio
+                </span>
+              ) : (
+                <a
+                  href="/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[10px] uppercase tracking-[0.25em] font-medium hover:underline"
+                  style={{ color: visual.colorTexto }}
+                >
+                  Tarjetón Studio
+                </a>
+              )}
             </div>
           </div>
         </motion.div>

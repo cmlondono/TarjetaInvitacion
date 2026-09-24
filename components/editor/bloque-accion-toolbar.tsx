@@ -100,48 +100,83 @@ export function BarraHerramientasBloque({
   alMover,
   alEliminar,
 }: BarraHerramientasBloqueProps) {
+  const [confirmando, setConfirmando] = useState(false)
+
+  if (esCabecera) return null
+
   return (
-    <div className="absolute top-2 right-2 z-30 opacity-0 group-hover/seccion:opacity-100 transition-all flex items-center gap-1 bg-slate-900/90 hover:bg-slate-900 backdrop-blur-md text-white px-2 py-1 rounded-lg shadow-xl border border-white/20 text-[10px]">
-      {!esCabecera && indice > 0 && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            alMover('arriba')
-          }}
-          title="Mover sección arriba"
-          className="p-1 hover:bg-white/20 rounded cursor-pointer transition-colors"
-        >
-          <ArrowUp size={12} />
-        </button>
-      )}
+    <div className="absolute top-2 right-2 z-30 opacity-90 sm:opacity-0 sm:group-hover/seccion:opacity-100 transition-all flex items-center gap-1 bg-slate-950/95 backdrop-blur-md text-white p-1 rounded-xl shadow-xl border border-slate-700/80 text-[10px]">
+      {confirmando ? (
+        <div className="flex items-center gap-1.5 px-1.5 py-0.5 animate-in fade-in zoom-in-95 duration-150">
+          <span className="text-[10px] font-bold text-rose-300">¿Eliminar bloque?</span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              alEliminar()
+              setConfirmando(false)
+            }}
+            className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white rounded-md font-bold text-[10px] cursor-pointer shadow-xs transition-colors flex items-center gap-1"
+          >
+            <Trash2 size={11} />
+            <span>Sí</span>
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setConfirmando(false)
+            }}
+            className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md text-[10px] cursor-pointer transition-colors"
+          >
+            No
+          </button>
+        </div>
+      ) : (
+        <>
+          {indice > 0 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                alMover('arriba')
+              }}
+              title="Subir bloque"
+              className="p-1 hover:bg-slate-800 rounded-lg cursor-pointer transition-colors text-slate-300 hover:text-white"
+            >
+              <ArrowUp size={12} />
+            </button>
+          )}
 
-      {!esCabecera && indice < totalSecciones - 1 && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            alMover('abajo')
-          }}
-          title="Mover sección abajo"
-          className="p-1 hover:bg-white/20 rounded cursor-pointer transition-colors"
-        >
-          <ArrowDown size={12} />
-        </button>
-      )}
+          {indice < totalSecciones - 1 && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                alMover('abajo')
+              }}
+              title="Bajar bloque"
+              className="p-1 hover:bg-slate-800 rounded-lg cursor-pointer transition-colors text-slate-300 hover:text-white"
+            >
+              <ArrowDown size={12} />
+            </button>
+          )}
 
-      {!esCabecera && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            alEliminar()
-          }}
-          title="Eliminar este bloque"
-          className="p-1 hover:bg-rose-600 rounded cursor-pointer transition-colors text-rose-300 hover:text-white"
-        >
-          <Trash2 size={12} />
-        </button>
+          <div className="w-px h-3 bg-slate-700 mx-0.5" />
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setConfirmando(true)
+            }}
+            title="Eliminar este bloque directamente de la tarjeta"
+            className="px-2 py-0.5 bg-rose-950/80 hover:bg-rose-600 text-rose-300 hover:text-white rounded-md cursor-pointer transition-all flex items-center gap-1 border border-rose-700/50 shadow-xs"
+          >
+            <Trash2 size={11} className="text-rose-400 group-hover:text-white" />
+            <span className="text-[10px] font-bold">Eliminar</span>
+          </button>
+        </>
       )}
     </div>
   )

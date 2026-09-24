@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -57,6 +57,9 @@ import {
   Sliders,
   Wand2,
   Square,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle,
 } from 'lucide-react'
 
 const PRESETS_MUSICA = [
@@ -215,6 +218,41 @@ export function VisualCustomizer({
     setPestanaCanvaInicial(pestana)
     setMostrarEstudioCanva(true)
   }
+
+  // Ref y desplazamiento suave para el carrusel de tipografías
+  const fuentesCarouselRef = useRef<HTMLDivElement>(null)
+  const scrollFuentesCarousel = (direccion: 'izq' | 'der') => {
+    if (fuentesCarouselRef.current) {
+      const desplazamiento = direccion === 'izq' ? -140 : 140
+      fuentesCarouselRef.current.scrollBy({ left: desplazamiento, behavior: 'smooth' })
+    }
+  }
+
+  // Control de salida del editor sin guardar
+  const [mostrarModalSalirSinGuardar, setMostrarModalSalirSinGuardar] = useState(false)
+  const [haGuardado, setHaGuardado] = useState(false)
+
+  const intentarVolverAInicio = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault()
+    // Si ya guardó o no está en modo edición y tiene enlace publicado generado, permite salir directo
+    if (haGuardado) {
+      router.push('/')
+      return
+    }
+    setMostrarModalSalirSinGuardar(true)
+  }
+
+  // Advertencia de navegador para evitar pérdida accidental de datos
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!haGuardado) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [haGuardado])
 
   // Preescucha de música en el editor
   const [audioPreview, setAudioPreview] = useState<HTMLAudioElement | null>(null)
@@ -462,6 +500,7 @@ export function VisualCustomizer({
         imagenRetrato: cabecera?.datos?.imagenRetrato || evento.imagenRetrato,
       }
 
+      setHaGuardado(true)
       EventoRepositorio.guardar(eventoGuardado)
       router.push(`/gestionar/${eventoGuardado.tokenAdmin}`)
     } catch (e) {
@@ -473,41 +512,57 @@ export function VisualCustomizer({
   return (
     <div className="w-full min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans">
       {/* Barra Superior de Herramientas */}
-      <header className="w-full bg-white border-b border-slate-200 px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-40 flex items-center justify-between shadow-2xs gap-2">
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          {/* Botón para regresar a la Landing Page */}
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-2 rounded-xl border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold transition-all shadow-2xs shrink-0"
-            title="Regresar a la página principal"
-          >
-            <ArrowLeft size={15} />
-            <span className="hidden sm:inline">Inicio</span>
-          </Link>
+      <header className="w-full bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-3 sticky top-0 z-40 flex flex-col sm:flex-row sm:items-center sm:justify-between shadow-2xs gap-2">
+        {/* Fila 1: Regresar + Identidad Tarjetón */}
+        <div className="flex items-center justify-between w-full sm:w-auto min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            {/* Botón para regresar a la Landing Page con verificación de guardado */}
+            <button
+              type="button"
+              onClick={intentarVolverAInicio}
+              className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-2 rounded-xl border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer"
+              title="Regresar a la página principal"
+            >
+              <ArrowLeft size={15} />
+              <span className="hidden sm:inline">Inicio</span>
+            </button>
 
-          {/* Logotipo */}
-          <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group min-w-0">
-            <TarjetonLogo size="sm" subtexto="studio" />
-            <div className="hidden md:block">
-              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200 font-medium whitespace-nowrap">
-                {modoEdicion ? 'Modo Edición' : 'Creador Modular'}
-              </span>
-            </div>
-          </Link>
+            {/* Logotipo */}
+            <button
+              type="button"
+              onClick={intentarVolverAInicio}
+              className="flex items-center gap-2 sm:gap-2.5 group min-w-0 text-left cursor-pointer"
+              title="Regresar a la página principal"
+            >
+              <TarjetonLogo size="sm" subtexto="studio" />
+              <div className="hidden md:block">
+                <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200 font-medium whitespace-nowrap">
+                  {modoEdicion ? 'Modo Edición' : 'Creador Modular'}
+                </span>
+              </div>
+            </button>
+          </div>
+
+          {/* Badge modo en móvil */}
+          <div className="sm:hidden">
+            <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200 font-medium whitespace-nowrap">
+              {modoEdicion ? 'Edición' : 'Creador'}
+            </span>
+          </div>
         </div>
 
-        {/* Acciones Superiores */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          {/* Botón Estudio Creativo Canva */}
+        {/* Fila 2 (en móvil se ubica debajo del título sin sobreponerse): Acciones Principales */}
+        <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2.5 w-full sm:w-auto pt-1 sm:pt-0 border-t border-slate-100 sm:border-0 shrink-0">
+          {/* Botón Estudio Tarjetón (Acorde a la app y en negro institucional) */}
           <button
             type="button"
             onClick={() => abrirEstudioCanvaEnPestana('elementos')}
-            className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-500 hover:to-amber-700 text-slate-950 text-xs font-black flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95 border border-amber-300"
-            title="Abrir Estudio Creativo tipo Canva: sellos de cera 3D, texturas artesanales, marcos y biblioteca de iconos"
+            className="flex-1 sm:flex-initial justify-center px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-950 hover:bg-slate-900 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95 border border-slate-800 shrink-0"
+            title="Abrir Estudio Tarjetón: marcos, texturas artesanales, monogramas y biblioteca de iconos"
           >
-            <Sparkles size={14} className="text-slate-950 fill-amber-200" />
-            <span className="hidden sm:inline">Estudio Canva</span>
-            <span className="sm:hidden text-[11px]">Canva</span>
+            <Sparkles size={13} className="text-amber-400 shrink-0" />
+            <span className="hidden sm:inline">Estudio Tarjetón</span>
+            <span className="sm:hidden text-[11px]">Estudio</span>
           </button>
 
           {/* Botón para alternar el Panel Lateral de Ajustes */}
@@ -517,21 +572,22 @@ export function VisualCustomizer({
               setPanelAjustesAbierto(!panelAjustesAbierto)
               if (!panelAjustesAbierto) setVistaMobile('editor')
             }}
-            className={`px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs ${
+            className={`flex-1 sm:flex-initial justify-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs shrink-0 ${
               panelAjustesAbierto
                 ? 'bg-amber-50 border-amber-300 text-amber-900'
                 : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
             }`}
             title={panelAjustesAbierto ? 'Ocultar panel lateral' : 'Abrir ajustes detallados'}
           >
-            <Sliders size={14} />
+            <Sliders size={13} className="shrink-0" />
             <span className="hidden sm:inline">{panelAjustesAbierto ? 'Ocultar Ajustes' : 'Ajustes Detallados'}</span>
+            <span className="sm:hidden text-[11px]">{panelAjustesAbierto ? 'Ocultar' : 'Ajustes'}</span>
           </button>
 
-          {/* Estado de Licencia */}
+          {/* Estado de Licencia / Premium */}
           {evento.esPremium ? (
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-900 text-white shadow-2xs">
-              <Award size={14} className="text-amber-400" />
+            <span className="flex-1 sm:flex-initial justify-center inline-flex items-center gap-1 sm:gap-1.5 text-xs font-bold px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-900 text-white shadow-2xs shrink-0">
+              <Award size={13} className="text-amber-400 shrink-0" />
               <span className="hidden sm:inline">Licencia Activa</span>
               <span className="sm:hidden text-[11px]">VIP</span>
             </span>
@@ -539,28 +595,28 @@ export function VisualCustomizer({
             <button
               type="button"
               onClick={() => setMostrarModalPago(true)}
-              className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 transition-all cursor-pointer shadow-2xs"
+              className="flex-1 sm:flex-initial justify-center inline-flex items-center gap-1 sm:gap-1.5 text-xs font-bold px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0"
               title="Habilitar invitados ilimitados y remover publicidad"
             >
-              <Award size={14} className="text-amber-700" />
+              <Award size={13} className="text-amber-700 shrink-0" />
               <span className="hidden md:inline">Activar</span>
               <span className="text-[11px] sm:text-xs">Premium</span>
-              <span className="hidden sm:inline">($3.99)</span>
             </button>
           )}
 
+          {/* Botón Publicar Tarjeta */}
           <button
             onClick={handleGuardarYPublicar}
             disabled={guardando}
-            className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-xl flex items-center gap-1.5 sm:gap-2 shadow-xs transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer shrink-0"
+            className="flex-1 sm:flex-initial justify-center bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-xl flex items-center gap-1 sm:gap-2 shadow-xs transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer shrink-0"
           >
             {guardando ? (
-              'Guardando...'
+              <span className="text-[11px] sm:text-xs">Guardando...</span>
             ) : (
               <>
-                <span className="sm:hidden">{modoEdicion ? 'Guardar' : 'Publicar'}</span>
+                <span className="sm:hidden text-[11px]">{modoEdicion ? 'Guardar' : 'Publicar'}</span>
                 <span className="hidden sm:inline">{modoEdicion ? 'Guardar Cambios' : 'Publicar Tarjeta'}</span>
-                <ArrowRight size={14} />
+                <ArrowRight size={13} className="shrink-0" />
               </>
             )}
           </button>
@@ -721,21 +777,21 @@ export function VisualCustomizer({
           {/* ═══════════════ PESTAÑA 2: DISEÑO, COLORES & TIPOGRAFÍAS ═══════════════ */}
           {pestanaActiva === 'diseno' && (
             <div className="space-y-5">
-              {/* Banner Acceso Directo Canva Studio */}
-              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white shadow-sm flex items-center justify-between gap-3">
+              {/* Banner Acceso Directo Estudio Tarjetón */}
+              <div className="p-3.5 rounded-2xl bg-slate-950 text-white border border-slate-800 shadow-sm flex items-center justify-between gap-3">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <Sparkles size={14} className="text-amber-200" />
-                    <span className="text-xs font-black tracking-wide uppercase">Estudio Creativo Canva</span>
+                    <Sparkles size={14} className="text-amber-400" />
+                    <span className="text-xs font-black tracking-wide uppercase">Estudio Tarjetón</span>
                   </div>
-                  <p className="text-[11px] text-amber-100/90 leading-tight">
-                    Sellos de cera 3D, texturas artesanales, monogramas y biblioteca de iconos.
+                  <p className="text-[11px] text-slate-300 leading-tight">
+                    Texturas de papel, marcos ornamentales, monogramas y biblioteca de iconos.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => abrirEstudioCanvaEnPestana('elementos')}
-                  className="px-3 py-1.5 rounded-xl bg-white text-slate-950 text-xs font-black hover:bg-amber-50 shadow-xs cursor-pointer shrink-0 transition-all active:scale-95"
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-950 text-xs font-bold shadow-xs cursor-pointer shrink-0 transition-all active:scale-95"
                 >
                   Abrir
                 </button>
@@ -1362,161 +1418,260 @@ export function VisualCustomizer({
           }`}
         >
           {/* BARRA RÁPIDA DE 1 CLIC */}
-          <div className="w-full max-w-2xl mb-3 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-300 shadow-sm p-2 flex flex-wrap items-center justify-between gap-2 z-20">
-            {/* Control Rápido de Color & Tonos (Minimalista) */}
-            <div className="flex items-center gap-1.5 pl-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Color:
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setPestanaActiva('diseno')
-                  setPanelAjustesAbierto(true)
-                }}
-                className="flex items-center gap-2 py-1 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition-all cursor-pointer shadow-2xs group"
-                title="Editar paleta de colores y escala de tonos"
-              >
-                <div className="flex items-center -space-x-1.5">
-                  <span
-                    className="w-4 h-4 rounded-full border border-white shadow-xs"
-                    style={{ backgroundColor: visual.colorTarjeta }}
-                    title={`Tarjeta: ${visual.colorTarjeta}`}
-                  />
-                  <span
-                    className="w-4 h-4 rounded-full border border-white shadow-xs"
-                    style={{ backgroundColor: visual.colorPrimario }}
-                    title={`Botón: ${visual.colorPrimario}`}
-                  />
-                  <span
-                    className="w-4 h-4 rounded-full border border-white shadow-xs"
-                    style={{ backgroundColor: visual.colorSecundario }}
-                    title={`Detalles: ${visual.colorSecundario}`}
-                  />
-                </div>
-                <span className="font-bold text-[11px] text-slate-700 group-hover:text-slate-900">
-                  Cuadros & Tonos
-                </span>
-              </button>
-            </div>
-
-            {/* Tipografía en 1 clic */}
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <div className="w-full max-w-2xl mb-3 bg-white/95 backdrop-blur-md rounded-2xl border border-slate-300 shadow-sm p-2.5 flex flex-col gap-2.5 z-20">
+            {/* FILA 1: Carrusel de Fuentes del ancho completo del contenedor */}
+            <div className="w-full flex items-center gap-2 min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0">
                 Fuente:
               </span>
-              <div className="flex items-center bg-slate-100 p-0.5 rounded-xl text-[11px]">
-                {TIPOGRAFIAS_RAPIDAS.map((t) => {
-                  const estaActiva = visual.fuenteTitulo === t.tituloFont
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => aplicarTipografiaRapida(t)}
-                      className={`px-2 py-0.5 rounded-lg font-medium transition-all cursor-pointer ${
-                        estaActiva ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      {t.subtitulo}
-                    </button>
-                  )
-                })}
+              <div className="flex-1 w-full min-w-0 flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200/80 shadow-2xs">
+                {/* Botón retroceder carrusel */}
+                <button
+                  type="button"
+                  onClick={() => scrollFuentesCarousel('izq')}
+                  className="w-7 h-7 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+                  title="Ver fuentes anteriores"
+                  aria-label="Fuente anterior"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+
+                {/* Lista scrolleable horizontal suave a todo el ancho */}
+                <div
+                  ref={fuentesCarouselRef}
+                  className="flex-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar scroll-smooth px-1.5 py-0.5 w-full"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                >
+                  {TIPOGRAFIAS_RAPIDAS.map((t) => {
+                    const estaActiva = visual.fuenteTitulo === t.tituloFont
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => aplicarTipografiaRapida(t)}
+                        className={`px-3 py-1 rounded-lg text-xs whitespace-nowrap font-medium transition-all cursor-pointer shrink-0 ${
+                          estaActiva
+                            ? 'bg-slate-900 text-white font-bold shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
+                        }`}
+                        title={`${t.nombre} (${t.subtitulo})`}
+                      >
+                        {t.subtitulo}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {/* Botón avanzar carrusel */}
+                <button
+                  type="button"
+                  onClick={() => scrollFuentesCarousel('der')}
+                  className="w-7 h-7 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-white flex items-center justify-center transition-all cursor-pointer shrink-0"
+                  title="Ver fuentes siguientes"
+                  aria-label="Fuente siguiente"
+                >
+                  <ChevronRight size={14} />
+                </button>
               </div>
             </div>
 
-            {/* Forma de Tarjeta en 1 clic */}
-            <div className="hidden sm:flex items-center gap-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                Borde:
-              </span>
-              <div className="flex items-center bg-slate-100 p-0.5 rounded-xl text-[11px]">
-                {FORMAS_RAPIDAS.map((f) => {
-                  const estaActiva = visual.formaTarjeta === f.id
-                  return (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => aplicarFormaRapida(f.id)}
-                      className={`px-2 py-0.5 rounded-lg font-medium transition-all cursor-pointer ${
-                        estaActiva ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      {f.nombre}
-                    </button>
-                  )
-                })}
+            {/* FILA 2: Marcos & Bordes identado a la izquierda | Preview y Diseño a la derecha */}
+            <div className="w-full flex items-center justify-between gap-2 pt-1 border-t border-slate-100 flex-wrap sm:flex-nowrap">
+              {/* Izquierda: Marcos y Bordes identado a la izquierda, Texturas, Colores y Forma */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {/* Marcos y Bordes */}
+                <button
+                  type="button"
+                  onClick={() => abrirEstudioCanvaEnPestana('elementos')}
+                  className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                  title="Bordes perimetrales y marcos decorativos de la tarjeta"
+                >
+                  <Square size={13} className="text-slate-700" />
+                  <span>Marcos & Bordes</span>
+                </button>
+
+                {/* Texturas de Papel */}
+                <button
+                  type="button"
+                  onClick={() => abrirEstudioCanvaEnPestana('fondos')}
+                  className="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                  title="Texturas de papel de algodón, mármol oro, acuarela, lino rústico"
+                >
+                  <Sparkles size={13} className="text-slate-600" />
+                  <span>Texturas</span>
+                </button>
+
+                {/* Control Rápido de Color & Tonos */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPestanaActiva('diseno')
+                    setPanelAjustesAbierto(true)
+                  }}
+                  className="flex items-center gap-1.5 py-1 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition-all cursor-pointer shadow-2xs group"
+                  title="Editar paleta de colores y escala de tonos"
+                >
+                  <div className="flex items-center -space-x-1.5">
+                    <span
+                      className="w-3.5 h-3.5 rounded-full border border-white shadow-xs"
+                      style={{ backgroundColor: visual.colorTarjeta }}
+                      title={`Tarjeta: ${visual.colorTarjeta}`}
+                    />
+                    <span
+                      className="w-3.5 h-3.5 rounded-full border border-white shadow-xs"
+                      style={{ backgroundColor: visual.colorPrimario }}
+                      title={`Botón: ${visual.colorPrimario}`}
+                    />
+                    <span
+                      className="w-3.5 h-3.5 rounded-full border border-white shadow-xs"
+                      style={{ backgroundColor: visual.colorSecundario }}
+                      title={`Detalles: ${visual.colorSecundario}`}
+                    />
+                  </div>
+                  <span className="font-bold text-[11px] text-slate-700 group-hover:text-slate-900">
+                    Colores
+                  </span>
+                </button>
+
+                {/* Forma de Tarjeta en 1 clic */}
+                <div className="hidden md:flex items-center bg-slate-100 p-0.5 rounded-xl text-[11px]">
+                  {FORMAS_RAPIDAS.map((f) => {
+                    const estaActiva = visual.formaTarjeta === f.id
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => aplicarFormaRapida(f.id)}
+                        className={`px-2 py-0.5 rounded-lg font-medium transition-all cursor-pointer ${
+                          estaActiva ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        {f.nombre}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-            </div>
 
-            {/* Marcos y Texturas en la Barra Rápida */}
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => abrirEstudioCanvaEnPestana('elementos')}
-                className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
-                title="Bordes perimetrales y marcos decorativos de la tarjeta"
-              >
-                <Square size={12} className="text-slate-600" />
-                <span>Marcos & Bordes</span>
-              </button>
+              {/* Derecha: Botón de Preview y de Diseño (+ Bloque, Dispositivo) */}
+              <div className="flex items-center gap-1.5 sm:gap-2 ml-auto shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setMostrarModalAgregarSeccion(true)}
+                  className="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
+                  title="Añadir nueva sección a la tarjeta"
+                >
+                  <Plus size={13} />
+                  <span className="hidden sm:inline">+ Bloque</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={() => abrirEstudioCanvaEnPestana('fondos')}
-                className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1 shadow-2xs"
-                title="Texturas de papel de algodón, mármol oro, acuarela, lino rústico"
-              >
-                <Sparkles size={12} className="text-slate-500" />
-                <span>Texturas</span>
-              </button>
-            </div>
+                <div className="hidden sm:block h-4 w-px bg-slate-200" />
 
-            {/* Acciones directas: + Módulo, Modo Vista, Dispositivo */}
-            <div className="flex items-center gap-1.5 ml-auto">
-              <button
-                type="button"
-                onClick={() => setMostrarModalAgregarSeccion(true)}
-                className="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
-                title="Añadir nueva sección a la tarjeta"
-              >
-                <Plus size={13} />
-                <span>+ Bloque</span>
-              </button>
+                {/* Conmutador de Diseñando y Preview de Invitado (a la derecha) */}
+                <div
+                  className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200/90 shadow-2xs"
+                  role="group"
+                  aria-label="Modo de trabajo"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setModoEdicionDirecta(true)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      modoEdicionDirecta
+                        ? 'bg-slate-900 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                    title="Modo Diseñador: Haz clic en textos, fotos y botones de la tarjeta para editarlos"
+                  >
+                    <Edit3 size={12} />
+                    <span>Diseñando</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setModoEdicionDirecta(false)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      !modoEdicionDirecta
+                        ? 'bg-slate-900 text-white shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                    title="Previsualización de Invitado: Mira exactamente la experiencia real que tendrá el invitado"
+                  >
+                    <Eye size={12} />
+                    <span>Vista Invitado</span>
+                  </button>
+                </div>
 
-              <div className="h-4 w-px bg-slate-200" />
-
-              <div className="flex items-center bg-slate-100 p-0.5 rounded-xl">
+                {/* Conmutador de vista Móvil / Escritorio */}
                 <button
                   type="button"
                   onClick={() => setVistaDispositivo(vistaDispositivo === 'movil' ? 'desktop' : 'movil')}
-                  className="p-1 rounded-lg text-slate-600 hover:text-slate-900 cursor-pointer"
-                  title={vistaDispositivo === 'movil' ? 'Vista Escritorio' : 'Vista Móvil'}
+                  className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer shadow-2xs transition-all"
+                  title={vistaDispositivo === 'movil' ? 'Cambiar a Vista de Escritorio' : 'Cambiar a Vista Móvil'}
                 >
                   {vistaDispositivo === 'movil' ? <Monitor size={14} /> : <Smartphone size={14} />}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setModoEdicionDirecta(!modoEdicionDirecta)}
-                  className={`px-2 py-0.5 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
-                    !modoEdicionDirecta ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                  title={modoEdicionDirecta ? 'Ver como invitado' : 'Volver a modo editor'}
-                >
-                  {!modoEdicionDirecta ? 'Invitado' : 'Diseñando'}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Banner sutil informativo */}
-          {modoEdicionDirecta && (
-            <div className="mb-3 bg-slate-900/90 text-white text-[11px] font-medium px-4 py-1 rounded-full shadow-xs flex items-center gap-2 backdrop-blur-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span>
-                Haz clic en cualquier texto o fecha para editar. Cambia colores y fuentes en 1 clic arriba.
-              </span>
+          {/* Banner indicador interactivo de Modo */}
+          <div
+            className={`w-full max-w-2xl mb-3 flex items-center justify-between gap-2 px-4 py-2 rounded-2xl text-xs font-medium transition-all shadow-xs backdrop-blur-xs border ${
+              modoEdicionDirecta
+                ? 'bg-slate-900 text-white border-slate-800'
+                : 'bg-emerald-950 text-white border-emerald-800'
+            }`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              {modoEdicionDirecta ? (
+                <>
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-bold text-xs truncate">
+                      Modo Diseñador (Edición en Vivo)
+                    </p>
+                    <p className="text-[11px] text-slate-300 hidden sm:block truncate">
+                      Haz clic en cualquier texto, foto o bloque para editar tu tarjeta.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-400 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-bold text-xs truncate">
+                      Previsualización de Invitado
+                    </p>
+                    <p className="text-[11px] text-emerald-200 hidden sm:block truncate">
+                      Así es exactamente como tus invitados verán la tarjeta y responderán su asistencia.
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
-          )}
+
+            <button
+              type="button"
+              onClick={() => setModoEdicionDirecta(!modoEdicionDirecta)}
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 ${
+                modoEdicionDirecta
+                  ? 'bg-white text-slate-950 hover:bg-amber-50 shadow-xs'
+                  : 'bg-white text-emerald-950 hover:bg-emerald-50 shadow-xs'
+              }`}
+            >
+              {modoEdicionDirecta ? (
+                <>
+                  <Eye size={13} />
+                  <span>Ver como invitado</span>
+                </>
+              ) : (
+                <>
+                  <Edit3 size={13} />
+                  <span>Volver a diseñar</span>
+                </>
+              )}
+            </button>
+          </div>
 
           {/* Marco de Dispositivo Móvil */}
           <div
@@ -1630,6 +1785,59 @@ export function VisualCustomizer({
         alAgregarSeccion={agregarNuevaSeccion}
         pestanaInicial={pestanaCanvaInicial}
       />
+
+      {/* ════════════ MODAL ALERTA: SALIR SIN GUARDAR CAMBIOS ════════════ */}
+      {mostrarModalSalirSinGuardar && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white border border-slate-200 max-w-md w-full rounded-3xl p-6 shadow-2xl animate-in zoom-in-95 duration-200 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-200 text-amber-700 flex items-center justify-center mx-auto shadow-xs">
+              <AlertTriangle size={24} />
+            </div>
+
+            <div className="text-center space-y-2">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                ¿Deseas salir a la página principal?
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Aún no has guardado los cambios ni se ha generado el enlace público de tu tarjeta. Si sales ahora, perderás todo el progreso realizado en tu diseño.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => setMostrarModalSalirSinGuardar(false)}
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm transition-all shadow-xs cursor-pointer"
+              >
+                Continuar editando
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMostrarModalSalirSinGuardar(false)
+                  handleGuardarYPublicar()
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 font-bold text-xs sm:text-sm transition-all shadow-2xs cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Sparkles size={14} className="text-amber-500" />
+                <span>Guardar y Publicar ahora</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMostrarModalSalirSinGuardar(false)
+                  router.push('/')
+                }}
+                className="w-full py-2 px-4 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-50 text-xs font-semibold transition-colors cursor-pointer text-center"
+              >
+                Salir sin guardar (perder progreso)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

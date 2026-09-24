@@ -129,6 +129,7 @@ export const ModalPersonalizadorSobre = React.memo(function ModalPersonalizadorS
 }: ModalPersonalizadorSobreProps) {
   // Estado local desacoplado para respuesta INMEDIATA (0ms de latencia, 60 FPS)
   const [previewAbierto, setPreviewAbierto] = useState(false)
+  const [pestanaMobile, setPestanaMobile] = useState<'edicion' | 'preview'>('edicion')
 
   const [localTieneSobre, setLocalTieneSobre] = useState<boolean>(Boolean(visual.animacionSobre))
   const [localEstilo, setLocalEstilo] = useState<EstiloSobreTipo>(visual.estiloSobre || 'clasico')
@@ -144,6 +145,7 @@ export const ModalPersonalizadorSobre = React.memo(function ModalPersonalizadorS
   const abiertoPrevioRef = useRef(false)
   useEffect(() => {
     if (abierto && !abiertoPrevioRef.current) {
+      setPestanaMobile('edicion')
       setLocalTieneSobre(Boolean(visual.animacionSobre))
       setLocalEstilo(visual.estiloSobre || 'clasico')
       setLocalColor(visual.colorSobre || visual.colorPrimario || '#0B192C')
@@ -377,25 +379,25 @@ export const ModalPersonalizadorSobre = React.memo(function ModalPersonalizadorS
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-5xl max-h-[94vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-200 w-full max-w-5xl h-[94vh] sm:h-auto sm:max-h-[94vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
         
         {/* Cabecera del Modal (Negro institucional & Blanco) */}
-        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-950 text-white shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white/10 text-white border border-white/20 flex items-center justify-center shadow-xs">
-              <Mail size={18} className="text-white" />
+        <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-200 flex items-center justify-between bg-slate-950 text-white shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/10 text-white border border-white/20 flex items-center justify-center shadow-xs">
+              <Mail size={17} className="text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white tracking-tight">
+                <h2 className="text-sm sm:text-base font-bold text-white tracking-tight">
                   Sobre Protocolario 3D
                 </h2>
-                <span className="text-[10px] bg-white/15 text-slate-200 font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider border border-white/20">
-                  Vista Previa en Tiempo Real
+                <span className="text-[10px] bg-white/15 text-slate-200 font-semibold px-2 py-0.5 rounded-full uppercase tracking-wider border border-white/20 hidden xs:inline-block">
+                  En Vivo
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
-                Ajustes de papelería, cortes, colores y sellos de cera con respuesta inmediata
+              <p className="text-[11px] sm:text-xs text-slate-400">
+                Ajustes de papelería, cortes, colores y sellos de cera
               </p>
             </div>
           </div>
@@ -409,12 +411,57 @@ export const ModalPersonalizadorSobre = React.memo(function ModalPersonalizadorS
           </button>
         </div>
 
+        {/* Barra de pestañas exclusiva para móvil (Opciones de Diseño vs Visor 3D) */}
+        <div className="lg:hidden flex p-1.5 bg-slate-900 border-t border-white/10 shrink-0">
+          <button
+            type="button"
+            onClick={() => setPestanaMobile('edicion')}
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none ${
+              pestanaMobile === 'edicion'
+                ? 'bg-white text-slate-950 shadow-xs'
+                : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            <Sliders size={13} />
+            <span>Opciones de Diseño</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setPestanaMobile('preview')}
+            className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none ${
+              pestanaMobile === 'preview'
+                ? 'bg-white text-slate-950 shadow-xs'
+                : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            <Eye size={13} />
+            <span>Ver Sobre 3D</span>
+            {localTieneSobre && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 ml-0.5" />}
+          </button>
+        </div>
+
         {/* Cuerpo Principal: 2 Columnas (Visor Inmediato a la Izquierda | Controles a la Derecha) */}
-        <div className="flex-1 overflow-y-auto flex flex-col lg:flex-row">
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
           
           {/* ═══════════════ COLUMNA 1: VISOR INTERACTIVO EN TIEMPO REAL ═══════════════ */}
-          <div className="w-full lg:w-[44%] p-4 sm:p-5 bg-slate-100 border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col justify-between shrink-0">
+          <div
+            className={`${
+              pestanaMobile === 'preview' ? 'flex' : 'hidden'
+            } lg:flex w-full lg:w-[44%] p-4 sm:p-5 bg-slate-100 border-b lg:border-b-0 lg:border-r border-slate-200 flex-col justify-between shrink-0 overflow-y-auto`}
+          >
             <div>
+              {/* Botón en móvil para alternar rápidamente a la edición */}
+              <div className="lg:hidden mb-3">
+                <button
+                  type="button"
+                  onClick={() => setPestanaMobile('edicion')}
+                  className="w-full py-2 px-3 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer select-none"
+                >
+                  <Sliders size={13} />
+                  <span>Volver a Opciones de Diseño</span>
+                </button>
+              </div>
+
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <span className="text-xs font-bold text-slate-900 uppercase tracking-wider block">
@@ -605,7 +652,29 @@ export const ModalPersonalizadorSobre = React.memo(function ModalPersonalizadorS
           </div>
 
           {/* ═══════════════ COLUMNA 2: CONTROLES & PERSONALIZACIÓN ═══════════════ */}
-          <div className="flex-1 p-5 sm:p-6 space-y-6 text-slate-800 text-sm overflow-y-auto">
+          <div
+            className={`${
+              pestanaMobile === 'edicion' ? 'flex' : 'hidden'
+            } lg:flex flex-1 p-4 sm:p-6 space-y-6 text-slate-800 text-sm overflow-y-auto flex-col`}
+          >
+            {/* Banner de acceso rápido a vista 3D en móvil */}
+            <div className="lg:hidden">
+              <button
+                type="button"
+                onClick={() => setPestanaMobile('preview')}
+                className="w-full p-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl flex items-center justify-between text-xs font-bold shadow-xs border border-slate-800 cursor-pointer select-none active:scale-[0.99] transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center">
+                    <Eye size={13} className="text-white" />
+                  </div>
+                  <span>Ver Sobre 3D en Tiempo Real</span>
+                </div>
+                <span className="text-[11px] text-slate-300 flex items-center gap-1 font-semibold">
+                  Toca aquí →
+                </span>
+              </button>
+            </div>
             
             {/* 1. SECCIÓN DE ACTIVACIÓN: MENSAJE CLARO QUE EXPLICA QUE ES OPCIONAL */}
             <div
@@ -938,24 +1007,45 @@ export const ModalPersonalizadorSobre = React.memo(function ModalPersonalizadorS
         </div>
 
         {/* Pie del modal con acciones */}
-        <div className="px-5 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3 shrink-0">
-          {localTieneSobre && onProbarApertura ? (
+        <div className="px-4 sm:px-5 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2">
+            {/* En móvil: alternador rápido entre opciones y preview */}
             <button
               type="button"
-              onClick={handleProbarApertura}
-              className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-2 cursor-pointer active:scale-95 shadow-xs border border-slate-800 select-none"
+              onClick={() => setPestanaMobile(pestanaMobile === 'edicion' ? 'preview' : 'edicion')}
+              className="lg:hidden px-3 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs select-none"
             >
-              <Eye size={14} className="text-white" />
-              <span>Probar en Pantalla Completa</span>
+              {pestanaMobile === 'edicion' ? (
+                <>
+                  <Eye size={13} />
+                  <span>Ver Sobre</span>
+                </>
+              ) : (
+                <>
+                  <Sliders size={13} />
+                  <span>Editar</span>
+                </>
+              )}
             </button>
-          ) : (
-            <div />
-          )}
+
+            {localTieneSobre && onProbarApertura && (
+              <button
+                type="button"
+                onClick={handleProbarApertura}
+                className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 sm:gap-2 cursor-pointer active:scale-95 shadow-xs border border-slate-800 select-none whitespace-nowrap"
+                title="Probar animación de apertura en pantalla completa"
+              >
+                <Eye size={13} className="text-white shrink-0" />
+                <span className="hidden sm:inline">Probar en Pantalla Completa</span>
+                <span className="sm:hidden">Pantalla Completa</span>
+              </button>
+            )}
+          </div>
 
           <button
             type="button"
             onClick={handleCerrar}
-            className="px-6 py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs cursor-pointer active:scale-95 shadow-sm select-none"
+            className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 text-white font-bold text-xs cursor-pointer active:scale-95 shadow-sm select-none whitespace-nowrap"
           >
             Listo, Aplicar Sobre
           </button>

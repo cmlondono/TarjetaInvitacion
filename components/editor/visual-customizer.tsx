@@ -515,11 +515,11 @@ export function VisualCustomizer({
   }
 
   return (
-    <div className="w-full min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans">
+    <div className="w-full max-w-[100vw] min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans overflow-x-hidden">
       {/* Barra Superior de Herramientas */}
-      <header className="w-full bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-3 sticky top-0 z-40 flex flex-col sm:flex-row sm:items-center sm:justify-between shadow-2xs gap-2">
+      <header className="w-full max-w-full bg-white border-b border-slate-200 px-3 sm:px-6 py-2 sm:py-3 sticky top-0 z-40 flex flex-col sm:flex-row sm:items-center sm:justify-between shadow-2xs gap-2 overflow-x-clip sm:overflow-visible">
         {/* Fila 1: Regresar + Identidad Tarjetón */}
-        <div className="flex items-center justify-between w-full sm:w-auto min-w-0">
+        <div className="flex items-center justify-between w-full sm:w-auto min-w-0 shrink-0">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {/* Botón para regresar a la Landing Page con verificación de guardado */}
             <button
@@ -556,99 +556,101 @@ export function VisualCustomizer({
           </div>
         </div>
 
-        {/* Fila 2 (en móvil se ubica debajo del título sin sobreponerse): Acciones Principales */}
-        <div className="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2.5 w-full sm:w-auto pt-1 sm:pt-0 border-t border-slate-100 sm:border-0 shrink-0">
-          {/* Botón Sobre 3D: Activar y personalizar estilos, colores y lacre */}
-          <button
-            type="button"
-            onClick={() => setMostrarModalSobre(true)}
-            className={`flex-1 sm:flex-initial justify-center px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95 border shrink-0 ${
-              visual.animacionSobre
-                ? 'bg-slate-950 hover:bg-slate-900 text-white border-slate-950 shadow-xs'
-                : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300'
-            }`}
-            title="Personalizar Sobre 3D: activar, cambiar estilos, colores y sellos de lacre"
-          >
-            <Mail size={13} className="shrink-0 text-current" />
-            <span className="hidden sm:inline">Sobre 3D</span>
-            <span className="sm:hidden text-[11px]">Sobre</span>
-            {visual.animacionSobre && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
-            )}
-          </button>
-
-          {/* Botón Estudio Tarjetón (Acorde a la app y en negro institucional) */}
-          <button
-            type="button"
-            onClick={() => abrirEstudioCanvaEnPestana('elementos')}
-            className="flex-1 sm:flex-initial justify-center px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-950 hover:bg-slate-900 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95 border border-slate-800 shrink-0"
-            title="Abrir Estudio Tarjetón: marcos, texturas artesanales, monogramas y biblioteca de iconos"
-          >
-            <Sparkles size={13} className="text-amber-400 shrink-0" />
-            <span className="hidden sm:inline">Estudio Tarjetón</span>
-            <span className="sm:hidden text-[11px]">Estudio</span>
-          </button>
-
-          {/* Botón para alternar el Panel Lateral de Ajustes */}
-          <button
-            type="button"
-            onClick={() => {
-              setPanelAjustesAbierto(!panelAjustesAbierto)
-              if (!panelAjustesAbierto) setVistaMobile('editor')
-            }}
-            className={`flex-1 sm:flex-initial justify-center px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs shrink-0 ${
-              panelAjustesAbierto
-                ? 'bg-amber-50 border-amber-300 text-amber-900'
-                : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
-            }`}
-            title={panelAjustesAbierto ? 'Ocultar panel lateral' : 'Abrir ajustes detallados'}
-          >
-            <Sliders size={13} className="shrink-0" />
-            <span className="hidden sm:inline">{panelAjustesAbierto ? 'Ocultar Ajustes' : 'Ajustes Detallados'}</span>
-            <span className="sm:hidden text-[11px]">{panelAjustesAbierto ? 'Ocultar' : 'Ajustes'}</span>
-          </button>
-
-          {/* Estado de Licencia / Premium */}
-          {evento.esPremium ? (
-            <span className="flex-1 sm:flex-initial justify-center inline-flex items-center gap-1 sm:gap-1.5 text-xs font-bold px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-slate-900 text-white shadow-2xs shrink-0">
-              <Award size={13} className="text-amber-400 shrink-0" />
-              <span className="hidden sm:inline">Licencia Activa</span>
-              <span className="sm:hidden text-[11px]">VIP</span>
-            </span>
-          ) : (
+        {/* Fila 2: Acciones Principales (En móvil: Carrusel horizontal fluido con swipe; En escritorio: Barra alineada) */}
+        <div className="w-full max-w-full min-w-0 pt-1.5 sm:pt-0 border-t border-slate-100 sm:border-0 overflow-x-auto sm:overflow-visible [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] scroll-smooth touch-pan-x overscroll-x-contain shrink-0">
+          <div className="flex items-center justify-start sm:justify-end gap-1.5 sm:gap-2.5 w-max sm:w-auto min-w-full sm:min-w-0 px-1 sm:px-0 py-0.5 sm:py-0 pr-4 sm:pr-0">
+            {/* Botón Sobre 3D: Activar y personalizar estilos, colores y lacre */}
             <button
               type="button"
-              onClick={() => setMostrarModalPago(true)}
-              className="flex-1 sm:flex-initial justify-center inline-flex items-center gap-1 sm:gap-1.5 text-xs font-bold px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0"
-              title="Habilitar invitados ilimitados y remover publicidad"
+              onClick={() => setMostrarModalSobre(true)}
+              className={`px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer active:scale-95 border shrink-0 whitespace-nowrap select-none ${
+                visual.animacionSobre
+                  ? 'bg-slate-950 hover:bg-slate-900 text-white border-slate-950 shadow-xs'
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300'
+              }`}
+              title="Personalizar Sobre 3D: activar, cambiar estilos, colores y sellos de lacre"
             >
-              <Award size={13} className="text-amber-700 shrink-0" />
-              <span className="hidden md:inline">Activar</span>
-              <span className="text-[11px] sm:text-xs">Premium</span>
+              <Mail size={13} className="shrink-0 text-current" />
+              <span className="hidden sm:inline">Sobre 3D</span>
+              <span className="sm:hidden text-[11px]">Sobre 3D</span>
+              {visual.animacionSobre && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+              )}
             </button>
-          )}
 
-          {/* Botón Publicar Tarjeta */}
-          <button
-            onClick={handleGuardarYPublicar}
-            disabled={guardando}
-            className="flex-1 sm:flex-initial justify-center bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm px-2.5 sm:px-5 py-1.5 sm:py-2 rounded-xl flex items-center gap-1 sm:gap-2 shadow-xs transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer shrink-0"
-          >
-            {guardando ? (
-              <span className="text-[11px] sm:text-xs">Guardando...</span>
+            {/* Botón Estudio Tarjetón (Acorde a la app y en negro institucional) */}
+            <button
+              type="button"
+              onClick={() => abrirEstudioCanvaEnPestana('elementos')}
+              className="px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-slate-950 hover:bg-slate-900 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95 border border-slate-800 shrink-0 whitespace-nowrap select-none"
+              title="Abrir Estudio Tarjetón: marcos, texturas artesanales, monogramas y biblioteca de iconos"
+            >
+              <Sparkles size={13} className="text-amber-400 shrink-0" />
+              <span className="hidden sm:inline">Estudio Tarjetón</span>
+              <span className="sm:hidden text-[11px]">Estudio</span>
+            </button>
+
+            {/* Botón para alternar el Panel Lateral de Ajustes */}
+            <button
+              type="button"
+              onClick={() => {
+                setPanelAjustesAbierto(!panelAjustesAbierto)
+                if (!panelAjustesAbierto) setVistaMobile('editor')
+              }}
+              className={`px-3 py-1.5 sm:py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs shrink-0 whitespace-nowrap select-none ${
+                panelAjustesAbierto
+                  ? 'bg-slate-100 border-slate-900 text-slate-950 font-bold'
+                  : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+              }`}
+              title={panelAjustesAbierto ? 'Ocultar panel lateral' : 'Abrir ajustes detallados'}
+            >
+              <Sliders size={13} className="shrink-0" />
+              <span className="hidden sm:inline">{panelAjustesAbierto ? 'Ocultar Ajustes' : 'Ajustes Detallados'}</span>
+              <span className="sm:hidden text-[11px]">{panelAjustesAbierto ? 'Ocultar' : 'Ajustes'}</span>
+            </button>
+
+            {/* Estado de Licencia / Premium */}
+            {evento.esPremium ? (
+              <span className="inline-flex items-center gap-1 sm:gap-1.5 text-xs font-bold px-3 py-1.5 sm:py-2 rounded-xl bg-slate-900 text-white shadow-2xs shrink-0 whitespace-nowrap select-none">
+                <Award size={13} className="text-amber-400 shrink-0" />
+                <span className="hidden sm:inline">Licencia Activa</span>
+                <span className="sm:hidden text-[11px]">VIP</span>
+              </span>
             ) : (
-              <>
-                <span className="sm:hidden text-[11px]">{modoEdicion ? 'Guardar' : 'Publicar'}</span>
-                <span className="hidden sm:inline">{modoEdicion ? 'Guardar Cambios' : 'Publicar Tarjeta'}</span>
-                <ArrowRight size={13} className="shrink-0" />
-              </>
+              <button
+                type="button"
+                onClick={() => setMostrarModalPago(true)}
+                className="inline-flex items-center gap-1 sm:gap-1.5 text-xs font-bold px-3 py-1.5 sm:py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 transition-all cursor-pointer shadow-2xs shrink-0 whitespace-nowrap select-none"
+                title="Habilitar invitados ilimitados y remover publicidad"
+              >
+                <Award size={13} className="text-amber-700 shrink-0" />
+                <span className="hidden md:inline">Activar</span>
+                <span className="text-[11px] sm:text-xs">Premium</span>
+              </button>
             )}
-          </button>
+
+            {/* Botón Publicar Tarjeta */}
+            <button
+              onClick={handleGuardarYPublicar}
+              disabled={guardando}
+              className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-xl flex items-center gap-1 sm:gap-2 shadow-xs transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer shrink-0 whitespace-nowrap select-none"
+            >
+              {guardando ? (
+                <span className="text-[11px] sm:text-xs">Guardando...</span>
+              ) : (
+                <>
+                  <span className="sm:hidden text-[11px]">{modoEdicion ? 'Guardar' : 'Publicar'}</span>
+                  <span className="hidden sm:inline">{modoEdicion ? 'Guardar Cambios' : 'Publicar Tarjeta'}</span>
+                  <ArrowRight size={13} className="shrink-0" />
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Barra de alternancia móvil/tablet (Editor vs Vista Previa) */}
-      <div className="lg:hidden w-full bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-center shrink-0 z-30 shadow-2xs">
+      <div className="lg:hidden w-full max-w-full bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-center shrink-0 z-30 shadow-2xs">
         <div className="grid grid-cols-2 max-w-xs w-full bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
           <button
             type="button"
@@ -678,7 +680,7 @@ export function VisualCustomizer({
       </div>
 
       {/* Espacio de Trabajo Principal (2 Columnas) */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+      <div className="flex-1 w-full max-w-full min-w-0 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
         {/* Barra Lateral de Configuración Modular */}
         <div
           className={`h-[calc(100vh-112px)] lg:h-[calc(100vh-61px)] overflow-y-auto bg-white border-r border-slate-200 p-4 sm:p-6 transition-all duration-200 ${

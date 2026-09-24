@@ -14,11 +14,20 @@ function ContenidoCrear() {
 
   useEffect(() => {
     if (tokenEdicion) {
-      const encontrado = EventoRepositorio.obtenerPorTokenAdmin(tokenEdicion)
-      if (encontrado) {
-        setEventoAEditar(encontrado)
+      const cargar = async () => {
+        let encontrado = EventoRepositorio.obtenerPorTokenAdmin(tokenEdicion)
+        if (!encontrado) {
+          encontrado = await EventoRepositorio.obtenerPorTokenAdminAsync(tokenEdicion)
+          if (encontrado) {
+            EventoRepositorio.guardar(encontrado)
+          }
+        }
+        if (encontrado) {
+          setEventoAEditar(encontrado)
+        }
+        setCargando(false)
       }
-      setCargando(false)
+      cargar()
     }
   }, [tokenEdicion])
 

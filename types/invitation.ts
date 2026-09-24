@@ -20,6 +20,12 @@ export type FuenteTipografica =
   | 'inter' // Limpia / Corporativa
   | 'cinzel' // Solemne / Sofisticada
   | 'dancing' // Cursiva / Festiva
+  | 'greatvibes' // Cursiva Caligráfica / Boda de Gala
+  | 'alexbrush' // Cursiva Nupcial Fluida
+  | 'parisienne' // Chic Francés / Quinceañera
+  | 'prata' // Didone Editorial / Alta Costura
+  | 'lora' // Serif Cálida / Poética
+  | 'poppins' // Geométrica Limpia / Contemporánea
 
 export type EfectoFondo =
   | 'particulas_doradas'
@@ -53,6 +59,67 @@ export type NombreIcono =
   | 'star'
   | 'users'
   | 'messageSquare'
+  | 'link'
+  | 'globe'
+  | 'video'
+  | 'shoppingBag'
+  | 'feather'
+  | 'quote'
+  | 'image'
+  | 'cake'
+  | 'partyPopper'
+  | 'flame'
+  | 'baby'
+  | 'sun'
+  | 'beer'
+  | 'crown'
+  | 'flower'
+  | 'bus'
+  | 'coffee'
+  | 'cocktail'
+  | 'trophy'
+  | 'mic'
+  | 'headphones'
+  | 'compass'
+  | 'qrCode'
+  | 'phone'
+  | 'mail'
+  | 'dollarSign'
+  | 'wallet'
+  | 'umbrella'
+  | 'watch'
+  | 'tree'
+  | 'moon'
+  | 'gamepad'
+  | 'smile'
+  | 'shieldCheck'
+  | 'infinity'
+  | 'sparkle'
+
+export type TexturaFondo =
+  | 'liso'
+  | 'papel_algodon'
+  | 'marmol_oro'
+  | 'acuarela_botanica'
+  | 'noche_estrellada'
+  | 'lino_rustico'
+  | 'terciopelo_oscuro'
+  | 'fiesta_neon'
+
+export type SelloCeraTipo =
+  | 'ninguno'
+  | 'monograma_oro'
+  | 'lacre_rojo'
+  | 'esmeralda_botanica'
+  | 'zafiro_corona'
+  | 'corazon_oro'
+
+export type MarcoDecorativoTipo =
+  | 'ninguno'
+  | 'oro_fino'
+  | 'doble_dorado'
+  | 'esquinas_vintage'
+  | 'arco_floral'
 
 export type TipoSeccion =
   | 'cabecera'          // Portada con título, anfitriones, subtítulo, foto de portada / retrato
@@ -66,6 +133,10 @@ export type TipoSeccion =
   | 'mensaje_libre'     // Poema, dedicatoria de bienvenida o notas especiales
   | 'hospedaje'         // Recomendaciones de hoteles o transporte
   | 'confirmacion_rsvp' // Botón interactivo de confirmación WhatsApp
+  | 'texto_libre'       // Bloque libre de texto con alineación, tamaño y formato
+  | 'imagen_libre'      // Fotografía o banner libre (polaroid, circular, banner)
+  | 'boton_enlace'      // Botón hacia cualquier enlace web externo (Spotify, Falabella, video)
+  | 'separador_ornamental' // Filete dorado, botánico, ondas o monograma decorativo
 
 export interface ElementoItinerario {
   id: string
@@ -124,10 +195,37 @@ export interface SeccionModular {
     hoteles?: HotelHospedaje[]
     // Confirmación RSVP
     metodoConfirmacion?: MetodoConfirmacion
+    // Bloque de Texto Libre
+    cuerpoTexto?: string
+    alineacionTexto?: 'izquierda' | 'centro' | 'derecha'
+    tamanoTexto?: 'sm' | 'base' | 'lg' | 'xl'
+    estiloTexto?: 'normal' | 'cursiva' | 'serif' | 'destacado'
+    colorTextoPersonalizado?: string
+    // Bloque de Imagen Libre
+    urlImagen?: string
+    pieImagen?: string
+    formatoImagen?: 'banner' | 'cuadrada' | 'polaroid' | 'circular' | 'tarjeta'
+    // Bloque de Botón / Enlace Externo
+    textoBoton?: string
+    urlBoton?: string
+    subtextoBoton?: string
+    estiloBoton?: 'primario' | 'secundario' | 'dorado' | 'borde'
+    iconoBoton?: NombreIcono
+    // Separador Ornamental
+    estiloSeparador?: 'linea_dorada' | 'rombo' | 'botanico' | 'onda' | 'puntos'
   }
 }
 
 export type MetodoConfirmacion = 'tarjeton' | 'whatsapp' | 'ambos'
+
+export type FormaTarjeta = 'clasica' | 'arco' | 'doble_borde' | 'biselada'
+
+export interface MusicaFondoConfig {
+  activa: boolean
+  url: string
+  titulo?: string
+  autoReproducir?: boolean
+}
 
 export interface ConfiguracionVisual {
   fuenteTitulo: FuenteTipografica
@@ -138,6 +236,12 @@ export interface ConfiguracionVisual {
   colorTarjeta: string // Color/transparencia de la tarjeta central
   colorTexto: string // Color tipográfico principal
   efectoFondo: EfectoFondo
+  formaTarjeta?: FormaTarjeta // Silueta de la tarjeta (Arco, Clásica, Doble Borde, etc.)
+  musicaFondo?: MusicaFondoConfig // Melodía protocolaria de fondo
+  texturaFondo?: TexturaFondo // Textura estética de fondo (papel artesanal, mármol oro, etc.)
+  selloCera?: SelloCeraTipo // Sello de cera / lacre artesanal en relieve
+  marcoDecorativo?: MarcoDecorativoTipo // Marco de oro fino, esquineros vintage, etc.
+  textoMonograma?: string // Monograma opcional para el sello (ej: "J&M", "50", "A")
   mostrarCuentaRegresiva: boolean
   mostrarUbicacion: boolean
   mostrarDressCode: boolean

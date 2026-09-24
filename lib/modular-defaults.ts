@@ -79,6 +79,34 @@ export const CATALOGO_SECCIONES: MetaSeccion[] = [
     tituloDefecto: 'Palabras de Bienvenida',
   },
   {
+    tipo: 'texto_libre',
+    nombre: 'Bloque de Texto Libre',
+    descripcion: 'Párrafo, versículo, dedicatoria o notas con alineación y tamaños personalizables',
+    iconoDefecto: 'feather',
+    tituloDefecto: 'Dedicatoria',
+  },
+  {
+    tipo: 'imagen_libre',
+    nombre: 'Fotografía / Banner Libre',
+    descripcion: 'Inserta una foto o recuerdo en formato polaroid, banner o retrato',
+    iconoDefecto: 'image',
+    tituloDefecto: 'Nuestro Momento',
+  },
+  {
+    tipo: 'boton_enlace',
+    nombre: 'Botón & Enlace Externo',
+    descripcion: 'Botón directo a Spotify, mesa en tienda, video de la historia o web externa',
+    iconoDefecto: 'link',
+    tituloDefecto: 'Enlace de Interés',
+  },
+  {
+    tipo: 'separador_ornamental',
+    nombre: 'Separador Ornamental',
+    descripcion: 'Filete dorado, rombo, adorno botánico u ondas decorativas de papelería fina',
+    iconoDefecto: 'sparkles',
+    tituloDefecto: 'Separador',
+  },
+  {
     tipo: 'hospedaje',
     nombre: 'Hospedaje & Traslados',
     descripcion: 'Hoteles recomendados, tarifas y teléfonos para invitados de otras ciudades',
@@ -365,16 +393,68 @@ export function crearSeccionPorTipo(tipo: TipoSeccion, orden: number): SeccionMo
         },
       }
     case 'mensaje_libre':
+    case 'texto_libre':
       return {
         id: idUnico,
         tipo,
         titulo: meta.tituloDefecto,
-        subtitulo: 'Dedicatoria',
+        subtitulo: 'Palabras especiales',
         icono: meta.iconoDefecto,
         visible: true,
         orden,
         datos: {
           mensaje: 'Esperamos contar con su distinguida presencia para compartir este día inolvidable.',
+          cuerpoTexto:
+            'Cada momento compartido con quienes amamos se convierte en un tesoro eterno. Gracias por ser parte de nuestra historia y acompañarnos en esta fecha memorable.',
+          alineacionTexto: 'centro',
+          tamanoTexto: 'base',
+          estiloTexto: 'cursiva',
+        },
+      }
+    case 'imagen_libre':
+      return {
+        id: idUnico,
+        tipo,
+        titulo: meta.tituloDefecto,
+        subtitulo: 'Fotografía conmemorativa',
+        icono: meta.iconoDefecto,
+        visible: true,
+        orden,
+        datos: {
+          urlImagen:
+            'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
+          pieImagen: 'Donde comienza la magia...',
+          formatoImagen: 'polaroid',
+        },
+      }
+    case 'boton_enlace':
+      return {
+        id: idUnico,
+        tipo,
+        titulo: meta.tituloDefecto,
+        subtitulo: 'Acceso directo',
+        icono: meta.iconoDefecto,
+        visible: true,
+        orden,
+        datos: {
+          textoBoton: 'Ver Nuestra Lista de Regalos',
+          urlBoton: 'https://www.falabella.com.co',
+          subtextoBoton: 'Código de evento: #12345',
+          estiloBoton: 'dorado',
+          iconoBoton: 'gift',
+        },
+      }
+    case 'separador_ornamental':
+      return {
+        id: idUnico,
+        tipo,
+        titulo: 'Separador Decorativo',
+        subtitulo: '',
+        icono: meta.iconoDefecto,
+        visible: true,
+        orden,
+        datos: {
+          estiloSeparador: 'linea_dorada',
         },
       }
     default:

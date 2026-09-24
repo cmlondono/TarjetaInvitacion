@@ -31,6 +31,12 @@ import {
   Sparkles,
   Camera,
   X,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Type,
+  Feather,
+  Link as LinkIcon,
 } from 'lucide-react'
 
 interface SeccionItemEditorProps {
@@ -61,6 +67,7 @@ export function SeccionItemEditor({
   const inputFilePortadaRef = useRef<HTMLInputElement>(null)
   const inputFileRetratoRef = useRef<HTMLInputElement>(null)
   const inputFileGaleriaRef = useRef<HTMLInputElement>(null)
+  const inputFileImagenLibreRef = useRef<HTMLInputElement>(null)
 
   const handleSubirArchivo = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -779,21 +786,87 @@ export function SeccionItemEditor({
             </div>
           )}
 
-          {/* 7. MENSAJE LIBRE / CITA */}
-          {seccion.tipo === 'mensaje_libre' && (
+          {/* 7. MENSAJE LIBRE / TEXTO LIBRE */}
+          {(seccion.tipo === 'mensaje_libre' || seccion.tipo === 'texto_libre') && (
             <div className="space-y-3 pt-2 border-t border-slate-200">
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800">
-                  Cita, Dedicatoria o Mensaje Especial
+                  Contenido del Texto o Dedicatoria
                 </label>
                 <textarea
-                  rows={3}
-                  value={seccion.datos?.mensaje || ''}
-                  onChange={(e) => alActualizarDatos('mensaje', e.target.value)}
-                  placeholder="Escriba aquí el mensaje que verán sus invitados..."
+                  rows={4}
+                  value={seccion.datos?.cuerpoTexto || seccion.datos?.mensaje || ''}
+                  onChange={(e) => {
+                    alActualizarDatos('cuerpoTexto', e.target.value)
+                    alActualizarDatos('mensaje', e.target.value)
+                  }}
+                  placeholder="Escribe aquí poemas, notas, versículos o palabras de bienvenida..."
                   className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg leading-relaxed"
                 />
               </div>
+
+              {/* Controles de Formato: Alineación y Tamaño */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block">
+                    Alineación
+                  </label>
+                  <div className="flex border border-slate-200 rounded-lg overflow-hidden bg-white p-0.5">
+                    {[
+                      { id: 'izquierda', icon: <AlignLeft size={13} />, title: 'Izquierda' },
+                      { id: 'centro', icon: <AlignCenter size={13} />, title: 'Centro' },
+                      { id: 'derecha', icon: <AlignRight size={13} />, title: 'Derecha' },
+                    ].map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => alActualizarDatos('alineacionTexto', opt.id)}
+                        className={`flex-1 py-1 flex items-center justify-center rounded cursor-pointer ${
+                          (seccion.datos?.alineacionTexto || 'centro') === opt.id
+                            ? 'bg-slate-900 text-white shadow-xs'
+                            : 'text-slate-500 hover:text-slate-900'
+                        }`}
+                        title={opt.title}
+                      >
+                        {opt.icon}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block">
+                    Tamaño
+                  </label>
+                  <select
+                    value={seccion.datos?.tamanoTexto || 'base'}
+                    onChange={(e) => alActualizarDatos('tamanoTexto', e.target.value)}
+                    className="w-full px-2 py-1.5 text-xs bg-white border border-slate-300 rounded-lg"
+                  >
+                    <option value="sm">Pequeño (Nota)</option>
+                    <option value="base">Normal (Párrafo)</option>
+                    <option value="lg">Mediano (Cita)</option>
+                    <option value="xl">Grande (Destacado)</option>
+                  </select>
+                </div>
+
+                <div className="col-span-2 sm:col-span-1 space-y-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-600 block">
+                    Estilo
+                  </label>
+                  <select
+                    value={seccion.datos?.estiloTexto || 'cursiva'}
+                    onChange={(e) => alActualizarDatos('estiloTexto', e.target.value)}
+                    className="w-full px-2 py-1.5 text-xs bg-white border border-slate-300 rounded-lg"
+                  >
+                    <option value="cursiva">Cursiva Poética</option>
+                    <option value="serif">Serif Clásica</option>
+                    <option value="normal">Sans Moderna</option>
+                    <option value="destacado">Cita con Marco</option>
+                  </select>
+                </div>
+              </div>
+
               <div className="space-y-1">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800">
                   Firma o Autor (Opcional)
@@ -802,9 +875,177 @@ export function SeccionItemEditor({
                   type="text"
                   value={seccion.datos?.autorMensaje || ''}
                   onChange={(e) => alActualizarDatos('autorMensaje', e.target.value)}
-                  placeholder="Ej: Sofía & Carlos / Junta Directiva"
+                  placeholder="Ej: Sofía & Carlos / Proverbios 3:5"
                   className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg"
                 />
+              </div>
+            </div>
+          )}
+
+          {/* 7.1. FOTOGRAFÍA / BANNER LIBRE */}
+          {seccion.tipo === 'imagen_libre' && (
+            <div className="space-y-3 pt-2 border-t border-slate-200">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                    <ImageIcon size={12} /> Fotografía o Imagen
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => inputFileImagenLibreRef.current?.click()}
+                    className="text-[10px] text-slate-700 hover:text-slate-900 font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Upload size={11} /> Subir archivo
+                  </button>
+                  <input
+                    ref={inputFileImagenLibreRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) =>
+                      handleSubirArchivo(e, (url) => alActualizarDatos('urlImagen', url))
+                    }
+                  />
+                </div>
+                <input
+                  type="url"
+                  value={seccion.datos?.urlImagen || ''}
+                  onChange={(e) => alActualizarDatos('urlImagen', e.target.value)}
+                  placeholder="https://... URL de la imagen"
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800 block">
+                  Formato Visual de la Foto
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs">
+                  {[
+                    { id: 'polaroid', label: 'Polaroid Retro' },
+                    { id: 'circular', label: 'Retrato Circular' },
+                    { id: 'banner', label: 'Banner Amplio' },
+                    { id: 'tarjeta', label: 'Tarjeta Clásica' },
+                  ].map((fmt) => (
+                    <button
+                      key={fmt.id}
+                      type="button"
+                      onClick={() => alActualizarDatos('formatoImagen', fmt.id)}
+                      className={`py-1.5 px-2 rounded-lg border text-center font-medium cursor-pointer ${
+                        (seccion.datos?.formatoImagen || 'polaroid') === fmt.id
+                          ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
+                          : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                      }`}
+                    >
+                      {fmt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800">
+                  Pie de Foto / Dedicatoria Breve (Opcional)
+                </label>
+                <input
+                  type="text"
+                  value={seccion.datos?.pieImagen || ''}
+                  onChange={(e) => alActualizarDatos('pieImagen', e.target.value)}
+                  placeholder="Ej: Cartagena, Atardecer en el Muelle 2025"
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* 7.2. BOTÓN & ENLACE EXTERNO */}
+          {seccion.tipo === 'boton_enlace' && (
+            <div className="space-y-3 pt-2 border-t border-slate-200">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800">
+                  Texto del Botón
+                </label>
+                <input
+                  type="text"
+                  value={seccion.datos?.textoBoton || ''}
+                  onChange={(e) => alActualizarDatos('textoBoton', e.target.value)}
+                  placeholder="Ej: Ver Mesa de Regalos en Falabella"
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                  <LinkIcon size={12} /> Enlace de Destino (URL)
+                </label>
+                <input
+                  type="url"
+                  value={seccion.datos?.urlBoton || ''}
+                  onChange={(e) => alActualizarDatos('urlBoton', e.target.value)}
+                  placeholder="https://..."
+                  className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800 block">
+                    Estilo Visual del Botón
+                  </label>
+                  <select
+                    value={seccion.datos?.estiloBoton || 'primario'}
+                    onChange={(e) => alActualizarDatos('estiloBoton', e.target.value)}
+                    className="w-full px-2 py-1.5 text-xs bg-white border border-slate-300 rounded-lg"
+                  >
+                    <option value="primario">Color Principal del Evento</option>
+                    <option value="dorado">Dorado de Gala (Gradiente)</option>
+                    <option value="borde">Contorno Minimalista</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800 block">
+                    Subtexto Adicional (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={seccion.datos?.subtextoBoton || ''}
+                    onChange={(e) => alActualizarDatos('subtextoBoton', e.target.value)}
+                    placeholder="Ej: Código de evento: #9948"
+                    className="w-full px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 7.3. SEPARADOR ORNAMENTAL */}
+          {seccion.tipo === 'separador_ornamental' && (
+            <div className="space-y-3 pt-2 border-t border-slate-200">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-800 block">
+                Diseño del Separador
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[
+                  { id: 'linea_dorada', label: 'Filete Dorado ◈', preview: '─── ◈ ───' },
+                  { id: 'botanico', label: 'Corona Laurel', preview: '🌿 ✧ 🌿' },
+                  { id: 'onda', label: 'Onda Sutil', preview: '∿∿∿' },
+                  { id: 'puntos', label: 'Tres Destellos', preview: '✦ ✦ ✦' },
+                ].map((sep) => (
+                  <button
+                    key={sep.id}
+                    type="button"
+                    onClick={() => alActualizarDatos('estiloSeparador', sep.id)}
+                    className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center gap-1 ${
+                      (seccion.datos?.estiloSeparador || 'linea_dorada') === sep.id
+                        ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
+                        : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-800'
+                    }`}
+                  >
+                    <span className="text-xs font-mono font-bold">{sep.preview}</span>
+                    <span className="text-[10px] font-medium opacity-80">{sep.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
           )}

@@ -57,3 +57,38 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Tipografías Especializadas para Tarjetas de Invitación */
+.font-greatvibes {
+  font-family: 'Great Vibes', cursive !important;
+}
+.font-alexbrush {
+  font-family: 'Alex Brush', cursive !important;
+}
+.font-parisienne {
+  font-family: 'Parisienne', cursive !important;
+}
+.font-cinzel {
+  font-family: 'Cinzel', serif !important;
+}
+.font-cormorant {
+  font-family: 'Cormorant Garamond', serif !important;
+}
+.font-playfair {
+  font-family: 'Playfair Display', serif !important;
+}
+.font-prata {
+  font-family: 'Prata', serif !important;
+}
+.font-lora {
+  font-family: 'Lora', serif !important;
+}
+.font-montserrat {
+  font-family: 'Montserrat', sans-serif !important;
+}
+.font-poppins {
+  font-family: 'Poppins', sans-serif !important;
+}
+.font-dancing {
+  font-family: 'Dancing Script', cursive !important;
+}

@@ -160,7 +160,7 @@ export function TarjetonLogo({
         </div>
         {subtexto !== 'none' && subtextLabels[subtexto] && (
           <span
-            className={`text-[9px] sm:text-[10px] tracking-widest uppercase font-medium mt-0.5 ${
+            className={`hidden sm:inline-block text-[9px] sm:text-[10px] tracking-widest uppercase font-medium mt-0.5 ${
               modoOscuro ? 'text-slate-400' : 'text-slate-500'
             }`}
           >

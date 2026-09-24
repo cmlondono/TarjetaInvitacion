@@ -20,13 +20,13 @@ export function StatsBackground() {
         { top: '5%', right: '4%', sym: 'μ' },
         { bottom: '6%', left: '4%', sym: 'β' },
         { bottom: '5%', right: '3%', sym: 'α' },
-      ].map((p, i) => (
+      ].map(({ sym, ...pos }, i) => (
         <span
           key={i}
           className="absolute font-serif select-none opacity-[0.1]"
-          style={{ ...p, color: '#C2547A', fontSize: '1.5rem', sym: undefined } as React.CSSProperties}
+          style={{ ...pos, color: '#C2547A', fontSize: '1.5rem' }}
         >
-          {p.sym}
+          {sym}
         </span>
       ))}
     </div>

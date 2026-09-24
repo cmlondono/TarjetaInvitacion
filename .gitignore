@@ -18,3 +18,4 @@ node_modules
 # Archivos locales de medios y scripts de marketing
 scripts/
 public/ads/
+*.tsbuildinfo

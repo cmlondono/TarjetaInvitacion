@@ -1,14 +1,27 @@
 'use client'
 
-import { useState, Fragment } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { motion } from 'framer-motion'
-import { DetalleEvento, ConfiguracionVisual, Invitado, SeccionModular } from '@/types/invitation'
+import {
+  DetalleEvento,
+  ConfiguracionVisual,
+  Invitado,
+  SeccionModular,
+  TipoSeccion,
+  ElementoItinerario,
+} from '@/types/invitation'
 import { EventCountdown } from './event-countdown'
 import { BackgroundEffects } from './background-effects'
 import { construirUrlWhatsApp } from '@/lib/event-utils'
-import { generarSeccionesPorDefecto } from '@/lib/modular-defaults'
+import { generarSeccionesPorDefecto, IMAGENES_CURADAS } from '@/lib/modular-defaults'
 import { IconoDinamico } from '@/components/ui/icono-dinamico'
 import { ModuloRsvp } from './modulo-rsvp'
+import { InlineEditableText } from '@/components/editor/inline-editable-text'
+import { DecoracionesTarjeta } from './decoraciones-tarjeta'
+import {
+  BarraInsercionEntreBloques,
+  BarraHerramientasBloque,
+} from '@/components/editor/bloque-accion-toolbar'
 import {
   Calendar,
   Clock,
@@ -22,6 +35,15 @@ import {
   Phone,
   Quote,
   Building2,
+  Music,
+  Camera,
+  Plus,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Link as LinkIcon,
+  Trash2,
+  Wand2,
 } from 'lucide-react'
 
 interface DynamicInvitationCardProps {
@@ -29,6 +51,13 @@ interface DynamicInvitationCardProps {
   visual: ConfiguracionVisual
   invitado?: Invitado | null
   esModoVistaPrevia?: boolean
+  esModoEdicionDirecta?: boolean
+  alActualizarSeccion?: (seccionId: string, campo: keyof SeccionModular, valor: any) => void
+  alActualizarDatosSeccion?: (seccionId: string, campoDatos: string, valor: any) => void
+  alActualizarEvento?: (campo: keyof DetalleEvento, valor: any) => void
+  alMoverSeccion?: (indice: number, direccion: 'arriba' | 'abajo') => void
+  alEliminarSeccion?: (seccionId: string) => void
+  alInsertarSeccionEnIndice?: (indice: number, tipo: TipoSeccion) => void
 }
 
 const animacionAparicion = {
@@ -63,24 +92,58 @@ export function DynamicInvitationCard({
   visual,
   invitado,
   esModoVistaPrevia = false,
+  esModoEdicionDirecta = false,
+  alActualizarSeccion,
+  alActualizarDatosSeccion,
+  alActualizarEvento,
+  alMoverSeccion,
+  alEliminarSeccion,
+  alInsertarSeccionEnIndice,
 }: DynamicInvitationCardProps) {
   const [cuentaCopiada, setCuentaCopiada] = useState(false)
   const urlWhatsApp = construirUrlWhatsApp(evento, invitado || undefined)
   const esPlural = invitado ? invitado.esPlural : false
   const nombreInvitado = invitado?.nombre || 'Invitado de Honor'
 
-  // Mapeo tipográfico sobrio
+  const manejarSubidaArchivo = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    alCompletar: (url: string) => void
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        alCompletar(reader.result)
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // Mapeo tipográfico especializado para tarjetas de invitación
   const claseFuenteTitulo =
-    visual.fuenteTitulo === 'playfair'
-      ? 'font-serif'
-      : visual.fuenteTitulo === 'cormorant'
-      ? 'font-serif italic font-normal'
+    visual.fuenteTitulo === 'greatvibes'
+      ? 'font-greatvibes text-4xl sm:text-5xl font-normal tracking-wide'
+      : visual.fuenteTitulo === 'alexbrush'
+      ? 'font-alexbrush text-3xl sm:text-4xl font-normal tracking-wide'
+      : visual.fuenteTitulo === 'parisienne'
+      ? 'font-parisienne text-3xl sm:text-4xl font-normal tracking-wide'
       : visual.fuenteTitulo === 'cinzel'
-      ? 'font-serif uppercase tracking-[0.18em]'
+      ? 'font-cinzel uppercase tracking-[0.18em] font-semibold'
+      : visual.fuenteTitulo === 'cormorant'
+      ? 'font-cormorant italic font-normal tracking-normal'
+      : visual.fuenteTitulo === 'playfair'
+      ? 'font-playfair font-normal'
+      : visual.fuenteTitulo === 'prata'
+      ? 'font-prata font-normal tracking-normal'
+      : visual.fuenteTitulo === 'lora'
+      ? 'font-lora italic font-normal'
       : visual.fuenteTitulo === 'montserrat'
-      ? 'font-sans font-bold tracking-tight'
+      ? 'font-montserrat font-bold tracking-tight'
+      : visual.fuenteTitulo === 'poppins'
+      ? 'font-poppins font-semibold tracking-normal'
       : visual.fuenteTitulo === 'dancing'
-      ? 'font-serif italic tracking-wide'
+      ? 'font-dancing text-3xl sm:text-4xl font-normal tracking-wide'
       : 'font-sans font-semibold'
 
   // Obtener secciones modulares activas y ordenadas
@@ -100,13 +163,104 @@ export function DynamicInvitationCard({
     } catch {}
   }
 
+  // Manejo de música de fondo protocolaria
+  const [reproduciendoMusica, setReproduciendoMusica] = useState(false)
+  const [audioInstancia, setAudioInstancia] = useState<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    if (visual.musicaFondo?.activa && visual.musicaFondo.url) {
+      const audio = new Audio(visual.musicaFondo.url)
+      audio.loop = true
+      audio.volume = 0.4
+      setAudioInstancia(audio)
+
+      if (visual.musicaFondo.autoReproducir && !esModoVistaPrevia) {
+        audio.play().then(() => setReproduciendoMusica(true)).catch(() => {
+          // El navegador bloquea autoplay hasta el primer gesto del usuario
+        })
+      }
+
+      return () => {
+        audio.pause()
+        audio.currentTime = 0
+      }
+    }
+  }, [visual.musicaFondo?.url, visual.musicaFondo?.activa, visual.musicaFondo?.autoReproducir, esModoVistaPrevia])
+
+  const alternarMusica = () => {
+    if (!audioInstancia && visual.musicaFondo?.url) {
+      const audio = new Audio(visual.musicaFondo.url)
+      audio.loop = true
+      audio.volume = 0.4
+      audio.play().then(() => setReproduciendoMusica(true))
+      setAudioInstancia(audio)
+      return
+    }
+    if (!audioInstancia) return
+
+    if (reproduciendoMusica) {
+      audioInstancia.pause()
+      setReproduciendoMusica(false)
+    } else {
+      audioInstancia.play().then(() => setReproduciendoMusica(true))
+    }
+  }
+
+  // Siluetas de Tarjeta
+  const formaTarjeta = visual.formaTarjeta || 'clasica'
+  const claseFormaExterior =
+    formaTarjeta === 'arco'
+      ? 'rounded-t-[180px] sm:rounded-t-[210px] rounded-b-3xl'
+      : formaTarjeta === 'doble_borde'
+      ? 'rounded-2xl ring-4 ring-amber-400/20 shadow-2xl'
+      : formaTarjeta === 'biselada'
+      ? 'rounded-[2.5rem]'
+      : 'rounded-2xl'
+
+  const claseFormaInterior =
+    formaTarjeta === 'arco'
+      ? 'rounded-t-[179px] sm:rounded-t-[209px] rounded-b-3xl'
+      : formaTarjeta === 'doble_borde'
+      ? 'rounded-xl border-2 border-amber-400/30'
+      : formaTarjeta === 'biselada'
+      ? 'rounded-[2.4rem]'
+      : 'rounded-2xl'
+
   return (
     <div
-      className="w-full min-h-screen flex flex-col items-center justify-center px-3 sm:px-4 py-8 sm:py-12 relative overflow-hidden transition-colors duration-500"
+      className={`w-full ${
+        esModoVistaPrevia ? 'min-h-full py-3 sm:py-6' : 'min-h-screen py-8 sm:py-12'
+      } flex flex-col items-center justify-center px-2 sm:px-4 relative overflow-hidden transition-colors duration-500`}
       style={{ backgroundColor: visual.colorFondo }}
     >
       {/* Micro-textura y efectos sutiles */}
       <BackgroundEffects efecto={visual.efectoFondo} colorAcento={visual.colorSecundario} />
+
+      {/* Botón Flotante de Música de Fondo */}
+      {visual.musicaFondo?.activa && visual.musicaFondo.url && (
+        <div className="fixed bottom-5 right-5 z-40 animate-in fade-in zoom-in duration-300">
+          <button
+            type="button"
+            onClick={alternarMusica}
+            className={`px-3 py-2 rounded-full backdrop-blur-md border shadow-lg flex items-center gap-2 transition-all cursor-pointer select-none active:scale-95 ${
+              reproduciendoMusica
+                ? 'bg-slate-900/90 text-white border-amber-400/50 ring-2 ring-amber-400/30'
+                : 'bg-white/90 text-slate-800 border-slate-300 hover:bg-white'
+            }`}
+            title={reproduciendoMusica ? 'Pausar melodía de fondo' : 'Reproducir melodía de fondo'}
+          >
+            <div className={`relative ${reproduciendoMusica ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }}>
+              <Music size={14} className={reproduciendoMusica ? 'text-amber-400' : 'text-slate-600'} />
+            </div>
+            <span className="text-[11px] font-semibold tracking-wide max-w-[120px] truncate">
+              {visual.musicaFondo.titulo || 'Melodía'}
+            </span>
+            <span className="text-[10px] opacity-70">
+              {reproduciendoMusica ? '❚❚' : '▶'}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* Tarjeta Central Modular */}
       <div className="relative w-full max-w-[430px] z-10">
@@ -114,17 +268,25 @@ export function DynamicInvitationCard({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="rounded-2xl p-[1px] shadow-2xl transition-all"
+          className={`${claseFormaExterior} p-[1px] shadow-2xl transition-all`}
           style={{
             background: `linear-gradient(180deg, ${visual.colorSecundario}44 0%, ${visual.colorPrimario}22 50%, ${visual.colorSecundario}33 100%)`,
           }}
         >
           <div
-            className="relative rounded-2xl overflow-hidden backdrop-blur-xl border border-white/60 dark:border-black/40"
+            className={`relative ${claseFormaInterior} overflow-hidden backdrop-blur-xl border border-white/60 dark:border-black/40`}
             style={{ backgroundColor: visual.colorTarjeta }}
           >
+            {/* Decoraciones Estéticas y Texturas Artesanales */}
+            <DecoracionesTarjeta
+              textura={visual.texturaFondo}
+              marco={visual.marcoDecorativo}
+              colorAcento={visual.colorPrimario}
+              colorSecundario={visual.colorSecundario}
+            />
+
             {/* Renderizado de Bloques Modulares Dinámicos */}
-            <div className="flex flex-col">
+            <div className="flex flex-col relative z-10">
               {listaSecciones.map((seccion, index) => {
                 const renderizarBloque = () => {
                   switch (seccion.tipo) {
@@ -141,8 +303,8 @@ export function DynamicInvitationCard({
                         }}
                       >
                         {/* Fotografía de Portada Superior si está definida */}
-                        {imagenPortada && (
-                          <div className="w-full h-36 sm:h-44 relative overflow-hidden bg-slate-200">
+                        {imagenPortada ? (
+                          <div className="w-full h-36 sm:h-44 relative overflow-hidden bg-slate-200 group/portada">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={imagenPortada}
@@ -155,23 +317,124 @@ export function DynamicInvitationCard({
                                 background: `linear-gradient(180deg, transparent 40%, ${visual.colorTarjeta} 100%)`,
                               }}
                             />
+                            {esModoEdicionDirecta && (
+                              <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const portadas = IMAGENES_CURADAS.portadas
+                                    const idxActual = portadas.findIndex((p) => p.url === imagenPortada)
+                                    const siguiente = portadas[(idxActual + 1) % portadas.length].url
+                                    alActualizarDatosSeccion?.(seccion.id, 'imagenPortada', siguiente)
+                                    alActualizarEvento?.('imagenPortada', siguiente)
+                                  }}
+                                  className="px-2.5 py-1 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white text-[10px] font-bold shadow-md backdrop-blur-xs flex items-center gap-1 cursor-pointer transition-all border border-white/20"
+                                  title="1 Clic: Cambiar a la siguiente foto de catálogo"
+                                >
+                                  <Wand2 size={11} className="text-amber-400" />
+                                  <span>Foto Sugerida</span>
+                                </button>
+                                <label className="px-2.5 py-1 rounded-full bg-white/95 hover:bg-white text-slate-900 text-[10px] font-bold shadow-md backdrop-blur-xs flex items-center gap-1 cursor-pointer transition-all border border-slate-200">
+                                  <Camera size={11} />
+                                  <span>Subir Foto</span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="sr-only"
+                                    onChange={(e) =>
+                                      manejarSubidaArchivo(e, (url) => {
+                                        alActualizarDatosSeccion?.(seccion.id, 'imagenPortada', url)
+                                        alActualizarEvento?.('imagenPortada', url)
+                                      })
+                                    }
+                                  />
+                                </label>
+                              </div>
+                            )}
                           </div>
-                        )}
-
-                        <div className={`px-6 sm:px-8 pb-7 flex flex-col items-center w-full ${imagenPortada ? 'pt-3' : 'pt-8'}`}>
-                          {/* Fotografía / Logotipo Central si está configurado */}
-                          {imagenRetrato && (
-                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 shadow-md mb-3 -mt-8 relative z-10 bg-white"
-                              style={{ borderColor: visual.colorPrimario }}
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={imagenRetrato}
-                                alt="Anfitrión"
-                                className="w-full h-full object-cover"
-                              />
+                        ) : esModoEdicionDirecta ? (
+                          <div className="w-full py-6 border-2 border-dashed border-amber-400/40 bg-amber-500/5 hover:bg-amber-500/10 flex flex-col items-center justify-center gap-2 transition-colors">
+                            <div className="flex items-center gap-2">
+                              <label className="px-3 py-1.5 rounded-full bg-slate-900 text-white text-[11px] font-bold shadow-sm flex items-center gap-1.5 cursor-pointer hover:bg-slate-800">
+                                <Camera size={13} />
+                                <span>Subir Foto de Portada</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="sr-only"
+                                  onChange={(e) =>
+                                    manejarSubidaArchivo(e, (url) => {
+                                      alActualizarDatosSeccion?.(seccion.id, 'imagenPortada', url)
+                                      alActualizarEvento?.('imagenPortada', url)
+                                    })
+                                  }
+                                />
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const primera = IMAGENES_CURADAS.portadas[0].url
+                                  alActualizarDatosSeccion?.(seccion.id, 'imagenPortada', primera)
+                                  alActualizarEvento?.('imagenPortada', primera)
+                                }}
+                                className="px-3 py-1.5 rounded-full bg-white text-slate-800 border border-slate-300 text-[11px] font-bold shadow-sm flex items-center gap-1.5 cursor-pointer hover:bg-slate-50"
+                              >
+                                <Wand2 size={13} className="text-amber-500" />
+                                <span>Usar Foto Sugerida</span>
+                              </button>
                             </div>
-                          )}
+                            <span className="text-[10px] text-slate-500">Haz clic en una opción para ilustrar la portada en 1 solo paso</span>
+                          </div>
+                        ) : null}
+
+                        <div className={`px-4 sm:px-8 pb-7 flex flex-col items-center w-full ${imagenPortada ? 'pt-3' : 'pt-8'}`}>
+                          {/* Fotografía / Logotipo Central si está configurado */}
+                          {imagenRetrato ? (
+                            <div className={`relative group/retrato ${imagenPortada ? '-mt-8 sm:-mt-10' : 'mt-0'} z-10`}>
+                              <div
+                                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 shadow-md mb-3 bg-white"
+                                style={{ borderColor: visual.colorPrimario }}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={imagenRetrato}
+                                  alt="Anfitrión"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              {esModoEdicionDirecta && (
+                                <label className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover/retrato:opacity-100 transition-opacity flex items-center justify-center cursor-pointer mb-3">
+                                  <Camera size={16} className="text-white" />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="sr-only"
+                                    onChange={(e) =>
+                                      manejarSubidaArchivo(e, (url) => {
+                                        alActualizarDatosSeccion?.(seccion.id, 'imagenRetrato', url)
+                                        alActualizarEvento?.('imagenRetrato', url)
+                                      })
+                                    }
+                                  />
+                                </label>
+                              )}
+                            </div>
+                          ) : esModoEdicionDirecta ? (
+                            <label className="w-12 h-12 rounded-full border-2 border-dashed border-amber-400/50 hover:border-amber-500 bg-amber-500/5 flex items-center justify-center cursor-pointer mb-2 transition-colors" title="Añadir foto de anfitrión o logo">
+                              <Camera size={14} className="text-amber-600" />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="sr-only"
+                                onChange={(e) =>
+                                  manejarSubidaArchivo(e, (url) => {
+                                    alActualizarDatosSeccion?.(seccion.id, 'imagenRetrato', url)
+                                    alActualizarEvento?.('imagenRetrato', url)
+                                  })
+                                }
+                              />
+                            </label>
+                          ) : null}
 
                           {/* Badge institucional de convocatoria */}
                           <motion.div
@@ -195,17 +458,21 @@ export function DynamicInvitationCard({
                             </span>
                           </motion.div>
 
-                          {/* Nombre del Invitado o Título Principal */}
-                          <motion.h2
-                            custom={index + 0.5}
-                            initial="oculto"
-                            animate="visible"
-                            variants={animacionAparicion}
-                            className={`text-2xl sm:text-3xl leading-snug tracking-tight ${claseFuenteTitulo}`}
-                            style={{ color: visual.colorTexto }}
-                          >
-                            {invitado ? nombreInvitado : seccion.titulo || evento.titulo}
-                          </motion.h2>
+                          {/* Nombre del Invitado o Título Principal con Edición Directa */}
+                          <div className="w-full text-center">
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={invitado ? nombreInvitado : seccion.titulo || evento.titulo}
+                              alGuardar={(nuevoTexto) => {
+                                alActualizarSeccion?.(seccion.id, 'titulo', nuevoTexto)
+                                alActualizarEvento?.('titulo', nuevoTexto)
+                              }}
+                              etiqueta="h2"
+                              className={`text-2xl sm:text-3xl leading-snug tracking-tight font-bold ${claseFuenteTitulo}`}
+                              style={{ color: visual.colorTexto }}
+                              placeholder="Título del Evento (ej: Nuestra Boda)"
+                            />
+                          </div>
 
                           {invitado && (
                             <motion.div
@@ -229,20 +496,31 @@ export function DynamicInvitationCard({
                             </motion.div>
                           )}
 
-                          {/* Anfitriones y Subtítulo */}
-                          <div className="mt-4 text-center">
-                            <p
-                              className="text-[10px] tracking-[0.25em] uppercase font-semibold opacity-70"
+                          {/* Anfitriones y Subtítulo con Edición Directa */}
+                          <div className="mt-4 text-center w-full">
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={seccion.subtitulo || evento.subtitulo || ''}
+                              alGuardar={(nuevoTexto) => {
+                                alActualizarSeccion?.(seccion.id, 'subtitulo', nuevoTexto)
+                                alActualizarEvento?.('subtitulo', nuevoTexto)
+                              }}
+                              etiqueta="p"
+                              className="text-[10px] tracking-[0.25em] uppercase font-semibold opacity-70 block"
                               style={{ color: visual.colorTexto }}
-                            >
-                              {seccion.subtitulo || evento.subtitulo || 'Tiene el honor de invitarle a'}
-                            </p>
-                            <h3
-                              className={`text-lg sm:text-xl font-bold mt-1 ${claseFuenteTitulo}`}
+                              placeholder="Tiene el honor de invitarle a"
+                            />
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={evento.anfitriones || ''}
+                              alGuardar={(nuevoTexto) => {
+                                alActualizarEvento?.('anfitriones', nuevoTexto)
+                              }}
+                              etiqueta="h3"
+                              className={`text-lg sm:text-xl font-bold mt-1 block ${claseFuenteTitulo}`}
                               style={{ color: visual.colorTexto }}
-                            >
-                              {evento.anfitriones || evento.titulo}
-                            </h3>
+                              placeholder="Nombres de los anfitriones"
+                            />
                           </div>
 
                           {/* Filete divisorio editorial */}
@@ -273,9 +551,14 @@ export function DynamicInvitationCard({
                             size={12}
                             style={{ color: visual.colorSecundario }}
                           />
-                          <p className="text-[10px] tracking-[0.25em] uppercase font-semibold opacity-60 text-center">
-                            {seccion.titulo || 'Tiempo Restante'}
-                          </p>
+                          <InlineEditableText
+                            activo={esModoEdicionDirecta}
+                            valor={seccion.titulo || 'Tiempo Restante'}
+                            alGuardar={(val) => alActualizarSeccion?.(seccion.id, 'titulo', val)}
+                            etiqueta="p"
+                            className="text-[10px] tracking-[0.25em] uppercase font-semibold opacity-60 text-center"
+                            style={{ color: visual.colorTexto }}
+                          />
                         </div>
                         <EventCountdown
                           fechaIso={evento.fechaEvento}
@@ -299,7 +582,9 @@ export function DynamicInvitationCard({
                       >
                         <div className="grid grid-cols-2 gap-2.5 w-full">
                           <div
-                            className="flex flex-col items-center justify-center p-3 rounded-xl text-center border"
+                            className={`flex flex-col items-center justify-center p-3 rounded-xl text-center border relative group transition-all ${
+                              esModoEdicionDirecta ? 'cursor-pointer hover:border-amber-400 hover:bg-amber-50/50' : ''
+                            }`}
                             style={{
                               backgroundColor: `${visual.colorPrimario}05`,
                               borderColor: `${visual.colorPrimario}18`,
@@ -311,7 +596,7 @@ export function DynamicInvitationCard({
                               style={{ color: visual.colorSecundario }}
                             />
                             <span className="text-[9px] uppercase tracking-widest font-semibold opacity-60">
-                              Fecha
+                              Fecha {esModoEdicionDirecta && '✏️'}
                             </span>
                             <span
                               className="text-xs font-semibold mt-0.5 capitalize"
@@ -326,6 +611,23 @@ export function DynamicInvitationCard({
                                   })
                                 : 'Por confirmar'}
                             </span>
+                            {esModoEdicionDirecta && (
+                              <input
+                                type="date"
+                                value={evento.fechaEvento ? evento.fechaEvento.split('T')[0] : ''}
+                                onChange={(e) => {
+                                  const nueva = e.target.value
+                                  if (nueva) {
+                                    const horaActual = evento.fechaEvento && evento.fechaEvento.includes('T')
+                                      ? evento.fechaEvento.split('T')[1]
+                                      : '18:00:00'
+                                    alActualizarEvento?.('fechaEvento', `${nueva}T${horaActual}`)
+                                  }
+                                }}
+                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                                title="Haz clic para cambiar la fecha directamente"
+                              />
+                            )}
                           </div>
 
                           <div
@@ -343,12 +645,15 @@ export function DynamicInvitationCard({
                             <span className="text-[9px] uppercase tracking-widest font-semibold opacity-60">
                               Hora
                             </span>
-                            <span
-                              className="text-xs font-semibold mt-0.5"
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={evento.horaEvento || '6:30 PM'}
+                              alGuardar={(val) => alActualizarEvento?.('horaEvento', val)}
+                              etiqueta="span"
+                              className="text-xs font-semibold mt-0.5 block"
                               style={{ color: visual.colorTexto }}
-                            >
-                              {evento.horaEvento || 'Por definir'}
-                            </span>
+                              placeholder="6:30 PM"
+                            />
                           </div>
                         </div>
 
@@ -371,8 +676,8 @@ export function DynamicInvitationCard({
                   }
 
                   case 'itinerario': {
-                    const hitos = seccion.datos?.itinerario || []
-                    if (hitos.length === 0) return null
+                    const hitos: ElementoItinerario[] = seccion.datos?.itinerario || []
+                    if (hitos.length === 0 && !esModoEdicionDirecta) return null
 
                     return (
                       <motion.div
@@ -394,22 +699,31 @@ export function DynamicInvitationCard({
                           >
                             <IconoDinamico nombre={seccion.icono || 'clock'} size={14} />
                           </div>
-                          <div>
-                            <p
-                              className="text-xs font-bold uppercase tracking-wider"
+                          <div className="flex-1">
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={seccion.titulo || 'Itinerario'}
+                              alGuardar={(val) => alActualizarSeccion?.(seccion.id, 'titulo', val)}
+                              etiqueta="p"
+                              className="text-xs font-bold uppercase tracking-wider block"
                               style={{ color: visual.colorTexto }}
-                            >
-                              {seccion.titulo || 'Itinerario'}
-                            </p>
-                            {seccion.subtitulo && (
-                              <p className="text-[10px] opacity-60">{seccion.subtitulo}</p>
-                            )}
+                              placeholder="Itinerario del Evento"
+                            />
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={seccion.subtitulo || ''}
+                              alGuardar={(val) => alActualizarSeccion?.(seccion.id, 'subtitulo', val)}
+                              etiqueta="p"
+                              className="text-[10px] opacity-60 block"
+                              style={{ color: visual.colorTexto }}
+                              placeholder="Cronograma de la celebración..."
+                            />
                           </div>
                         </div>
 
                         {/* Cronograma vertical */}
                         <div className="space-y-3 pl-1 relative border-l-2 ml-3" style={{ borderColor: `${visual.colorPrimario}20` }}>
-                          {hitos.map((hito) => (
+                          {hitos.map((hito, hIdx) => (
                             <div key={hito.id} className="relative pl-5">
                               {/* Punto o icono del hito */}
                               <div
@@ -422,31 +736,87 @@ export function DynamicInvitationCard({
                                 <IconoDinamico nombre={hito.icono || 'sparkles'} size={10} />
                               </div>
 
-                              <div className="flex items-baseline gap-2">
-                                <span
-                                  className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
-                                  style={{
-                                    backgroundColor: `${visual.colorPrimario}10`,
-                                    color: visual.colorPrimario,
-                                  }}
-                                >
-                                  {hito.hora}
-                                </span>
-                                <h4
-                                  className="text-xs font-semibold"
-                                  style={{ color: visual.colorTexto }}
-                                >
-                                  {hito.titulo}
-                                </h4>
+                              <div className="flex items-baseline justify-between gap-2">
+                                <div className="flex items-baseline gap-2 flex-1 min-w-0">
+                                  <InlineEditableText
+                                    activo={esModoEdicionDirecta}
+                                    valor={hito.hora}
+                                    alGuardar={(val) => {
+                                      const actualizados = [...hitos]
+                                      actualizados[hIdx] = { ...actualizados[hIdx], hora: val }
+                                      alActualizarDatosSeccion?.(seccion.id, 'itinerario', actualizados)
+                                    }}
+                                    etiqueta="span"
+                                    className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded inline-block"
+                                    style={{
+                                      backgroundColor: `${visual.colorPrimario}10`,
+                                      color: visual.colorPrimario,
+                                    }}
+                                    placeholder="20:00"
+                                  />
+                                  <InlineEditableText
+                                    activo={esModoEdicionDirecta}
+                                    valor={hito.titulo}
+                                    alGuardar={(val) => {
+                                      const actualizados = [...hitos]
+                                      actualizados[hIdx] = { ...actualizados[hIdx], titulo: val }
+                                      alActualizarDatosSeccion?.(seccion.id, 'itinerario', actualizados)
+                                    }}
+                                    etiqueta="h4"
+                                    className="text-xs font-semibold inline-block"
+                                    style={{ color: visual.colorTexto }}
+                                    placeholder="Nombre del momento"
+                                  />
+                                </div>
+                                {esModoEdicionDirecta && hitos.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const actualizados = hitos.filter((_, idx) => idx !== hIdx)
+                                      alActualizarDatosSeccion?.(seccion.id, 'itinerario', actualizados)
+                                    }}
+                                    className="text-slate-400 hover:text-red-600 p-0.5 rounded transition-colors cursor-pointer shrink-0"
+                                    title="Eliminar este momento del cronograma"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                )}
                               </div>
-                              {hito.descripcion && (
-                                <p className="text-[11px] opacity-70 mt-0.5 leading-relaxed">
-                                  {hito.descripcion}
-                                </p>
-                              )}
+                              <InlineEditableText
+                                activo={esModoEdicionDirecta}
+                                valor={hito.descripcion || ''}
+                                alGuardar={(val) => {
+                                  const actualizados = [...hitos]
+                                  actualizados[hIdx] = { ...actualizados[hIdx], descripcion: val }
+                                  alActualizarDatosSeccion?.(seccion.id, 'itinerario', actualizados)
+                                }}
+                                etiqueta="p"
+                                className="text-[11px] opacity-70 mt-0.5 leading-relaxed block"
+                                style={{ color: visual.colorTexto }}
+                                placeholder="Detalles de este momento (opcional)..."
+                              />
                             </div>
                           ))}
                         </div>
+
+                        {esModoEdicionDirecta && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const nuevoHito: ElementoItinerario = {
+                                id: `it-${Date.now()}`,
+                                hora: '20:00',
+                                titulo: 'Nuevo Momento',
+                                descripcion: 'Detalle de la actividad',
+                                icono: 'sparkles',
+                              }
+                              alActualizarDatosSeccion?.(seccion.id, 'itinerario', [...hitos, nuevoHito])
+                            }}
+                            className="w-full py-2 border-2 border-dashed border-amber-400/40 rounded-xl bg-amber-500/5 hover:bg-amber-500/10 text-amber-900 text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer mt-3 transition-colors"
+                          >
+                            <Plus size={13} /> <span>+ Añadir momento al itinerario</span>
+                          </button>
+                        )}
                       </motion.div>
                     )
                   }
@@ -459,7 +829,7 @@ export function DynamicInvitationCard({
                       seccion.datos?.enlaceWaze ||
                       (direccion ? `https://waze.com/ul?q=${encodeURIComponent(direccion)}` : '')
 
-                    if (!direccion) return null
+                    if (!direccion && !esModoEdicionDirecta) return null
 
                     return (
                       <motion.div
@@ -488,22 +858,53 @@ export function DynamicInvitationCard({
                             <MapPin size={16} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-[9px] uppercase tracking-wider font-semibold opacity-60">
-                              {seccion.titulo || 'Sede del Evento'}
-                            </p>
-                            <p
-                              className="text-xs font-semibold mt-0.5"
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={seccion.titulo || 'Sede del Evento'}
+                              alGuardar={(val) => alActualizarSeccion?.(seccion.id, 'titulo', val)}
+                              etiqueta="p"
+                              className="text-[9px] uppercase tracking-wider font-semibold opacity-60 block"
+                              placeholder="Sede del Evento"
+                            />
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={nombreLugar || ''}
+                              alGuardar={(val) => {
+                                alActualizarDatosSeccion?.(seccion.id, 'nombreLugar', val)
+                                alActualizarEvento?.('direccion', val)
+                              }}
+                              etiqueta="p"
+                              className="text-xs font-semibold mt-0.5 block"
                               style={{ color: visual.colorTexto }}
-                            >
-                              {nombreLugar}
-                            </p>
-                            {seccion.datos?.detallesAcceso && (
-                              <p className="text-[10px] opacity-70 mt-1 leading-normal">
-                                {seccion.datos.detallesAcceso}
-                              </p>
-                            )}
+                              placeholder="Nombre del salón, hacienda o dirección"
+                            />
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={seccion.datos?.detallesAcceso || ''}
+                              alGuardar={(val) => alActualizarDatosSeccion?.(seccion.id, 'detallesAcceso', val)}
+                              etiqueta="p"
+                              className="text-[10px] opacity-70 mt-1 leading-normal block"
+                              placeholder="Indicaciones de acceso, parqueadero o salón..."
+                            />
                           </div>
                         </div>
+
+                        {/* Enlace de Google Maps en Modo Edición Directa */}
+                        {esModoEdicionDirecta && (
+                          <div className="flex items-center gap-1.5 bg-white p-2 rounded-lg border border-slate-200 text-xs">
+                            <MapPin size={13} className="text-amber-600 shrink-0" />
+                            <input
+                              type="url"
+                              value={enlaceMapa || ''}
+                              onChange={(e) => {
+                                alActualizarDatosSeccion?.(seccion.id, 'enlaceMapa', e.target.value)
+                                alActualizarEvento?.('enlaceMapa', e.target.value)
+                              }}
+                              placeholder="Enlace de Google Maps (https://maps.google.com/...)"
+                              className="w-full text-[10px] bg-transparent outline-none font-mono"
+                            />
+                          </div>
+                        )}
 
                         {/* Botones de Navegación Google Maps & Waze */}
                         <div className="grid grid-cols-2 gap-2">
@@ -547,7 +948,7 @@ export function DynamicInvitationCard({
                     const colores = seccion.datos?.coloresSugeridos || evento.paletaVestimenta || []
                     const notas = seccion.datos?.notasVestimenta
 
-                    if (!etiqueta) return null
+                    if (!etiqueta && !esModoEdicionDirecta) return null
 
                     return (
                       <motion.div
@@ -577,15 +978,26 @@ export function DynamicInvitationCard({
                               <IconoDinamico nombre={seccion.icono || 'shirt'} size={16} />
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="text-[9px] uppercase tracking-wider font-semibold opacity-60">
-                                {seccion.titulo || 'Código de Etiqueta'}
-                              </p>
-                              <p
-                                className="text-xs font-semibold"
+                              <InlineEditableText
+                                activo={esModoEdicionDirecta}
+                                valor={seccion.titulo || 'Código de Etiqueta'}
+                                alGuardar={(val) => alActualizarSeccion?.(seccion.id, 'titulo', val)}
+                                etiqueta="p"
+                                className="text-[9px] uppercase tracking-wider font-semibold opacity-60 block"
+                                placeholder="Código de Etiqueta"
+                              />
+                              <InlineEditableText
+                                activo={esModoEdicionDirecta}
+                                valor={etiqueta || ''}
+                                alGuardar={(val) => {
+                                  alActualizarDatosSeccion?.(seccion.id, 'etiqueta', val)
+                                  alActualizarEvento?.('codigoVestimenta', val)
+                                }}
+                                etiqueta="p"
+                                className="text-xs font-semibold block"
                                 style={{ color: visual.colorTexto }}
-                              >
-                                {etiqueta}
-                              </p>
+                                placeholder="Ej: Traje Formal / Corbata Oscura"
+                              />
                             </div>
                           </div>
 
@@ -606,8 +1018,15 @@ export function DynamicInvitationCard({
                             </div>
                           )}
 
-                          {notas && (
-                            <p className="text-[10px] opacity-70 italic">{notas}</p>
+                          {(notas || esModoEdicionDirecta) && (
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={notas || ''}
+                              alGuardar={(val) => alActualizarDatosSeccion?.(seccion.id, 'notasVestimenta', val)}
+                              etiqueta="p"
+                              className="text-[10px] opacity-70 italic block"
+                              placeholder="Notas adicionales de etiqueta (opcional)..."
+                            />
                           )}
                         </div>
                       </motion.div>
@@ -649,46 +1068,101 @@ export function DynamicInvitationCard({
                               <CreditCard size={16} />
                             </div>
                             <div className="text-xs min-w-0 flex-1">
-                              <p className="text-[9px] uppercase tracking-wider font-semibold opacity-60">
-                                {seccion.titulo || 'Detalles de Cortesía'}
-                              </p>
-                              {banco && (
-                                <p className="font-semibold" style={{ color: visual.colorTexto }}>
-                                  {banco} · {tipoCuenta || 'Cuenta'}
-                                </p>
-                              )}
+                              <InlineEditableText
+                                activo={esModoEdicionDirecta}
+                                valor={seccion.titulo || 'Detalles de Cortesía / Lluvia de Sobres'}
+                                alGuardar={(val) => alActualizarSeccion?.(seccion.id, 'titulo', val)}
+                                etiqueta="p"
+                                className="text-[9px] uppercase tracking-wider font-semibold opacity-60 block"
+                                placeholder="Detalles de Cortesía"
+                              />
+                              <div className="flex items-center gap-1.5 font-semibold" style={{ color: visual.colorTexto }}>
+                                <InlineEditableText
+                                  activo={esModoEdicionDirecta}
+                                  valor={banco || ''}
+                                  alGuardar={(val) => {
+                                    alActualizarDatosSeccion?.(seccion.id, 'banco', val)
+                                    alActualizarEvento?.('datosBancarios', {
+                                      ...evento.datosBancarios,
+                                      banco: val,
+                                    })
+                                  }}
+                                  etiqueta="span"
+                                  placeholder="Nombre del Banco"
+                                />
+                                <span className="opacity-60">·</span>
+                                <InlineEditableText
+                                  activo={esModoEdicionDirecta}
+                                  valor={tipoCuenta || 'Ahorros'}
+                                  alGuardar={(val) => {
+                                    alActualizarDatosSeccion?.(seccion.id, 'tipoCuenta', val)
+                                    alActualizarEvento?.('datosBancarios', {
+                                      ...evento.datosBancarios,
+                                      tipoCuenta: val,
+                                    })
+                                  }}
+                                  etiqueta="span"
+                                  placeholder="Tipo Cuenta"
+                                />
+                              </div>
                             </div>
                           </div>
 
-                          {numeroCuenta && (
-                            <div className="flex items-center justify-between bg-white/80 dark:bg-black/20 p-2 rounded-lg border border-black/5 text-xs">
-                              <div>
+                          {(numeroCuenta || esModoEdicionDirecta) && (
+                            <div className="flex items-center justify-between bg-white/80 dark:bg-black/20 p-2.5 rounded-lg border border-black/5 text-xs">
+                              <div className="flex-1 min-w-0 mr-2">
                                 <span className="text-[9px] opacity-60 uppercase block">
                                   Número de Cuenta:
                                 </span>
-                                <span className="font-mono font-bold text-xs">{numeroCuenta}</span>
-                                {titular && (
-                                  <span className="text-[10px] opacity-70 block">
-                                    Titular: {titular}
-                                  </span>
-                                )}
+                                <InlineEditableText
+                                  activo={esModoEdicionDirecta}
+                                  valor={numeroCuenta || ''}
+                                  alGuardar={(val) => {
+                                    alActualizarDatosSeccion?.(seccion.id, 'numeroCuenta', val)
+                                    alActualizarEvento?.('datosBancarios', {
+                                      ...evento.datosBancarios,
+                                      numeroCuenta: val,
+                                    })
+                                  }}
+                                  etiqueta="span"
+                                  className="font-mono font-bold text-xs block"
+                                  placeholder="000-000000-00"
+                                />
+                                <div className="flex items-center gap-1 text-[10px] opacity-70 mt-0.5">
+                                  <span>Titular:</span>
+                                  <InlineEditableText
+                                    activo={esModoEdicionDirecta}
+                                    valor={titular || ''}
+                                    alGuardar={(val) => {
+                                      alActualizarDatosSeccion?.(seccion.id, 'titular', val)
+                                      alActualizarEvento?.('datosBancarios', {
+                                        ...evento.datosBancarios,
+                                        titular: val,
+                                      })
+                                    }}
+                                    etiqueta="span"
+                                    placeholder="Nombre del titular"
+                                  />
+                                </div>
                               </div>
-                              <button
-                                onClick={() => copiarCuenta(numeroCuenta)}
-                                className="px-2.5 py-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-medium flex items-center gap-1 transition-all cursor-pointer"
-                              >
-                                {cuentaCopiada ? (
-                                  <>
-                                    <Check size={12} className="text-emerald-600" />
-                                    <span>Copiado</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Copy size={12} />
-                                    <span>Copiar</span>
-                                  </>
-                                )}
-                              </button>
+                              {numeroCuenta && (
+                                <button
+                                  onClick={() => copiarCuenta(numeroCuenta)}
+                                  className="px-2.5 py-1.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-medium flex items-center gap-1 transition-all cursor-pointer shrink-0"
+                                >
+                                  {cuentaCopiada ? (
+                                    <>
+                                      <Check size={12} className="text-emerald-600" />
+                                      <span>Copiado</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy size={12} />
+                                      <span>Copiar</span>
+                                    </>
+                                  )}
+                                </button>
+                              )}
                             </div>
                           )}
 
@@ -865,6 +1339,499 @@ export function DynamicInvitationCard({
                     )
                   }
 
+                  case 'texto_libre': {
+                    const texto = seccion.datos?.cuerpoTexto || seccion.datos?.mensaje
+                    if (!texto && !esModoEdicionDirecta) return null
+
+                    const alineacion = seccion.datos?.alineacionTexto || 'centro'
+                    const tamano = seccion.datos?.tamanoTexto || 'base'
+                    const estilo = seccion.datos?.estiloTexto || 'cursiva'
+
+                    const claseAlineacion =
+                      alineacion === 'izquierda'
+                        ? 'text-left'
+                        : alineacion === 'derecha'
+                        ? 'text-right'
+                        : 'text-center'
+
+                    const claseTamano =
+                      tamano === 'sm'
+                        ? 'text-xs leading-relaxed'
+                        : tamano === 'lg'
+                        ? 'text-base sm:text-lg leading-relaxed'
+                        : tamano === 'xl'
+                        ? 'text-lg sm:text-xl font-medium leading-snug'
+                        : 'text-sm leading-relaxed'
+
+                    const claseEstilo =
+                      estilo === 'cursiva'
+                        ? 'font-serif italic'
+                        : estilo === 'serif'
+                        ? 'font-serif'
+                        : estilo === 'destacado'
+                        ? 'font-serif italic font-semibold'
+                        : 'font-sans'
+
+                    return (
+                      <motion.div
+                        key={seccion.id}
+                        custom={index}
+                        initial="oculto"
+                        animate="visible"
+                        variants={animacionAparicion}
+                        className="px-6 sm:px-8 py-5 border-b border-black/[0.04]"
+                      >
+                        <div
+                          className={`p-4 rounded-xl border relative ${claseAlineacion} ${
+                            estilo === 'destacado' ? 'border-amber-400/40' : ''
+                          }`}
+                          style={{
+                            backgroundColor: `${visual.colorPrimario}04`,
+                            borderColor: estilo === 'destacado' ? undefined : `${visual.colorPrimario}15`,
+                          }}
+                        >
+                          {/* Selector de alineación rápido en modo edición */}
+                          {esModoEdicionDirecta && (
+                            <div className="flex items-center justify-end gap-1 mb-2 pb-1.5 border-b border-black/5 opacity-60 hover:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={() => alActualizarDatosSeccion?.(seccion.id, 'alineacionTexto', 'izquierda')}
+                                className={`p-1 rounded hover:bg-black/5 cursor-pointer ${alineacion === 'izquierda' ? 'text-amber-600 font-bold' : ''}`}
+                                title="Alinear a la izquierda"
+                              >
+                                <AlignLeft size={11} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => alActualizarDatosSeccion?.(seccion.id, 'alineacionTexto', 'centro')}
+                                className={`p-1 rounded hover:bg-black/5 cursor-pointer ${alineacion === 'centro' ? 'text-amber-600 font-bold' : ''}`}
+                                title="Alinear al centro"
+                              >
+                                <AlignCenter size={11} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => alActualizarDatosSeccion?.(seccion.id, 'alineacionTexto', 'derecha')}
+                                className={`p-1 rounded hover:bg-black/5 cursor-pointer ${alineacion === 'derecha' ? 'text-amber-600 font-bold' : ''}`}
+                                title="Alinear a la derecha"
+                              >
+                                <AlignRight size={11} />
+                              </button>
+                            </div>
+                          )}
+
+                          {(seccion.titulo || esModoEdicionDirecta) && (
+                            <div className="flex items-center gap-1.5 mb-2.5 justify-center">
+                              <IconoDinamico
+                                nombre={seccion.icono || 'feather'}
+                                size={13}
+                                style={{ color: visual.colorSecundario }}
+                              />
+                              <InlineEditableText
+                                activo={esModoEdicionDirecta}
+                                valor={seccion.titulo || ''}
+                                alGuardar={(val) => alActualizarSeccion?.(seccion.id, 'titulo', val)}
+                                etiqueta="span"
+                                className="text-[10px] tracking-[0.2em] uppercase font-bold opacity-70"
+                                style={{ color: visual.colorTexto }}
+                                placeholder="Título (opcional)"
+                              />
+                            </div>
+                          )}
+
+                          <InlineEditableText
+                            activo={esModoEdicionDirecta}
+                            valor={texto || ''}
+                            alGuardar={(val) => alActualizarDatosSeccion?.(seccion.id, 'cuerpoTexto', val)}
+                            multilinea={true}
+                            etiqueta="p"
+                            className={`${claseTamano} ${claseEstilo} whitespace-pre-line opacity-90 block`}
+                            style={{ color: seccion.datos?.colorTextoPersonalizado || visual.colorTexto }}
+                            placeholder="Haz clic aquí para escribir tu texto libre, poema o versículo bíblico..."
+                          />
+
+                          {(seccion.datos?.autorMensaje || esModoEdicionDirecta) && (
+                            <div className="mt-3">
+                              <InlineEditableText
+                                activo={esModoEdicionDirecta}
+                                valor={seccion.datos?.autorMensaje || ''}
+                                alGuardar={(val) => alActualizarDatosSeccion?.(seccion.id, 'autorMensaje', val)}
+                                etiqueta="p"
+                                className="text-[10px] uppercase tracking-wider font-semibold opacity-70 block"
+                                style={{ color: visual.colorSecundario }}
+                                placeholder="— Autor o cita (opcional)"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )
+                  }
+
+                  case 'imagen_libre': {
+                    const url = seccion.datos?.urlImagen
+                    if (!url && !esModoEdicionDirecta) return null
+
+                    const formato = seccion.datos?.formatoImagen || 'polaroid'
+                    const pie = seccion.datos?.pieImagen
+
+                    // Placeholder en modo edición si aún no se ha cargado foto
+                    if (!url && esModoEdicionDirecta) {
+                      return (
+                        <div key={seccion.id} className="px-6 sm:px-8 py-5 border-b border-black/[0.04]">
+                          <div className="p-6 border-2 border-dashed border-amber-400/50 rounded-2xl bg-amber-500/5 text-center flex flex-col items-center justify-center gap-2">
+                            <Camera size={24} className="text-amber-600" />
+                            <p className="text-xs font-bold text-amber-950">Módulo de Fotografía</p>
+                            <label className="cursor-pointer">
+                              <span className="px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold inline-flex items-center gap-1.5 shadow-xs">
+                                <Camera size={13} /> Cargar Fotografía
+                              </span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="sr-only"
+                                onChange={(e) =>
+                                  manejarSubidaArchivo(e, (newUrl) =>
+                                    alActualizarDatosSeccion?.(seccion.id, 'urlImagen', newUrl)
+                                  )
+                                }
+                              />
+                            </label>
+                            <p className="text-[10px] text-slate-500">Selecciona una imagen desde tu dispositivo</p>
+                          </div>
+                        </div>
+                      )
+                    }
+
+                    return (
+                      <motion.div
+                        key={seccion.id}
+                        custom={index}
+                        initial="oculto"
+                        animate="visible"
+                        variants={animacionAparicion}
+                        className="px-6 sm:px-8 py-5 border-b border-black/[0.04]"
+                      >
+                        {/* Selector de formato rápido en modo edición */}
+                        {esModoEdicionDirecta && (
+                          <div className="flex items-center justify-center gap-1 mb-3 text-[10px]">
+                            {[
+                              { id: 'polaroid', label: 'Polaroid' },
+                              { id: 'circular', label: 'Circular' },
+                              { id: 'banner', label: 'Banner' },
+                              { id: 'tarjeta', label: 'Tarjeta' },
+                            ].map((f) => (
+                              <button
+                                key={f.id}
+                                type="button"
+                                onClick={() => alActualizarDatosSeccion?.(seccion.id, 'formatoImagen', f.id)}
+                                className={`px-2 py-0.5 rounded-full border cursor-pointer font-medium transition-colors ${
+                                  formato === f.id
+                                    ? 'bg-slate-900 text-white border-slate-900'
+                                    : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+                                }`}
+                              >
+                                {f.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+
+                        {formato === 'polaroid' ? (
+                          <div className="bg-white p-3 pb-4 rounded-xl shadow-lg border border-black/10 rotate-[-1deg] hover:rotate-0 transition-transform duration-300 max-w-xs mx-auto text-center group/polaroid relative">
+                            <div className="aspect-square sm:aspect-4/3 w-full rounded-lg overflow-hidden bg-slate-100 mb-2.5 relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={url}
+                                alt={pie || seccion.titulo || 'Fotografía'}
+                                className="w-full h-full object-cover"
+                              />
+                              {esModoEdicionDirecta && (
+                                <label className="absolute inset-0 bg-black/40 opacity-0 group-hover/polaroid:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                                  <span className="px-2.5 py-1 rounded-full bg-white text-slate-900 text-[10px] font-bold shadow-md flex items-center gap-1">
+                                    <Camera size={12} /> Cambiar
+                                  </span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="sr-only"
+                                    onChange={(e) =>
+                                      manejarSubidaArchivo(e, (newUrl) =>
+                                        alActualizarDatosSeccion?.(seccion.id, 'urlImagen', newUrl)
+                                      )
+                                    }
+                                  />
+                                </label>
+                              )}
+                            </div>
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={pie || ''}
+                              alGuardar={(val) => alActualizarDatosSeccion?.(seccion.id, 'pieImagen', val)}
+                              etiqueta="p"
+                              className="font-serif italic text-xs text-slate-800 tracking-wide pt-1 block"
+                              placeholder="Escribe un pie de foto..."
+                            />
+                          </div>
+                        ) : formato === 'circular' ? (
+                          <div className="text-center group/circular relative">
+                            <div
+                              className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden mx-auto shadow-md border-2 mb-2 bg-white relative"
+                              style={{ borderColor: visual.colorPrimario }}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={url}
+                                alt={pie || seccion.titulo || 'Fotografía'}
+                                className="w-full h-full object-cover"
+                              />
+                              {esModoEdicionDirecta && (
+                                <label className="absolute inset-0 bg-black/40 opacity-0 group-hover/circular:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                                  <Camera size={16} className="text-white" />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="sr-only"
+                                    onChange={(e) =>
+                                      manejarSubidaArchivo(e, (newUrl) =>
+                                        alActualizarDatosSeccion?.(seccion.id, 'urlImagen', newUrl)
+                                      )
+                                    }
+                                  />
+                                </label>
+                              )}
+                            </div>
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={pie || ''}
+                              alGuardar={(val) => alActualizarDatosSeccion?.(seccion.id, 'pieImagen', val)}
+                              etiqueta="p"
+                              className="text-xs opacity-75 italic block"
+                              style={{ color: visual.colorTexto }}
+                              placeholder="Pie de foto..."
+                            />
+                          </div>
+                        ) : formato === 'banner' ? (
+                          <div className="-mx-6 sm:-mx-8 relative overflow-hidden h-44 sm:h-52 bg-slate-100 group/banner">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={url}
+                              alt={pie || seccion.titulo || 'Fotografía'}
+                              className="w-full h-full object-cover"
+                            />
+                            {esModoEdicionDirecta && (
+                              <label className="absolute inset-0 bg-black/40 opacity-0 group-hover/banner:opacity-100 transition-opacity flex items-center justify-center cursor-pointer z-10">
+                                <span className="px-3 py-1.5 rounded-full bg-white text-slate-900 text-xs font-bold shadow-md flex items-center gap-1.5">
+                                  <Camera size={13} /> Cambiar Banner
+                                </span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="sr-only"
+                                  onChange={(e) =>
+                                    manejarSubidaArchivo(e, (newUrl) =>
+                                      alActualizarDatosSeccion?.(seccion.id, 'urlImagen', newUrl)
+                                    )
+                                  }
+                                />
+                              </label>
+                            )}
+                            <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/70 to-transparent text-white text-center text-xs font-serif italic">
+                              <InlineEditableText
+                                activo={esModoEdicionDirecta}
+                                valor={pie || ''}
+                                alGuardar={(val) => alActualizarDatosSeccion?.(seccion.id, 'pieImagen', val)}
+                                etiqueta="span"
+                                placeholder="Pie de foto..."
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="rounded-2xl overflow-hidden border border-black/10 shadow-xs bg-white group/tarjeta relative">
+                            <div className="aspect-video w-full overflow-hidden relative">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={url}
+                                alt={pie || seccion.titulo || 'Fotografía'}
+                                className="w-full h-full object-cover"
+                              />
+                              {esModoEdicionDirecta && (
+                                <label className="absolute inset-0 bg-black/40 opacity-0 group-hover/tarjeta:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                                  <span className="px-3 py-1.5 rounded-full bg-white text-slate-900 text-xs font-bold shadow-md flex items-center gap-1.5">
+                                    <Camera size={13} /> Cambiar Foto
+                                  </span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="sr-only"
+                                    onChange={(e) =>
+                                      manejarSubidaArchivo(e, (newUrl) =>
+                                        alActualizarDatosSeccion?.(seccion.id, 'urlImagen', newUrl)
+                                      )
+                                    }
+                                  />
+                                </label>
+                              )}
+                            </div>
+                            <div className="p-3 text-center">
+                              <InlineEditableText
+                                activo={esModoEdicionDirecta}
+                                valor={pie || ''}
+                                alGuardar={(val) => alActualizarDatosSeccion?.(seccion.id, 'pieImagen', val)}
+                                etiqueta="p"
+                                className="text-xs opacity-80 block"
+                                style={{ color: visual.colorTexto }}
+                                placeholder="Pie de foto..."
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </motion.div>
+                    )
+                  }
+
+                  case 'boton_enlace': {
+                    const texto = seccion.datos?.textoBoton || seccion.titulo || 'Visitar Enlace'
+                    const url = seccion.datos?.urlBoton || '#'
+                    const subtexto = seccion.datos?.subtextoBoton
+                    const estilo = seccion.datos?.estiloBoton || 'primario'
+                    const icono = seccion.datos?.iconoBoton || seccion.icono || 'link'
+
+                    const estiloDorado = estilo === 'dorado'
+                    const estiloBorde = estilo === 'borde'
+
+                    return (
+                      <motion.div
+                        key={seccion.id}
+                        custom={index}
+                        initial="oculto"
+                        animate="visible"
+                        variants={animacionAparicion}
+                        className="px-6 sm:px-8 py-4 border-b border-black/[0.04]"
+                      >
+                        <a
+                          href={esModoEdicionDirecta ? undefined : url}
+                          target={esModoEdicionDirecta ? undefined : '_blank'}
+                          rel="noopener noreferrer"
+                          onClick={(e) => {
+                            if (esModoEdicionDirecta) e.preventDefault()
+                          }}
+                          className={`w-full py-3.5 px-5 rounded-xl text-center flex flex-col items-center justify-center gap-0.5 shadow-xs transition-all active:scale-[0.98] ${
+                            estiloDorado
+                              ? 'bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-bold'
+                              : estiloBorde
+                              ? 'border-2 font-bold hover:bg-black/5'
+                              : 'text-white font-bold'
+                          }`}
+                          style={{
+                            backgroundColor:
+                              !estiloDorado && !estiloBorde ? visual.colorPrimario : undefined,
+                            borderColor: estiloBorde ? visual.colorPrimario : undefined,
+                            color: estiloBorde ? visual.colorTexto : undefined,
+                          }}
+                        >
+                          <div className="flex items-center gap-2 text-xs sm:text-sm">
+                            <IconoDinamico nombre={icono} size={15} />
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={texto}
+                              alGuardar={(val) => {
+                                alActualizarSeccion?.(seccion.id, 'titulo', val)
+                                alActualizarDatosSeccion?.(seccion.id, 'textoBoton', val)
+                              }}
+                              etiqueta="span"
+                              placeholder="Texto del Botón"
+                            />
+                            <ExternalLink size={13} className="opacity-70" />
+                          </div>
+                          {(subtexto || esModoEdicionDirecta) && (
+                            <InlineEditableText
+                              activo={esModoEdicionDirecta}
+                              valor={subtexto || ''}
+                              alGuardar={(val) => alActualizarDatosSeccion?.(seccion.id, 'subtextoBoton', val)}
+                              etiqueta="span"
+                              className="text-[10px] opacity-80 font-normal mt-0.5 block"
+                              placeholder="Subtítulo opcional..."
+                            />
+                          )}
+                        </a>
+
+                        {/* Campo de enlace en modo edición */}
+                        {esModoEdicionDirecta && (
+                          <div className="mt-2 flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs">
+                            <LinkIcon size={12} className="text-slate-400 shrink-0" />
+                            <input
+                              type="url"
+                              value={seccion.datos?.urlBoton || ''}
+                              onChange={(e) => alActualizarDatosSeccion?.(seccion.id, 'urlBoton', e.target.value)}
+                              placeholder="Pegar enlace de Spotify, mesa de regalos, YouTube..."
+                              className="w-full text-[10px] bg-transparent outline-none font-mono"
+                            />
+                          </div>
+                        )}
+                      </motion.div>
+                    )
+                  }
+
+                  case 'separador_ornamental': {
+                    const estilo = seccion.datos?.estiloSeparador || 'linea_dorada'
+
+                    return (
+                      <div key={seccion.id} className="px-6 sm:px-8 py-3 flex flex-col items-center justify-center gap-2 opacity-80">
+                        {estilo === 'linea_dorada' ? (
+                          <div className="flex items-center gap-3 w-full max-w-[220px]">
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-amber-400" />
+                            <span className="text-amber-500 text-xs">◈</span>
+                            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-amber-400" />
+                          </div>
+                        ) : estilo === 'botanico' ? (
+                          <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
+                            <span className="text-sm">🌿</span>
+                            <div className="h-px w-16 bg-current opacity-30" />
+                            <span className="text-xs tracking-widest uppercase font-serif">✧</span>
+                            <div className="h-px w-16 bg-current opacity-30" />
+                            <span className="text-sm scale-x-[-1] inline-block">🌿</span>
+                          </div>
+                        ) : estilo === 'onda' ? (
+                          <svg width="80" height="12" viewBox="0 0 80 12" fill="none" className="opacity-50">
+                            <path d="M0 6C10 0 10 12 20 6C30 0 30 12 40 6C50 0 50 12 60 6C70 0 70 12 80 6" stroke={visual.colorSecundario} strokeWidth="1.5" />
+                          </svg>
+                        ) : (
+                          <div className="flex items-center gap-2 text-xs tracking-widest text-amber-500">
+                            <span>✦</span>
+                            <span>✦</span>
+                            <span>✦</span>
+                          </div>
+                        )}
+
+                        {/* Selector de estilo de adorno en modo edición directa */}
+                        {esModoEdicionDirecta && (
+                          <div className="flex items-center gap-1 text-[9px]">
+                            {[
+                              { id: 'linea_dorada', label: '◈ Dorado' },
+                              { id: 'botanico', label: '🌿 Laurel' },
+                              { id: 'onda', label: '〰 Onda' },
+                              { id: 'diamantes', label: '✦ Diamantes' },
+                            ].map((s) => (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => alActualizarDatosSeccion?.(seccion.id, 'estiloSeparador', s.id)}
+                                className={`px-2 py-0.5 rounded-full border cursor-pointer transition-colors ${
+                                  estilo === s.id
+                                    ? 'bg-slate-900 text-white border-slate-900'
+                                    : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-600'
+                                }`}
+                              >
+                                {s.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  }
+
                   case 'confirmacion_rsvp': {
                     const metodoConfirmacion =
                       seccion.datos?.metodoConfirmacion ||
@@ -896,9 +1863,44 @@ export function DynamicInvitationCard({
                 }
               }
 
+              const bloque = renderizarBloque()
+              if (!bloque && !esModoEdicionDirecta) return null
+
               return (
                 <Fragment key={seccion.id}>
-                  {renderizarBloque()}
+                  {esModoEdicionDirecta && index > 0 && (
+                    <BarraInsercionEntreBloques
+                      indice={index}
+                      alInsertar={(idx, tipo) => alInsertarSeccionEnIndice?.(idx, tipo)}
+                    />
+                  )}
+
+                  <div
+                    className={`relative ${
+                      esModoEdicionDirecta
+                        ? 'group/seccion hover:ring-2 hover:ring-amber-400/50 rounded-xl transition-all'
+                        : ''
+                    }`}
+                  >
+                    {esModoEdicionDirecta && (
+                      <BarraHerramientasBloque
+                        indice={index}
+                        totalSecciones={listaSecciones.length}
+                        esCabecera={seccion.tipo === 'cabecera'}
+                        alMover={(dir) => alMoverSeccion?.(index, dir)}
+                        alEliminar={() => alEliminarSeccion?.(seccion.id)}
+                      />
+                    )}
+
+                    {bloque}
+                  </div>
+
+                  {esModoEdicionDirecta && index === listaSecciones.length - 1 && (
+                    <BarraInsercionEntreBloques
+                      indice={index + 1}
+                      alInsertar={(idx, tipo) => alInsertarSeccionEnIndice?.(idx, tipo)}
+                    />
+                  )}
                 </Fragment>
               )
             })}

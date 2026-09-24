@@ -358,7 +358,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
           </Link>
 
           <Link href="/" className="flex items-center gap-2 group">
-            <TarjetonLogo size="sm" subtexto="gestión" />
+            <TarjetonLogo size="sm" subtexto="admin" />
             <span className="hidden md:inline-block text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 font-medium">
               Panel de Anfitrión
             </span>

@@ -1,9 +1,11 @@
 -- =========================================================================
--- ESQUEMA DE BASE DE DATOS POSTGRESQL PARA SUPABASE
--- Plataforma: InvitacionesYa Studio
+-- ESQUEMA Y MIGRACIÓN DE BASE DE DATOS POSTGRESQL PARA SUPABASE
+-- Plataforma: Tarjetón Studio (Invitaciones Digitales Interactivas)
+-- Este script es 100% IDEMPOTENTE: puedes ejecutarlo tanto en una base de
+-- datos nueva como en una existente sin perder información.
 -- =========================================================================
 
--- 1. TABLA DE EVENTOS
+-- 1. TABLA PRINCIPAL DE EVENTOS
 CREATE TABLE IF NOT EXISTS public.eventos (
   id TEXT PRIMARY KEY,
   token_admin TEXT UNIQUE NOT NULL,
@@ -24,19 +26,30 @@ CREATE TABLE IF NOT EXISTS public.eventos (
   fotos_galeria JSONB DEFAULT '[]'::jsonb,
   imagen_portada TEXT,
   imagen_retrato TEXT,
+  mostrar_foto_retrato BOOLEAN DEFAULT true,
+  mostrar_badge BOOLEAN DEFAULT true,
+  texto_badge TEXT DEFAULT 'Convocatoria Oficial',
   es_premium BOOLEAN NOT NULL DEFAULT false,
   configuracion_visual JSONB DEFAULT '{}'::jsonb,
   secciones JSONB DEFAULT '[]'::jsonb,
+  metodo_confirmacion TEXT DEFAULT 'tarjeton',
   creado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
   expira_en TIMESTAMPTZ NOT NULL
 );
+
+-- Migración de columnas para eventos existentes
+ALTER TABLE public.eventos ADD COLUMN IF NOT EXISTS metodo_confirmacion TEXT DEFAULT 'tarjeton';
+ALTER TABLE public.eventos ADD COLUMN IF NOT EXISTS mostrar_foto_retrato BOOLEAN DEFAULT true;
+ALTER TABLE public.eventos ADD COLUMN IF NOT EXISTS mostrar_badge BOOLEAN DEFAULT true;
+ALTER TABLE public.eventos ADD COLUMN IF NOT EXISTS texto_badge TEXT DEFAULT 'Convocatoria Oficial';
 
 -- Índices de alto rendimiento para búsqueda rápida
 CREATE INDEX IF NOT EXISTS idx_eventos_slug ON public.eventos(slug_publico);
 CREATE INDEX IF NOT EXISTS idx_eventos_token_admin ON public.eventos(token_admin);
 CREATE INDEX IF NOT EXISTS idx_eventos_expira_en ON public.eventos(expira_en);
 
--- 2. TABLA DE INVITADOS
+
+-- 2. TABLA DE INVITADOS Y CONFIRMACIONES RSVP
 CREATE TABLE IF NOT EXISTS public.invitados (
   id TEXT PRIMARY KEY,
   evento_id TEXT NOT NULL REFERENCES public.eventos(id) ON DELETE CASCADE,
@@ -55,14 +68,16 @@ CREATE TABLE IF NOT EXISTS public.invitados (
   creado_en TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Si ya tenías creada la tabla anteriormente:
--- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS estado_confirmacion TEXT DEFAULT 'pendiente';
--- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS cupos_confirmados INTEGER DEFAULT 0;
--- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS mensaje_confirmacion TEXT;
--- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS enviado_por_whatsapp BOOLEAN DEFAULT false;
--- ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS fecha_envio_whatsapp TIMESTAMPTZ;
+-- Migración de columnas de confirmación y WhatsApp para tablas ya creadas
+ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS estado_confirmacion TEXT DEFAULT 'pendiente';
+ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS cupos_confirmados INTEGER DEFAULT 0;
+ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS mensaje_confirmacion TEXT;
+ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS enviado_por_whatsapp BOOLEAN DEFAULT false;
+ALTER TABLE public.invitados ADD COLUMN IF NOT EXISTS fecha_envio_whatsapp TIMESTAMPTZ;
 
 CREATE INDEX IF NOT EXISTS idx_invitados_evento_id ON public.invitados(evento_id);
+CREATE INDEX IF NOT EXISTS idx_invitados_codigo_acceso ON public.invitados(codigo_acceso);
+
 
 -- 3. TABLA DE PROMOCIONES Y CUPONES DE DESCUENTO
 CREATE TABLE IF NOT EXISTS public.promociones (
@@ -79,6 +94,7 @@ CREATE TABLE IF NOT EXISTS public.promociones (
 
 CREATE INDEX IF NOT EXISTS idx_promociones_codigo ON public.promociones(codigo);
 
+
 -- 4. TABLA DE PUBLICACIONES Y BANNERS EN LANDING PAGE
 CREATE TABLE IF NOT EXISTS public.publicaciones_landing (
   id TEXT PRIMARY KEY,
@@ -91,6 +107,7 @@ CREATE TABLE IF NOT EXISTS public.publicaciones_landing (
   color_fondo TEXT DEFAULT '#0F172A',
   fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
 
 -- 5. TABLA DE CONFIGURACIÓN GLOBAL DEL SISTEMA
 CREATE TABLE IF NOT EXISTS public.configuracion_global (
@@ -110,47 +127,62 @@ INSERT INTO public.configuracion_global (id, precio_premium_cop, precio_premium_
 VALUES ('principal', 15900, 3.99, 50)
 ON CONFLICT (id) DO NOTHING;
 
+
 -- 6. POLÍTICAS DE ACCESO (ROW LEVEL SECURITY)
--- Habilitar RLS para seguridad de nivel empresarial
 ALTER TABLE public.eventos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invitados ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.promociones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.publicaciones_landing ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.configuracion_global ENABLE ROW LEVEL SECURITY;
 
--- Lectura pública para invitados por slug
+-- Políticas para eventos
+DROP POLICY IF EXISTS "Lectura publica de eventos por slug" ON public.eventos;
 CREATE POLICY "Lectura publica de eventos por slug"
 ON public.eventos FOR SELECT
 USING (true);
 
+DROP POLICY IF EXISTS "Insertar nuevos eventos" ON public.eventos;
 CREATE POLICY "Insertar nuevos eventos"
 ON public.eventos FOR INSERT
 WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Actualizar evento con token admin" ON public.eventos;
 CREATE POLICY "Actualizar evento con token admin"
 ON public.eventos FOR UPDATE
+USING (true)
+WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Eliminar evento con token admin" ON public.eventos;
+CREATE POLICY "Eliminar evento con token admin"
+ON public.eventos FOR DELETE
 USING (true);
 
--- Invitados: lectura y confirmación pública
+-- Políticas para invitados
+DROP POLICY IF EXISTS "Lectura de invitados" ON public.invitados;
 CREATE POLICY "Lectura de invitados"
 ON public.invitados FOR SELECT
 USING (true);
 
+DROP POLICY IF EXISTS "Gestionar invitados" ON public.invitados;
 CREATE POLICY "Gestionar invitados"
 ON public.invitados FOR ALL
-USING (true);
+USING (true)
+WITH CHECK (true);
 
--- Banners públicos activos
+-- Políticas para banners de landing
+DROP POLICY IF EXISTS "Lectura de avisos en landing" ON public.publicaciones_landing;
 CREATE POLICY "Lectura de avisos en landing"
 ON public.publicaciones_landing FOR SELECT
 USING (activo = true);
 
--- Promociones
+-- Políticas para promociones
+DROP POLICY IF EXISTS "Lectura de promociones activas" ON public.promociones;
 CREATE POLICY "Lectura de promociones activas"
 ON public.promociones FOR SELECT
 USING (activo = true);
 
--- Configuración global
+-- Políticas para configuración global
+DROP POLICY IF EXISTS "Lectura de configuracion global" ON public.configuracion_global;
 CREATE POLICY "Lectura de configuracion global"
 ON public.configuracion_global FOR SELECT
 USING (true);

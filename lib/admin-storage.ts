@@ -34,6 +34,22 @@ export const AdminStorage = {
     }
   },
 
+  async obtenerConfiguracionAsync(): Promise<ConfiguracionGlobal> {
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/configuracion')
+        if (res.ok) {
+          const data = await res.json()
+          if (data?.configuracion) {
+            localStorage.setItem(KEY_CONFIGURACION, JSON.stringify(data.configuracion))
+            return data.configuracion
+          }
+        }
+      } catch {}
+    }
+    return this.obtenerConfiguracion()
+  },
+
   guardarConfiguracion(config: Partial<ConfiguracionGlobal>): ConfiguracionGlobal {
     if (typeof window === 'undefined') return CONFIGURACION_DEFAULT
     const actual = this.obtenerConfiguracion()
@@ -43,6 +59,45 @@ export const AdminStorage = {
       ultimaActualizacion: new Date().toISOString(),
     }
     localStorage.setItem(KEY_CONFIGURACION, JSON.stringify(nueva))
+
+    // Sincronización en segundo plano con la API
+    fetch('/api/admin/configuracion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ configuracion: nueva }),
+    }).catch((e) => console.warn('Aviso sincronizando configuración con servidor:', e))
+
+    return nueva
+  },
+
+  async guardarConfiguracionAsync(config: Partial<ConfiguracionGlobal>): Promise<ConfiguracionGlobal> {
+    const actual = this.obtenerConfiguracion()
+    const nueva: ConfiguracionGlobal = {
+      ...actual,
+      ...config,
+      ultimaActualizacion: new Date().toISOString(),
+    }
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(KEY_CONFIGURACION, JSON.stringify(nueva))
+      try {
+        const res = await fetch('/api/admin/configuracion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ configuracion: nueva }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data?.configuracion) {
+            localStorage.setItem(KEY_CONFIGURACION, JSON.stringify(data.configuracion))
+            return data.configuracion
+          }
+        }
+      } catch (err) {
+        console.warn('Error al guardar en /api/admin/configuracion:', err)
+      }
+    }
+
     return nueva
   },
 

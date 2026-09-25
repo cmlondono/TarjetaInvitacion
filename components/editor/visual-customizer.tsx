@@ -301,7 +301,15 @@ export function VisualCustomizer({
 
   // Estado del Evento
   const [evento, setEvento] = useState<DetalleEvento>(() => {
-    if (eventoInicial) return eventoInicial
+    if (eventoInicial) {
+      return {
+        ...eventoInicial,
+        limiteGratisInvitados:
+          eventoInicial.limiteGratisInvitados ||
+          (eventoInicial.configuracionVisual as any)?.limiteGratisInvitados ||
+          50,
+      }
+    }
 
     const hoy = new Date()
     const fechaPorDefecto = new Date(hoy.setDate(hoy.getDate() + 30)).toISOString().split('T')[0]
@@ -350,11 +358,29 @@ export function VisualCustomizer({
         tipoCuenta: 'Corriente',
       },
       esPremium: false,
+      limiteGratisInvitados: 50,
       metodoConfirmacion: 'tarjeton',
       creadoEn: new Date().toISOString(),
       expiraEn: new Date(Date.now() + 37 * 24 * 60 * 60 * 1000).toISOString(),
     }
   })
+
+  // Sincronizar cupo de cortesía vigente del sistema al momento de crear un evento nuevo
+  useEffect(() => {
+    if (!modoEdicion && !eventoInicial) {
+      fetch('/api/configuracion')
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.configuracion?.limiteGratisInvitados) {
+            setEvento((prev) => ({
+              ...prev,
+              limiteGratisInvitados: data.configuracion.limiteGratisInvitados,
+            }))
+          }
+        })
+        .catch(() => {})
+    }
+  }, [modoEdicion, eventoInicial])
 
   // Estado de la Configuración Visual
   const [visual, setVisual] = useState<ConfiguracionVisual>(() => {

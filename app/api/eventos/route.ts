@@ -81,6 +81,35 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // 0. Protección estricta de regla de negocio:
+    // El cupo de cortesía se fija al momento de crear el evento según la configuración del sistema vigente.
+    // Los anfitriones NO pueden alterar este valor. Si el evento ya existía, se preserva su cupo asignado.
+    const eventoExistente =
+      ServidorAlmacen.obtenerEventoPorId(evento.id) ||
+      ServidorAlmacen.obtenerEventoPorToken(evento.tokenAdmin)
+
+    if (eventoExistente) {
+      // Evento ya creado: preservar su límite histórico/asignado (ej: 50)
+      evento.limiteGratisInvitados =
+        eventoExistente.limiteGratisInvitados ||
+        (eventoExistente.configuracionVisual as any)?.limiteGratisInvitados ||
+        50
+      // Proteger también el estado Premium pagado
+      if (eventoExistente.esPremium) {
+        evento.esPremium = true
+      }
+    } else {
+      // Evento nuevo: snapshot del límite de cortesía vigente en la configuración global
+      const configActual = ServidorAlmacen.obtenerConfiguracion()
+      evento.limiteGratisInvitados = configActual?.limiteGratisInvitados || 50
+    }
+
+    // Persistir dentro de configuracionVisual para redundancia total en Supabase JSONB
+    if (!evento.configuracionVisual) {
+      evento.configuracionVisual = {} as any
+    }
+    (evento.configuracionVisual as any).limiteGratisInvitados = evento.limiteGratisInvitados
+
     // 1. Guardar de forma inmediata en el almacenamiento persistente del servidor (Disco JSON + Memoria)
     ServidorAlmacen.guardarEvento(evento)
 

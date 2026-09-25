@@ -35,6 +35,17 @@ export interface ConfiguracionGlobal {
   ultimaActualizacion: string
 }
 
+export const CONFIGURACION_DEFAULT: ConfiguracionGlobal = {
+  precioPremiumCOP: 15900,
+  precioPremiumUSD: 3.99,
+  limiteGratisInvitados: 50,
+  anunciosAdsHabilitados: true,
+  modoMantenimiento: false,
+  mensajeMantenimiento: 'Estamos realizando labores de mantenimiento protocolario.',
+  whatsappSoporte: '573001234567',
+  ultimaActualizacion: new Date().toISOString(),
+}
+
 export interface MetricasSistema {
   totalEventos: number
   totalEventosPremium: number

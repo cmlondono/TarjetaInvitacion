@@ -63,13 +63,14 @@ export default function PaginaAdminDashboard() {
   const primerDiaMes = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth(), 1).toISOString().split('T')[0]
   const ultimoDiaMes = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth() + 1, 0).toISOString().split('T')[0]
 
-  const [fechaDesde, setFechaDesde] = useState(primerDiaMes)
-  const [fechaHasta, setFechaHasta] = useState(ultimoDiaMes)
+  const [fechaDesde, setFechaDesde] = useState('')
+  const [fechaHasta, setFechaHasta] = useState('')
   const [cargandoEventos, setCargandoEventos] = useState(false)
-  const [filtroPresetFecha, setFiltroPresetFecha] = useState<'este_mes' | 'proximos_30' | 'proximos_90' | 'pasados' | 'personalizado'>('este_mes')
+  const [filtroPresetFecha, setFiltroPresetFecha] = useState<'todos' | 'este_mes' | 'proximos_30' | 'proximos_90' | 'pasados' | 'personalizado'>('todos')
   const [eventoAEliminar, setEventoAEliminar] = useState<DetalleEvento | null>(null)
   const [eliminandoEvento, setEliminandoEvento] = useState(false)
   const [idCopiadoAdmin, setIdCopiadoAdmin] = useState<string | null>(null)
+  const [guardandoConfig, setGuardandoConfig] = useState(false)
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tarjeton.online'
 
@@ -121,7 +122,9 @@ export default function PaginaAdminDashboard() {
     setMetricas(AdminStorage.calcularMetricas())
     setPromociones(AdminStorage.obtenerPromociones())
     setPublicaciones(AdminStorage.obtenerPublicaciones())
-    setConfiguracion(AdminStorage.obtenerConfiguracion())
+    AdminStorage.obtenerConfiguracionAsync().then((conf) => {
+      if (conf) setConfiguracion(conf)
+    })
     consultarEventos()
   }
 
@@ -133,8 +136,8 @@ export default function PaginaAdminDashboard() {
 
     try {
       const params = new URLSearchParams()
-      if (d) params.set('desde', d)
-      if (h) params.set('hasta', h)
+      if (d && d !== 'todos') params.set('desde', d)
+      if (h && h !== 'todos') params.set('hasta', h)
       if (q) params.set('busqueda', q)
 
       const res = await fetch(`/api/admin/eventos?${params.toString()}`)
@@ -149,8 +152,8 @@ export default function PaginaAdminDashboard() {
       // Fallback local en caso de desconexión
       const locales = EventoRepositorio.obtenerTodos().filter((e) => {
         const tiempo = new Date(e.fechaEvento).getTime()
-        const tD = d ? new Date(d).getTime() : 0
-        const tH = h ? new Date(h + 'T23:59:59').getTime() : Infinity
+        const tD = d && d !== 'todos' ? new Date(d).getTime() : 0
+        const tH = h && h !== 'todos' ? new Date(h + 'T23:59:59').getTime() : Infinity
         return tiempo >= tD && tiempo <= tH
       })
       setEventos(locales)
@@ -161,13 +164,16 @@ export default function PaginaAdminDashboard() {
     }
   }
 
-  const aplicarPresetFecha = (preset: 'este_mes' | 'proximos_30' | 'proximos_90' | 'pasados' | 'personalizado') => {
+  const aplicarPresetFecha = (preset: 'todos' | 'este_mes' | 'proximos_30' | 'proximos_90' | 'pasados' | 'personalizado') => {
     setFiltroPresetFecha(preset)
     const ahora = new Date()
     let nuevaDesde = ''
     let nuevaHasta = ''
 
-    if (preset === 'este_mes') {
+    if (preset === 'todos') {
+      nuevaDesde = ''
+      nuevaHasta = ''
+    } else if (preset === 'este_mes') {
       nuevaDesde = new Date(ahora.getFullYear(), ahora.getMonth(), 1).toISOString().split('T')[0]
       nuevaHasta = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0).toISOString().split('T')[0]
     } else if (preset === 'proximos_30') {
@@ -208,26 +214,27 @@ export default function PaginaAdminDashboard() {
     if (!eventoAEliminar) return
     setEliminandoEvento(true)
     try {
-      // 1. Borrado en backend con eliminación en cascada de invitados y confirmaciones
+      // 1. Borrado definitivo en backend con cascada de invitados y confirmaciones en Supabase y disco
       const res = await fetch(`/api/admin/eventos?id=${encodeURIComponent(eventoAEliminar.id)}`, {
         method: 'DELETE',
       })
+      const data = await res.json().catch(() => null)
 
-      // 2. Limpiar del almacenamiento local
-      EventoRepositorio.eliminar(eventoAEliminar.id)
-
-      if (res.ok) {
-        notificar(`Evento "${eventoAEliminar.titulo}" y todas sus invitaciones fueron eliminados.`)
+      if (res.ok && data?.ok) {
+        // 2. Limpiar del almacenamiento local y memoria de React de inmediato
+        EventoRepositorio.eliminar(eventoAEliminar.id)
+        setEventos((prev) => prev.filter((e) => e.id !== eventoAEliminar.id))
+        setEventoAEliminar(null)
+        setMetricas(AdminStorage.calcularMetricas())
+        notificar(`Evento "${eventoAEliminar.titulo}" y todas sus invitaciones fueron eliminados permanentemente.`)
+        consultarEventos()
       } else {
-        notificar('Evento eliminado de memoria y almacenamiento local.')
+        const errorMsg = data?.error || 'No se pudo eliminar el evento del servidor.'
+        notificar(`Error: ${errorMsg}`)
       }
-
-      setEventoAEliminar(null)
-      consultarEventos()
-      setMetricas(AdminStorage.calcularMetricas())
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error eliminando evento:', err)
-      notificar('Hubo un error al procesar la eliminación.')
+      notificar('Hubo un error de conexión al procesar la eliminación.')
     } finally {
       setEliminandoEvento(false)
     }
@@ -314,27 +321,85 @@ export default function PaginaAdminDashboard() {
   }
 
   // Acciones de Eventos
-  const handleTogglePremiumEvento = (ev: DetalleEvento) => {
-    const actualizado = { ...ev, esPremium: !ev.esPremium }
+  const handleTogglePremiumEvento = async (ev: DetalleEvento) => {
+    const nuevoEstado = !ev.esPremium
+    try {
+      await fetch('/api/admin/eventos', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: ev.id, esPremium: nuevoEstado }),
+      })
+    } catch (e) {
+      console.warn('Error sincronizando estado VIP con backend:', e)
+    }
+    const actualizado = { ...ev, esPremium: nuevoEstado }
     EventoRepositorio.guardar(actualizado)
-    cargarDatos()
-    notificar(`Evento ${ev.titulo} actualizado a ${actualizado.esPremium ? 'PREMIUM' : 'GRATUITO'}.`)
+    setEventos((prev) => prev.map((e) => (e.id === ev.id ? actualizado : e)))
+    setMetricas(AdminStorage.calcularMetricas())
+    notificar(`Evento "${ev.titulo}" actualizado a ${actualizado.esPremium ? 'PREMIUM' : 'GRATUITO'}.`)
   }
 
-  const handleEliminarEvento = (id: string) => {
-    if (confirm('¿Está seguro de eliminar este evento y todos sus pases asociados?')) {
-      EventoRepositorio.eliminar(id)
-      cargarDatos()
-      notificar('Evento eliminado del sistema.')
+  const handleEditarCupoEvento = async (ev: DetalleEvento) => {
+    const actual = ev.limiteGratisInvitados || 50
+    const respuesta = prompt(
+      `Modificar cupo de cortesía para "${ev.titulo}":\n\nEste cambio afectará ÚNICAMENTE a este evento y se respetará de forma independiente a la configuración global del sistema.`,
+      String(actual)
+    )
+    if (respuesta === null) return
+    const nuevoCupo = parseInt(respuesta.trim(), 10)
+    if (isNaN(nuevoCupo) || nuevoCupo < 1) {
+      alert('Ingresa una cantidad de cupos válida mayor a cero.')
+      return
+    }
+
+    try {
+      const res = await fetch('/api/admin/eventos', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: ev.id, limiteGratisInvitados: nuevoCupo }),
+      })
+      if (res.ok) {
+        const actualizado = { ...ev, limiteGratisInvitados: nuevoCupo }
+        EventoRepositorio.guardar(actualizado)
+        setEventos((prev) => prev.map((e) => (e.id === ev.id ? actualizado : e)))
+        notificar(`Cupo de cortesía de "${ev.titulo}" actualizado a ${nuevoCupo} pases.`)
+      } else {
+        notificar('Error al guardar el cupo en el servidor.')
+      }
+    } catch {
+      notificar('Error de conexión al actualizar cupo.')
+    }
+  }
+
+  const handleEliminarEvento = async (id: string) => {
+    if (confirm('¿Está seguro de eliminar este evento y todos sus pases asociados en cascada?')) {
+      try {
+        await fetch(`/api/admin/eventos?id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+        EventoRepositorio.eliminar(id)
+        setEventos((prev) => prev.filter((e) => e.id !== id))
+        cargarDatos()
+        notificar('Evento y sus invitaciones eliminados permanentemente del sistema.')
+      } catch (err) {
+        console.error('Error eliminando evento:', err)
+        notificar('Error al procesar la eliminación.')
+      }
     }
   }
 
   // Acciones de Configuración Global
-  const handleGuardarConfiguracion = (e: React.FormEvent) => {
+  const handleGuardarConfiguracion = async (e: React.FormEvent) => {
     e.preventDefault()
-    AdminStorage.guardarConfiguracion(configuracion)
-    cargarDatos()
-    notificar('Configuración operativa guardada con éxito.')
+    setGuardandoConfig(true)
+    try {
+      const guardada = await AdminStorage.guardarConfiguracionAsync(configuracion)
+      setConfiguracion(guardada)
+      notificar('Configuración operativa guardada y sincronizada con éxito en el servidor y Supabase.')
+    } catch (err) {
+      console.error('Error guardando configuración:', err)
+      notificar('Hubo un error al guardar la configuración.')
+    } finally {
+      setGuardandoConfig(false)
+    }
   }
 
   if (cargandoAuth) {
@@ -942,6 +1007,17 @@ export default function PaginaAdminDashboard() {
                 <div className="flex flex-wrap items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl border border-slate-200 w-fit text-xs">
                   <button
                     type="button"
+                    onClick={() => aplicarPresetFecha('todos')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                      filtroPresetFecha === 'todos'
+                        ? 'bg-white text-slate-950 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Todos los Eventos
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => aplicarPresetFecha('este_mes')}
                     className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                       filtroPresetFecha === 'este_mes'
@@ -1165,21 +1241,39 @@ export default function PaginaAdminDashboard() {
                               </span>
                             </td>
 
-                            {/* 3. Plan / Licencia */}
+                            {/* 3. Plan / Licencia & Cupo Asignado */}
                             <td className="py-3.5 px-3">
-                              <button
-                                type="button"
-                                onClick={() => handleTogglePremiumEvento(ev)}
-                                className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${
-                                  ev.esPremium
-                                    ? 'bg-slate-900 text-white'
-                                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
-                                }`}
-                                title="Haz clic para alternar el estado Premium manualmente"
-                              >
-                                <Award size={11} className={ev.esPremium ? 'text-amber-400' : ''} />
-                                <span>{ev.esPremium ? 'PREMIUM' : 'GRATUITO'}</span>
-                              </button>
+                              <div className="flex flex-col gap-1.5 items-start">
+                                <button
+                                  type="button"
+                                  onClick={() => handleTogglePremiumEvento(ev)}
+                                  className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-colors ${
+                                    ev.esPremium
+                                      ? 'bg-slate-900 text-white'
+                                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                                  }`}
+                                  title="Haz clic para alternar el estado Premium VIP manualmente"
+                                >
+                                  <Award size={11} className={ev.esPremium ? 'text-amber-400' : ''} />
+                                  <span>{ev.esPremium ? 'PREMIUM (VIP)' : 'GRATUITO'}</span>
+                                </button>
+
+                                {!ev.esPremium && (
+                                  <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md">
+                                    <span className="text-[10px] text-slate-600 font-mono">
+                                      Cupo: <strong className="text-slate-900">{ev.limiteGratisInvitados || 50}</strong>
+                                    </span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleEditarCupoEvento(ev)}
+                                      className="p-0.5 text-slate-400 hover:text-slate-900 rounded hover:bg-slate-200 transition-colors cursor-pointer"
+                                      title="Modificar cupo gratuito asignado exclusivamente a este evento"
+                                    >
+                                      <Edit3 size={11} />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             </td>
 
                             {/* 4. Enlace de Gestión Privado (Recuperación) */}
@@ -1369,9 +1463,11 @@ export default function PaginaAdminDashboard() {
 
               <button
                 type="submit"
-                className="py-3 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+                disabled={guardandoConfig}
+                className="py-3 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs shadow-xs transition-all active:scale-[0.98] cursor-pointer flex items-center gap-2"
               >
-                Guardar Configuración Operativa
+                {guardandoConfig && <RefreshCw size={13} className="animate-spin text-amber-400" />}
+                <span>{guardandoConfig ? 'Guardando en Servidor & Supabase...' : 'Guardar Configuración Operativa'}</span>
               </button>
             </form>
           </div>

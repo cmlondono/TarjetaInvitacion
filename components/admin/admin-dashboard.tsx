@@ -8,6 +8,8 @@ import {
   LIMITE_INVITADOS_GRATIS,
 } from '@/types/invitation'
 import { InvitadoRepositorio, EventoRepositorio } from '@/lib/storage'
+import { AdminStorage } from '@/lib/admin-storage'
+import { ConfiguracionGlobal, CONFIGURACION_DEFAULT } from '@/types/admin'
 import { ModalPago } from '@/components/checkout/modal-pago'
 import { ModalDespachoWhatsApp } from './modal-despacho-whatsapp'
 import { construirMensajeCompartir } from '@/lib/event-utils'
@@ -65,6 +67,13 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
   >('todos')
   const [sincronizando, setSincronizando] = useState(false)
   const [estadoDb, setEstadoDb] = useState<{ supabaseConfigurado: boolean; mensaje: string } | null>(null)
+  const [configuracion, setConfiguracion] = useState<ConfiguracionGlobal>(CONFIGURACION_DEFAULT)
+
+  useEffect(() => {
+    AdminStorage.obtenerConfiguracionAsync().then((c) => {
+      if (c) setConfiguracion(c)
+    })
+  }, [])
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tarjeton.online'
   const enlaceAdmin = `${baseUrl}/gestionar/${evento.tokenAdmin}`
@@ -244,9 +253,15 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
     }
   }, [evento.id, evento.tokenAdmin])
 
+  // El límite gratuito es el snapshot fijado específicamente para este evento al crearse o por el Super Admin
+  const limiteGratis =
+    evento.limiteGratisInvitados ||
+    (evento.configuracionVisual as any)?.limiteGratisInvitados ||
+    50
+  const precioUSD = configuracion.precioPremiumUSD || 3.99
   const cantidadInvitados = invitados.length
-  const limiteAlcanzado = !evento.esPremium && cantidadInvitados >= LIMITE_INVITADOS_GRATIS
-  const porcentajeUso = Math.min(100, Math.round((cantidadInvitados / LIMITE_INVITADOS_GRATIS) * 100))
+  const limiteAlcanzado = !evento.esPremium && cantidadInvitados >= limiteGratis
+  const porcentajeUso = Math.min(100, Math.round((cantidadInvitados / limiteGratis) * 100))
 
   const handleAgregarInvitado = (e: React.FormEvent) => {
     e.preventDefault()
@@ -258,7 +273,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
       pases: pasesNuevo,
       esPlural: esPlural || pasesNuevo > 1,
       telefono: telefonoNuevo.trim() || undefined,
-    })
+    }, limiteGratis)
 
     if (!resultado.exito) {
       setErrorLimite(resultado.error || 'Se ha alcanzado el límite del cupo de cortesía.')
@@ -488,7 +503,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                 </span>
               ) : (
                 <span className="text-[11px] font-mono tracking-widest uppercase px-2.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                  Cupo de Cortesía (Hasta 50 pases)
+                  Cupo de Cortesía (Hasta {limiteGratis} pases)
                 </span>
               )}
             </div>
@@ -571,14 +586,14 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                 </span>
               </div>
               <span className="text-xs font-mono font-bold text-slate-900">
-                {cantidadInvitados} / {LIMITE_INVITADOS_GRATIS}
+                {cantidadInvitados} / {limiteGratis}
               </span>
             </div>
 
             <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200">
               <div
                 className={`h-full transition-all duration-500 rounded-full ${
-                  cantidadInvitados >= LIMITE_INVITADOS_GRATIS
+                  cantidadInvitados >= limiteGratis
                     ? 'bg-amber-600'
                     : 'bg-slate-900'
                 }`}
@@ -588,15 +603,15 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
 
             <div className="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <p className="text-slate-600 font-normal">
-                {cantidadInvitados >= LIMITE_INVITADOS_GRATIS
-                  ? 'Ha alcanzado el cupo máximo de 50 invitaciones de cortesía.'
-                  : `Dispone de ${LIMITE_INVITADOS_GRATIS - cantidadInvitados} invitaciones en su cupo de cortesía.`}
+                {cantidadInvitados >= limiteGratis
+                  ? `Ha alcanzado el cupo máximo de ${limiteGratis} invitaciones de cortesía.`
+                  : `Dispone de ${limiteGratis - cantidadInvitados} invitaciones en su cupo de cortesía.`}
               </p>
               <button
                 onClick={() => setMostrarModalUpgrade(true)}
                 className="text-amber-700 hover:text-amber-800 hover:underline font-bold flex items-center gap-1 cursor-pointer"
               >
-                <span>Habilitar Cupo Ilimitado ($3.99 USD)</span>
+                <span>Habilitar Cupo Ilimitado (${precioUSD} USD)</span>
               </button>
             </div>
           </div>

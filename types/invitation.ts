@@ -320,6 +320,7 @@ export interface DetalleEvento {
   mostrarBadge?: boolean
   textoBadge?: string
   esPremium: boolean // Si pagó por invitados ilimitados / sin anuncios
+  limiteGratisInvitados?: number // Cupo de cortesía fijado al momento de su creación o por el Super Admin
   creadoEn: string
   expiraEn: string // Fecha evento + 7 días
 

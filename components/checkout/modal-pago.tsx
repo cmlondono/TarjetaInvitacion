@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   ShieldCheck,
   CreditCard,
@@ -18,7 +18,7 @@ import {
   Tag,
 } from 'lucide-react'
 import { AdminStorage } from '@/lib/admin-storage'
-import { Promocion } from '@/types/admin'
+import { Promocion, ConfiguracionGlobal, CONFIGURACION_DEFAULT } from '@/types/admin'
 
 interface ModalPagoProps {
   abierto: boolean
@@ -42,6 +42,13 @@ export function ModalPago({
   const [idComprobante, setIdComprobante] = useState<string | null>(null)
   const [correoCliente, setCorreoCliente] = useState('')
   const [errorPago, setErrorPago] = useState<string | null>(null)
+  const [config, setConfig] = useState<ConfiguracionGlobal>(CONFIGURACION_DEFAULT)
+
+  useEffect(() => {
+    AdminStorage.obtenerConfiguracionAsync().then((c) => {
+      if (c) setConfig(c)
+    })
+  }, [])
 
   // Cupones y Promociones
   const [mostrarCampoCupon, setMostrarCampoCupon] = useState(false)
@@ -51,7 +58,6 @@ export function ModalPago({
 
   if (!abierto) return null
 
-  const config = AdminStorage.obtenerConfiguracion()
   const precioBaseCOP = config.precioPremiumCOP || 15900
   const precioBaseUSD = config.precioPremiumUSD || 3.99
 

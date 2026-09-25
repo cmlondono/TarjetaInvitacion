@@ -1,4 +1,5 @@
 import { DetalleEvento, Invitado } from '@/types/invitation'
+import { ConfiguracionGlobal, CONFIGURACION_DEFAULT } from '@/types/admin'
 
 // Almacén híbrido de alta disponibilidad: Memoria global + Respaldo persistente en Disco JSON
 // Garantiza persistencia inmediata en el servidor incluso si Supabase aún no está conectado,
@@ -8,6 +9,7 @@ import { DetalleEvento, Invitado } from '@/types/invitation'
 declare global {
   var __tarjeton_eventos_cache: Map<string, DetalleEvento> | undefined
   var __tarjeton_confirmaciones_cache: Map<string, Map<string, Invitado>> | undefined
+  var __tarjeton_configuracion_cache: ConfiguracionGlobal | undefined
   var __tarjeton_disco_cargado: boolean | undefined
 }
 
@@ -41,7 +43,7 @@ function obtenerPath() {
   }
 }
 
-function obtenerRutasArchivos(): { eventos: string; invitados: string } | null {
+function obtenerRutasArchivos(): { eventos: string; invitados: string; configuracion: string } | null {
   const fs = obtenerFs()
   const path = obtenerPath()
   if (!fs || !path) return null
@@ -56,6 +58,7 @@ function obtenerRutasArchivos(): { eventos: string; invitados: string } | null {
     return {
       eventos: path.join(rutaData, 'eventos_db.json'),
       invitados: path.join(rutaData, 'invitados_db.json'),
+      configuracion: path.join(rutaData, 'configuracion_db.json'),
     }
   } catch {
     // 2. Si el sistema de archivos principal es de solo lectura (como AWS Lambda / Vercel Serverless), usar /tmp
@@ -67,6 +70,7 @@ function obtenerRutasArchivos(): { eventos: string; invitados: string } | null {
       return {
         eventos: path.join(rutaTmp, 'eventos_db.json'),
         invitados: path.join(rutaTmp, 'invitados_db.json'),
+        configuracion: path.join(rutaTmp, 'configuracion_db.json'),
       }
     } catch {
       return null
@@ -127,6 +131,19 @@ function cargarDesdeDisco(): void {
   } catch (err) {
     console.warn('[ServidorAlmacen] Error leyendo invitados de disco:', err)
   }
+  try {
+    if (fs.existsSync(rutas.configuracion)) {
+      const contenido = fs.readFileSync(rutas.configuracion, 'utf-8')
+      if (contenido && contenido.trim()) {
+        const conf = JSON.parse(contenido)
+        if (conf && typeof conf === 'object') {
+          globalThis.__tarjeton_configuracion_cache = { ...CONFIGURACION_DEFAULT, ...conf }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[ServidorAlmacen] Error leyendo configuración de disco:', err)
+  }
 }
 
 function persistirEventosEnDisco(): void {
@@ -160,6 +177,19 @@ function persistirInvitadosEnDisco(): void {
     fs.writeFileSync(rutas.invitados, JSON.stringify(estructura, null, 2), 'utf-8')
   } catch (err) {
     console.warn('[ServidorAlmacen] Error guardando invitados en disco:', err)
+  }
+}
+
+function persistirConfiguracionEnDisco(): void {
+  const fs = obtenerFs()
+  const rutas = obtenerRutasArchivos()
+  if (!fs || !rutas) return
+
+  try {
+    const config = globalThis.__tarjeton_configuracion_cache || CONFIGURACION_DEFAULT
+    fs.writeFileSync(rutas.configuracion, JSON.stringify(config, null, 2), 'utf-8')
+  } catch (err) {
+    console.warn('[ServidorAlmacen] Error guardando configuración en disco:', err)
   }
 }
 
@@ -290,5 +320,24 @@ export const ServidorAlmacen = {
     }
     if (!mapa) return []
     return Array.from(mapa.values())
+  },
+
+  obtenerConfiguracion(): ConfiguracionGlobal {
+    if (typeof window === 'undefined') {
+      cargarDesdeDisco()
+    }
+    return globalThis.__tarjeton_configuracion_cache || CONFIGURACION_DEFAULT
+  },
+
+  guardarConfiguracion(config: Partial<ConfiguracionGlobal>): ConfiguracionGlobal {
+    const actual = this.obtenerConfiguracion()
+    const nueva: ConfiguracionGlobal = {
+      ...actual,
+      ...config,
+      ultimaActualizacion: new Date().toISOString(),
+    }
+    globalThis.__tarjeton_configuracion_cache = nueva
+    persistirConfiguracionEnDisco()
+    return nueva
   },
 }

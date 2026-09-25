@@ -17,6 +17,11 @@ import {
 } from 'lucide-react'
 import { LandingAnnouncementBanner } from '@/components/landing/anuncio-banner'
 import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
+import { ServidorAlmacen } from '@/lib/server-storage'
+import { obtenerClienteSupabase } from '@/lib/supabase'
+import { CONFIGURACION_DEFAULT } from '@/types/admin'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Tarjetón — Convocatorias Protocolarias & Tarjetas Formales para WhatsApp',
@@ -42,7 +47,31 @@ export const metadata: Metadata = {
   },
 }
 
-export default function PaginaInicio() {
+export default async function PaginaInicio() {
+  let config = ServidorAlmacen.obtenerConfiguracion()
+  try {
+    const supabase = obtenerClienteSupabase()
+    if (supabase) {
+      const { data } = await supabase
+        .from('configuracion_global')
+        .select('*')
+        .eq('id', 'principal')
+        .maybeSingle()
+      if (data) {
+        config = {
+          ...config,
+          precioPremiumCOP: data.precio_premium_cop ?? config.precioPremiumCOP,
+          precioPremiumUSD: Number(data.precio_premium_usd ?? config.precioPremiumUSD),
+          limiteGratisInvitados: data.limite_gratis_invitados ?? config.limiteGratisInvitados,
+          anunciosAdsHabilitados: data.anuncios_ads_habilitados ?? config.anunciosAdsHabilitados,
+          modoMantenimiento: data.modo_mantenimiento ?? config.modoMantenimiento,
+          mensajeMantenimiento: data.mensaje_mantenimiento ?? config.mensajeMantenimiento,
+          whatsappSoporte: data.whatsapp_soporte ?? config.whatsappSoporte,
+        }
+      }
+    }
+  } catch {}
+
   const jsonLdWeb = {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',
@@ -64,6 +93,13 @@ export default function PaginaInicio() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWeb) }}
       />
+
+      {/* Banner de Modo Mantenimiento si está activo */}
+      {config.modoMantenimiento && (
+        <div className="w-full bg-amber-500 text-slate-950 px-4 py-2.5 text-center text-xs font-bold border-b border-amber-600 shadow-xs flex items-center justify-center gap-2">
+          <span>⚠️ Aviso del Sistema: {config.mensajeMantenimiento || 'El sistema se encuentra en mantenimiento programado.'}</span>
+        </div>
+      )}
 
       {/* Banner de Anuncios y Promociones Administrables */}
       <LandingAnnouncementBanner />
@@ -98,7 +134,7 @@ export default function PaginaInicio() {
         {/* Badge de Protocolo y Acceso Libre */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold mb-6 shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>Sin registros obligatorios · Hasta 50 pases de cortesía</span>
+          <span>Sin registros obligatorios · Hasta {config.limiteGratisInvitados} pases de cortesía</span>
         </div>
 
         {/* Título Principal */}
@@ -302,7 +338,7 @@ export default function PaginaInicio() {
                 <ul className="space-y-3 text-xs text-slate-700 font-normal">
                   <li className="flex items-center gap-2.5">
                     <Check size={16} className="text-slate-800 shrink-0" />
-                    <span>Emisión de hasta <strong>50 pases nominales</strong></span>
+                    <span>Emisión de hasta <strong>{config.limiteGratisInvitados} pases nominales</strong></span>
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check size={16} className="text-slate-800 shrink-0" />
@@ -323,11 +359,11 @@ export default function PaginaInicio() {
                 href="/crear"
                 className="mt-8 w-full py-3.5 rounded-xl border border-slate-300 text-center text-xs font-bold text-slate-900 hover:bg-slate-100 transition-colors block"
               >
-                Comenzar con 50 Cupos Gratis
+                Comenzar con {config.limiteGratisInvitados} Cupos Gratis
               </Link>
             </div>
 
-            {/* Plan Premium Ilimitado ($3.99 USD) */}
+            {/* Plan Premium Ilimitado */}
             <div className="p-8 rounded-2xl bg-white border-2 border-slate-900 flex flex-col justify-between relative shadow-lg">
               <div className="absolute -top-3.5 right-6 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded shadow-xs">
                 Acceso Completo
@@ -338,8 +374,8 @@ export default function PaginaInicio() {
                 </span>
                 <h3 className="text-xl font-bold mt-1 text-slate-950">Pase Ilimitado Protocolario</h3>
                 <div className="my-5">
-                  <span className="text-4xl font-extrabold text-slate-950">$3.99</span>
-                  <span className="text-xs text-slate-500 font-medium"> USD (Pago único por evento)</span>
+                  <span className="text-4xl font-extrabold text-slate-950">${config.precioPremiumUSD}</span>
+                  <span className="text-xs text-slate-500 font-medium"> USD (~${config.precioPremiumCOP.toLocaleString('es-CO')} COP / Pago único)</span>
                 </div>
                 <ul className="space-y-3 text-xs text-slate-800 font-normal">
                   <li className="flex items-center gap-2.5">
@@ -365,7 +401,7 @@ export default function PaginaInicio() {
                 href="/crear?plan=premium"
                 className="mt-8 w-full py-3.5 rounded-xl bg-slate-900 text-white text-center text-xs font-bold hover:bg-slate-800 transition-colors block shadow-sm"
               >
-                Activar Pase Premium ($3.99 USD)
+                Activar Pase Premium (${config.precioPremiumUSD} USD)
               </Link>
             </div>
           </div>

@@ -52,6 +52,13 @@ export function mapearEventoDesdeDb(fila: any): DetalleEvento {
     mostrarBadge,
     textoBadge,
     esPremium: fila.es_premium || false,
+    limiteGratisInvitados:
+      fila.limite_gratis_invitados !== undefined && fila.limite_gratis_invitados !== null
+        ? Number(fila.limite_gratis_invitados)
+        : fila.configuracion_visual?.limiteGratisInvitados !== undefined &&
+          fila.configuracion_visual?.limiteGratisInvitados !== null
+        ? Number(fila.configuracion_visual.limiteGratisInvitados)
+        : 50,
     creadoEn: fila.creado_en,
     expiraEn: fila.expira_en,
     configuracionVisual: fila.configuracion_visual || undefined,
@@ -258,7 +265,13 @@ export const EventoRepositorio = {
             imagen_portada: evento.imagenPortada || null,
             imagen_retrato: evento.imagenRetrato || null,
             es_premium: Boolean(evento.esPremium),
-            configuracion_visual: evento.configuracionVisual || {},
+            configuracion_visual: {
+              ...(evento.configuracionVisual || {}),
+              limiteGratisInvitados:
+                evento.limiteGratisInvitados ||
+                (evento.configuracionVisual as any)?.limiteGratisInvitados ||
+                50,
+            },
             secciones: evento.secciones || [],
             expira_en: evento.expiraEn,
           })
@@ -445,15 +458,25 @@ export const InvitadoRepositorio = {
    */
   agregar(
     evento: DetalleEvento,
-    invitadoData: Omit<Invitado, 'id' | 'codigoAcceso'>
+    invitadoData: Omit<Invitado, 'id' | 'codigoAcceso'>,
+    limiteMaximoPersonalizado?: number
   ): { exito: boolean; invitado?: Invitado; error?: string } {
     const invitadosActuales = this.obtenerPorEvento(evento.id)
 
-    // Regla de negocio: Límite gratuito de 50 invitados
-    if (!evento.esPremium && invitadosActuales.length >= LIMITE_INVITADOS_GRATIS) {
+    // Regla de negocio inmutable:
+    // El límite gratuito es el fijado para ESTE evento específico al momento de su creación (o por el Super Admin).
+    // Si el evento fue creado cuando el sistema daba 50, se respeta 50 para siempre.
+    // Si fue creado cuando daba 20, se respeta 20.
+    const limiteMaximo =
+      limiteMaximoPersonalizado ||
+      evento.limiteGratisInvitados ||
+      (evento.configuracionVisual as any)?.limiteGratisInvitados ||
+      50
+
+    if (!evento.esPremium && invitadosActuales.length >= limiteMaximo) {
       return {
         exito: false,
-        error: `Has alcanzado el límite de ${LIMITE_INVITADOS_GRATIS} invitados gratuitos. Pasa al plan ilimitado para agregar más.`,
+        error: `Has alcanzado el límite de ${limiteMaximo} invitados gratuitos concedidos a tu evento. Pasa al plan ilimitado para agregar más.`,
       }
     }
 

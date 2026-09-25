@@ -19,20 +19,6 @@ interface ModuloRsvpProps {
   metodoConfirmacion?: MetodoConfirmacion
 }
 
-/**
- * Determina si un color hexadecimal es percibido como claro u oscuro
- */
-function esColorClaro(hex?: string): boolean {
-  if (!hex || hex === 'transparent') return true
-  const limpio = hex.replace('#', '')
-  if (limpio.length < 6) return true
-  const r = parseInt(limpio.substring(0, 2), 16) || 0
-  const g = parseInt(limpio.substring(2, 4), 16) || 0
-  const b = parseInt(limpio.substring(4, 6), 16) || 0
-  const yiq = (r * 299 + g * 587 + b * 114) / 1000
-  return yiq >= 145
-}
-
 export function ModuloRsvp({
   evento,
   visual,
@@ -161,22 +147,6 @@ export function ModuloRsvp({
     setEnviando(false)
   }
 
-  // Variables de color armonizadas con la tarjeta y fondo de la invitación
-  const fondoTarjeta = visual.colorTarjeta || '#FFFFFF'
-  const textoTarjeta = visual.colorTexto || '#0F172A'
-  const colorPrimario = visual.colorPrimario || '#0F172A'
-  const colorSecundario = visual.colorSecundario || '#D4AF37'
-  const esClaro = esColorClaro(fondoTarjeta)
-
-  // Fondo dinámico adaptativo para que nunca quede en blanco fijo si el usuario cambia el tema
-  const estiloCajaAdaptativa: React.CSSProperties = {
-    background: esClaro
-      ? 'color-mix(in srgb, var(--color-tarjeta-live, ' + fondoTarjeta + ') 75%, rgba(255, 255, 255, 0.85))'
-      : 'color-mix(in srgb, var(--color-tarjeta-live, ' + fondoTarjeta + ') 75%, rgba(15, 23, 42, 0.85))',
-    borderColor: esClaro ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)',
-    color: textoTarjeta,
-  }
-
   // ════════════ MODO 1: CONFIRMACIÓN EXCLUSIVA POR WHATSAPP ════════════
   if (metodoConfirmacion === 'whatsapp') {
     return (
@@ -195,18 +165,15 @@ export function ModuloRsvp({
             />
           </div>
         )}
-        <div
-          className="w-full max-w-md backdrop-blur-md rounded-2xl p-5 sm:p-6 shadow-md border text-center space-y-4"
-          style={estiloCajaAdaptativa}
-        >
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/25 shadow-xs">
+        <div className="w-full max-w-md bg-white/95 backdrop-blur-md rounded-2xl p-5 sm:p-6 shadow-md border border-black/5 text-center space-y-4 text-slate-800">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200/80 shadow-xs">
             <MessageCircle size={24} />
           </div>
           <div>
-            <h4 className="text-base font-bold font-serif" style={{ color: textoTarjeta }}>
+            <h4 className="text-base font-bold font-serif text-slate-900">
               Confirmación vía WhatsApp
             </h4>
-            <p className="text-xs mt-1 max-w-xs mx-auto leading-relaxed opacity-75" style={{ color: textoTarjeta }}>
+            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
               Notifique su asistencia al anfitrión de forma inmediata con un mensaje protocolario en un toque.
             </p>
           </div>
@@ -244,10 +211,7 @@ export function ModuloRsvp({
         </div>
       )}
 
-      <div
-        className="w-full max-w-md backdrop-blur-md rounded-2xl p-5 sm:p-6 shadow-md border"
-        style={estiloCajaAdaptativa}
-      >
+      <div className="w-full max-w-md bg-white/95 backdrop-blur-md rounded-2xl p-5 sm:p-6 shadow-md border border-black/5 text-slate-800">
         <AnimatePresence mode="wait">
           {confirmadoExitoso && !mostrarFormularioEdicion ? (
             /* ════════════ PANTALLA: RESPUESTA YA REGISTRADA ════════════ */
@@ -259,27 +223,26 @@ export function ModuloRsvp({
               className="text-center py-2 space-y-4"
             >
               <div
-                className="w-13 h-13 rounded-full mx-auto flex items-center justify-center shadow-sm"
+                className="w-12 h-12 rounded-full mx-auto flex items-center justify-center shadow-sm"
                 style={{
-                  backgroundColor: estado === 'confirmado' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                  color: estado === 'confirmado' ? '#10B981' : '#EF4444',
-                  border: `1px solid ${estado === 'confirmado' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                  backgroundColor: estado === 'confirmado' ? '#DCFCE7' : '#FEE2E2',
+                  color: estado === 'confirmado' ? '#15803D' : '#B91C1C',
                 }}
               >
-                {estado === 'confirmado' ? <CheckCircle2 size={30} /> : <X size={30} />}
+                {estado === 'confirmado' ? <CheckCircle2 size={28} /> : <X size={28} />}
               </div>
 
               <div>
-                <h4 className="text-base sm:text-lg font-bold font-serif" style={{ color: textoTarjeta }}>
+                <h4 className="text-base font-bold font-serif text-slate-900">
                   {estado === 'confirmado' ? '¡Asistencia Registrada!' : 'Respuesta Registrada'}
                 </h4>
-                <p className="text-xs mt-1.5 leading-relaxed opacity-80" style={{ color: textoTarjeta }}>
+                <p className="text-xs text-slate-600 mt-1">
                   {estado === 'confirmado'
-                    ? `Muchas gracias, ${nombre || 'invitado'}. Te esperamos con gusto (${cupos} ${cupos === 1 ? 'cupo confirmado' : 'cupos confirmados'}).`
+                    ? `Muchas gracias, ${nombre || 'invitado'}. Te esperamos con gusto (${cupos} ${cupos === 1 ? 'cupo' : 'cupos'}).`
                     : `Lamentamos que no puedas acompañarnos, ${nombre || 'invitado'}. ¡Gracias por avisarnos!`}
                 </p>
                 {fechaConfirmacion && (
-                  <p className="text-[10px] mt-1.5 font-mono opacity-60" style={{ color: textoTarjeta }}>
+                  <p className="text-[10px] text-slate-400 mt-1 font-mono">
                     Registrado el {new Date(fechaConfirmacion).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </p>
                 )}
@@ -289,12 +252,7 @@ export function ModuloRsvp({
                 <button
                   type="button"
                   onClick={() => setMostrarFormularioEdicion(true)}
-                  className="text-xs font-semibold transition-all flex items-center gap-1.5 py-2 px-3.5 rounded-xl border cursor-pointer hover:opacity-80 active:scale-95 shadow-xs"
-                  style={{
-                    background: esClaro ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.08)',
-                    borderColor: esClaro ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.15)',
-                    color: textoTarjeta,
-                  }}
+                  className="px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <RefreshCw size={13} />
                   <span>Modificar mi respuesta</span>
@@ -305,7 +263,7 @@ export function ModuloRsvp({
                     href={urlWhatsApp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 transition-colors flex items-center gap-1.5 py-2 px-3.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 cursor-pointer shadow-xs"
+                    className="px-3.5 py-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <MessageCircle size={14} />
                     <span>Notificar también por WhatsApp</span>
@@ -324,25 +282,16 @@ export function ModuloRsvp({
             >
               {/* 1. NOMBRE Y PASE (como ya está y donde está) */}
               {invitado?.nombre ? (
-                <div
-                  className="rounded-xl p-3 sm:p-3.5 flex items-center justify-between border"
-                  style={{
-                    background: esClaro ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.06)',
-                    borderColor: esClaro ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.1)',
-                  }}
-                >
+                <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-xs shrink-0"
-                      style={{ backgroundColor: colorPrimario }}
-                    >
+                    <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center text-xs font-bold">
                       <UserCheck size={14} />
                     </div>
-                    <div className="min-w-0">
-                      <span className="text-xs sm:text-sm font-bold block truncate" style={{ color: textoTarjeta }}>
+                    <div>
+                      <span className="text-xs font-bold text-slate-900 block leading-tight">
                         {invitado.nombre}
                       </span>
-                      <span className="text-[10px] sm:text-[11px] opacity-70 block" style={{ color: textoTarjeta }}>
+                      <span className="text-[10px] text-slate-500">
                         Pase autorizado para {invitado.pases} {invitado.pases === 1 ? 'persona' : 'personas'}
                       </span>
                     </div>
@@ -350,10 +299,7 @@ export function ModuloRsvp({
                 </div>
               ) : (
                 <div>
-                  <label
-                    className="text-[11px] font-bold uppercase tracking-wider block mb-1.5"
-                    style={{ color: textoTarjeta, opacity: 0.85 }}
-                  >
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 block mb-1">
                     Tu Nombre Completo:
                   </label>
                   <input
@@ -364,15 +310,10 @@ export function ModuloRsvp({
                       setNombre(e.target.value)
                       if (errorNombre) setErrorNombre(false)
                     }}
-                    placeholder="Ej. Marcela Gómez"
-                    className={`w-full text-xs px-3.5 py-2.5 rounded-xl border outline-none transition-all placeholder:opacity-50 ${
-                      errorNombre ? 'ring-2 ring-rose-500 border-rose-500' : ''
+                    placeholder="Ej. Dra. Marcela Gómez"
+                    className={`w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all bg-white text-slate-900 ${
+                      errorNombre ? 'border-rose-500 ring-1 ring-rose-500' : ''
                     }`}
-                    style={{
-                      background: esClaro ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.6)',
-                      color: textoTarjeta,
-                      borderColor: errorNombre ? '#EF4444' : esClaro ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.2)',
-                    }}
                   />
                   {errorNombre && (
                     <p className="text-[10px] text-rose-500 mt-1 font-medium">
@@ -385,69 +326,37 @@ export function ModuloRsvp({
               {/* 2. LUEGO LOS CUPOS DE CONFIRMACIÓN */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label
-                    className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5"
-                    style={{ color: textoTarjeta, opacity: 0.85 }}
-                  >
-                    <Users size={14} style={{ color: colorSecundario || colorPrimario }} />
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                    <Users size={13} />
                     <span>¿Cuántos cupos confirmas?</span>
                   </label>
-                  <span className="text-[11px] font-bold font-mono" style={{ color: colorPrimario }}>
+                  <span className="text-[11px] font-bold text-slate-800 font-mono">
                     {cupos} {cupos === 1 ? 'asistente' : 'asistentes'}
                   </span>
                 </div>
 
-                {pasesMaximos > 1 ? (
-                  <div className="flex items-center gap-2">
-                    {Array.from({ length: pasesMaximos }, (_, i) => i + 1).map((num) => {
-                      const seleccionado = cupos === num
-                      return (
-                        <button
-                          key={num}
-                          type="button"
-                          onClick={() => setCupos(num)}
-                          className="flex-1 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border active:scale-95 shadow-xs"
-                          style={{
-                            backgroundColor: seleccionado
-                              ? colorPrimario
-                              : esClaro
-                              ? 'rgba(255, 255, 255, 0.7)'
-                              : 'rgba(255, 255, 255, 0.08)',
-                            color: seleccionado ? '#FFFFFF' : textoTarjeta,
-                            borderColor: seleccionado
-                              ? colorPrimario
-                              : esClaro
-                              ? 'rgba(0, 0, 0, 0.12)'
-                              : 'rgba(255, 255, 255, 0.15)',
-                          }}
-                        >
-                          {num}
-                        </button>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <div
-                    className="py-2 px-3 rounded-xl border text-xs flex items-center justify-between"
-                    style={{
-                      background: esClaro ? 'rgba(0, 0, 0, 0.02)' : 'rgba(255, 255, 255, 0.04)',
-                      borderColor: esClaro ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.08)',
-                      color: textoTarjeta,
-                    }}
-                  >
-                    <span className="opacity-80">Pase individual reservado</span>
-                    <span className="font-bold font-mono">1 cupo</span>
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: pasesMaximos }, (_, i) => i + 1).map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      onClick={() => setCupos(num)}
+                      className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer border ${
+                        cupos === num
+                          ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* 3. LUEGO EL MENSAJE O RESTRICCIONES */}
               <div>
-                <label
-                  className="text-[11px] font-bold uppercase tracking-wider block mb-1.5 flex items-center gap-1.5"
-                  style={{ color: textoTarjeta, opacity: 0.85 }}
-                >
-                  <MessageSquare size={14} style={{ color: colorSecundario || colorPrimario }} />
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 block mb-1 flex items-center gap-1.5">
+                  <MessageSquare size={13} />
                   <span>Mensaje o restricciones (opcional):</span>
                 </label>
                 <input
@@ -455,71 +364,48 @@ export function ModuloRsvp({
                   value={mensaje}
                   onChange={(e) => setMensaje(e.target.value)}
                   placeholder="Ej. Menú vegetariano, felicitaciones..."
-                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border outline-none transition-all placeholder:opacity-50"
-                  style={{
-                    background: esClaro ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 23, 42, 0.6)',
-                    color: textoTarjeta,
-                    borderColor: esClaro ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.2)',
-                  }}
+                  className="w-full text-xs px-3.5 py-2 rounded-xl border border-slate-300 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all bg-white text-slate-900"
                 />
               </div>
 
-              {/* 4. POR ÚLTIMO LA PREGUNTA: ¿Asistirás al evento? CON EL SÍ Y EL NO QUE CONFIRMA DIRECTAMENTE */}
-              <div className="pt-2">
-                <label
-                  className="text-[11px] font-bold uppercase tracking-wider block mb-2 text-center"
-                  style={{ color: textoTarjeta, opacity: 0.9 }}
-                >
+              {/* 4. POR ÚLTIMO LA PREGUNTA: ¿Asistirás al evento? CON SÍ Y NO QUE CONFIRMA DIRECTAMENTE */}
+              <div className="pt-1">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 block mb-1.5 text-center">
                   ¿Asistirás al evento?
                 </label>
-                <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-                  {/* Botón SÍ, ASISTIRÉ (Confirma directamente al tocar) */}
+                <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     disabled={enviando}
                     onClick={() => ejecutarConfirmacionDirecta('confirmado')}
-                    className="py-3 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] cursor-pointer shadow-md text-white disabled:opacity-60"
-                    style={{
-                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                      boxShadow: '0 4px 14px rgba(16, 185, 129, 0.3)',
-                    }}
+                    className="py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer bg-emerald-50 border-emerald-500 text-emerald-800 ring-2 ring-emerald-500/20 shadow-xs hover:bg-emerald-100 active:scale-[0.98] disabled:opacity-50"
                   >
-                    <Check size={16} className="stroke-[2.5]" />
+                    <Check size={15} className="text-emerald-600 stroke-[2.5]" />
                     <span>{enviando && estado === 'confirmado' ? 'Guardando...' : 'Sí, asistiré'}</span>
                   </button>
 
-                  {/* Botón NO PODRÉ ASISTIR (Confirma directamente al tocar) */}
                   <button
                     type="button"
                     disabled={enviando}
                     onClick={() => ejecutarConfirmacionDirecta('no_asiste')}
-                    className="py-3 px-3 sm:px-4 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] cursor-pointer border disabled:opacity-60"
-                    style={{
-                      background: esClaro ? 'rgba(244, 63, 94, 0.08)' : 'rgba(244, 63, 94, 0.15)',
-                      borderColor: esClaro ? 'rgba(244, 63, 94, 0.25)' : 'rgba(244, 63, 94, 0.4)',
-                      color: esClaro ? '#BE123C' : '#FDA4AF',
-                    }}
+                    className="py-2.5 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer bg-rose-50 border-rose-500 text-rose-800 ring-2 ring-rose-500/20 shadow-xs hover:bg-rose-100 active:scale-[0.98] disabled:opacity-50"
                   >
-                    <X size={16} className="stroke-[2.5]" />
+                    <X size={15} className="text-rose-600 stroke-[2.5]" />
                     <span>{enviando && estado === 'no_asiste' ? 'Guardando...' : 'No podré asistir'}</span>
                   </button>
                 </div>
               </div>
 
-              {/* Enlace alternativo para notificar por WhatsApp si el método es híbrido (ambos) */}
+              {/* Botón secundario para enviar por WhatsApp sólo si el método es híbrido (ambos) */}
               {metodoConfirmacion === 'ambos' && urlWhatsApp && !esModoVistaPrevia && (
-                <div
-                  className="pt-2 text-center border-t mt-3"
-                  style={{ borderColor: esClaro ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.08)' }}
-                >
+                <div className="pt-2 text-center border-t border-slate-100">
                   <a
                     href={urlWhatsApp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[11px] opacity-70 hover:opacity-100 font-medium inline-flex items-center gap-1 transition-opacity"
-                    style={{ color: textoTarjeta }}
+                    className="text-[11px] text-slate-500 hover:text-emerald-700 font-medium inline-flex items-center gap-1 transition-colors"
                   >
-                    <span>¿Prefieres responder vía WhatsApp directo? Haz clic aquí</span>
+                    <span>¿Prefieres notificar vía WhatsApp directo? Haz clic aquí</span>
                   </a>
                 </div>
               )}

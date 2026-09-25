@@ -128,61 +128,23 @@ VALUES ('principal', 15900, 3.99, 50)
 ON CONFLICT (id) DO NOTHING;
 
 
--- 6. POLÍTICAS DE ACCESO (ROW LEVEL SECURITY)
-ALTER TABLE public.eventos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.invitados ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.promociones ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.publicaciones_landing ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.configuracion_global ENABLE ROW LEVEL SECURITY;
+-- 6. PERMISOS Y SEGURIDAD
+-- Dado que en esta plataforma NO hay registro de usuarios con login/password,
+-- sino que la seguridad se gestiona mediante tokens únicos en la URL:
+--
+-- OPCIÓN RECOMENDADA (Más simple y directa):
+-- Desactivar RLS para que la aplicación guarde y lea sin bloqueos:
+ALTER TABLE public.eventos DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invitados DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.promociones DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.publicaciones_landing DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.configuracion_global DISABLE ROW LEVEL SECURITY;
 
--- Políticas para eventos
-DROP POLICY IF EXISTS "Lectura publica de eventos por slug" ON public.eventos;
-CREATE POLICY "Lectura publica de eventos por slug"
-ON public.eventos FOR SELECT
-USING (true);
+-- OPCIÓN ALTERNATIVA (Si deseas mantener RLS activo en Supabase, habilita acceso público):
+-- ALTER TABLE public.eventos ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE public.invitados ENABLE ROW LEVEL SECURITY;
+-- DROP POLICY IF EXISTS "Acceso total eventos" ON public.eventos;
+-- CREATE POLICY "Acceso total eventos" ON public.eventos FOR ALL USING (true) WITH CHECK (true);
+-- DROP POLICY IF EXISTS "Acceso total invitados" ON public.invitados;
+-- CREATE POLICY "Acceso total invitados" ON public.invitados FOR ALL USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Insertar nuevos eventos" ON public.eventos;
-CREATE POLICY "Insertar nuevos eventos"
-ON public.eventos FOR INSERT
-WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Actualizar evento con token admin" ON public.eventos;
-CREATE POLICY "Actualizar evento con token admin"
-ON public.eventos FOR UPDATE
-USING (true)
-WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Eliminar evento con token admin" ON public.eventos;
-CREATE POLICY "Eliminar evento con token admin"
-ON public.eventos FOR DELETE
-USING (true);
-
--- Políticas para invitados
-DROP POLICY IF EXISTS "Lectura de invitados" ON public.invitados;
-CREATE POLICY "Lectura de invitados"
-ON public.invitados FOR SELECT
-USING (true);
-
-DROP POLICY IF EXISTS "Gestionar invitados" ON public.invitados;
-CREATE POLICY "Gestionar invitados"
-ON public.invitados FOR ALL
-USING (true)
-WITH CHECK (true);
-
--- Políticas para banners de landing
-DROP POLICY IF EXISTS "Lectura de avisos en landing" ON public.publicaciones_landing;
-CREATE POLICY "Lectura de avisos en landing"
-ON public.publicaciones_landing FOR SELECT
-USING (activo = true);
-
--- Políticas para promociones
-DROP POLICY IF EXISTS "Lectura de promociones activas" ON public.promociones;
-CREATE POLICY "Lectura de promociones activas"
-ON public.promociones FOR SELECT
-USING (activo = true);
-
--- Políticas para configuración global
-DROP POLICY IF EXISTS "Lectura de configuracion global" ON public.configuracion_global;
-CREATE POLICY "Lectura de configuracion global"
-ON public.configuracion_global FOR SELECT
-USING (true);

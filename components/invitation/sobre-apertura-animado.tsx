@@ -444,7 +444,6 @@ export function SobreAperturaAnimado({
                     : 'rgba(15, 23, 42, 0.65)'
 
                   const nombreMostrar = invitado?.nombre || 'Distinguido(a) Invitado(a)'
-                  const esDemo = !invitado || invitado.id === 'preview-invitado' || invitado.id === 'inv-temp'
 
                   return (
                     <div
@@ -484,14 +483,6 @@ export function SobreAperturaAnimado({
                             : 'Pase Protocolario Personal'}
                         </span>
                       </div>
-                      {esDemo && (
-                        <span
-                          className="text-[8px] tracking-wide mt-0.5 block opacity-75 font-sans"
-                          style={{ color: colorSubtexto }}
-                        >
-                          (Nombre de ejemplo — cada invitado recibirá su sobre personalizado)
-                        </span>
-                      )}
                     </div>
                   )
                 })()}

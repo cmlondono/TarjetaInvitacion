@@ -232,6 +232,47 @@ export function ForroInteriorDecorativo({
  * - Sin botones ni letreros invasivos debajo del sobre.
  * - Si el invitado ya confirmó asistencia, el sobre aparece abierto de inmediato.
  */
+/**
+ * Verifica si el usuario/invitado ya completó su confirmación (en base de datos o en memoria de este navegador)
+ */
+export function verificarSiYaConfirmado(eventoId: string, invitado?: Invitado | null): boolean {
+  if (
+    invitado?.confirmado === true ||
+    invitado?.estadoConfirmacion === 'confirmado' ||
+    invitado?.estadoConfirmacion === 'no_asiste'
+  ) {
+    return true
+  }
+
+  if (typeof window === 'undefined') return false
+
+  try {
+    const claveExacta = `tarjeton_rsvp_${eventoId}_${invitado?.codigoAcceso || 'anon'}`
+    if (localStorage.getItem(claveExacta)) return true
+
+    // Buscar si hay confirmación registrada en este dispositivo para este evento
+    const prefijo = `tarjeton_rsvp_${eventoId}`
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k && k.startsWith(prefijo)) {
+        const val = localStorage.getItem(k)
+        if (val) {
+          try {
+            const parsed = JSON.parse(val)
+            if (parsed.estadoConfirmacion || parsed.fechaConfirmacion) {
+              return true
+            }
+          } catch {
+            return true
+          }
+        }
+      }
+    }
+  } catch {}
+
+  return false
+}
+
 export function SobreAperturaAnimado({
   evento,
   visual,
@@ -247,35 +288,62 @@ export function SobreAperturaAnimado({
   }, [])
 
   const tieneSobreActivado = Boolean(visual.animacionSobre)
-  const yaConfirmado = Boolean(
-    invitado?.confirmado === true || invitado?.estadoConfirmacion === 'confirmado'
-  )
+  const [yaConfirmado, setYaConfirmado] = useState<boolean>(() => {
+    return verificarSiYaConfirmado(evento.id, invitado)
+  })
 
   const [estaAbierto, setEstaAbierto] = useState<boolean>(() => {
     if (!tieneSobreActivado) return true
     if (esModoEdicionDirecta) return true
-    if (yaConfirmado) return true
+    if (verificarSiYaConfirmado(evento.id, invitado)) return true
     return false
   })
 
   const [abriendo, setAbriendo] = useState(false)
 
-  // Sincronizar apertura: si entra a edición directa se abre inmediatamente;
-  // si entra a vista previa o prueba y el sobre está activo, se cierra para mostrar la animación
+  // Escuchar confirmación en tiempo real y sincronizar con localStorage
   useEffect(() => {
-    if (esModoEdicionDirecta) {
+    const revisarConfirmacion = () => {
+      const confirmado = verificarSiYaConfirmado(evento.id, invitado)
+      if (confirmado) {
+        setYaConfirmado(true)
+        setEstaAbierto(true)
+        setAbriendo(false)
+      }
+    }
+
+    revisarConfirmacion()
+
+    const handleConfirmado = () => {
+      setYaConfirmado(true)
+      setEstaAbierto(true)
+      setAbriendo(false)
+    }
+
+    window.addEventListener('tarjeton_rsvp_confirmado', handleConfirmado)
+    window.addEventListener('storage', revisarConfirmacion)
+
+    return () => {
+      window.removeEventListener('tarjeton_rsvp_confirmado', handleConfirmado)
+      window.removeEventListener('storage', revisarConfirmacion)
+    }
+  }, [evento.id, invitado])
+
+  // Sincronizar apertura: si entra a edición directa o si ya confirmó, el sobre no se muestra cerrado
+  useEffect(() => {
+    if (esModoEdicionDirecta || yaConfirmado) {
       setEstaAbierto(true)
       setAbriendo(false)
     } else {
-      if (tieneSobreActivado && !yaConfirmado) {
+      if (tieneSobreActivado) {
         setEstaAbierto(false)
         setAbriendo(false)
       }
     }
   }, [esModoEdicionDirecta, tieneSobreActivado, yaConfirmado, claveReinicio])
 
-  // Si no está activado el sobre, renderizar directamente los hijos
-  if (!tieneSobreActivado) {
+  // Si no está activado el sobre o el usuario ya confirmó, renderizar directamente los hijos sin animación del sobre
+  if (!tieneSobreActivado || yaConfirmado) {
     return <>{children}</>
   }
 

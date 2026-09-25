@@ -163,10 +163,10 @@ export function PaginaInvitacionCliente({
             <AlertCircle size={28} />
           </div>
           <h1 className="text-xl sm:text-2xl font-bold font-serif mb-2 text-slate-100">
-            Invitación No Encontrada
+            Invitación No Disponible
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 mb-6 leading-relaxed">
-            No se pudo cargar la tarjeta protocolaria con el código <span className="font-mono text-amber-300">/i/{slug}</span>. Es posible que el enlace haya cambiado o que los datos estén completando su sincronización.
+            No se pudo cargar la información de la invitación con el código <span className="font-mono text-amber-300">/i/{slug}</span>. Si el problema persiste o considera que es un error, por favor comuníquese con el anfitrión o con el administrador del sistema.
           </p>
 
           <div className="space-y-3">

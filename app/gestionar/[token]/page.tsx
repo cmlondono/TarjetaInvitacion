@@ -48,9 +48,9 @@ export default function PaginaGestionar() {
           <div className="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4">
             <AlertCircle size={24} />
           </div>
-          <h1 className="text-xl font-bold font-serif mb-2">Evento no encontrado</h1>
+          <h1 className="text-xl font-bold font-serif mb-2">Evento no disponible</h1>
           <p className="text-xs text-slate-500 mb-6 leading-relaxed">
-            El enlace de administración que estás usando no es válido o ha expirado su ciclo de vida.
+            El enlace de administración que estás usando no es válido o no está disponible en este momento. Si el problema persiste, por favor comuníquese con el administrador del sistema.
           </p>
           <Link
             href="/crear"

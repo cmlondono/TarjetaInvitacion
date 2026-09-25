@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
   } catch (err: any) {
     console.error('Error en GET /api/invitados:', err)
     return NextResponse.json(
-      { exito: false, error: err.message },
+      { exito: false, error: 'Error del servidor al obtener la lista de invitados. Por favor, comuníquese con el administrador del sistema.' },
       { status: 500 }
     )
   }
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     console.error('Error en POST /api/invitados:', err)
     return NextResponse.json(
-      { exito: false, error: err.message },
+      { exito: false, error: 'Error del servidor al registrar invitados. Por favor, comuníquese con el administrador del sistema.' },
       { status: 500 }
     )
   }

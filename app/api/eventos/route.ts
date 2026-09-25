@@ -12,39 +12,9 @@ import { DetalleEvento } from '@/types/invitation'
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
-    const verificarDb = searchParams.get('verificarDb')
     const slug = searchParams.get('slug')
     const token = searchParams.get('token')
     const id = searchParams.get('id')
-
-    // Diagnóstico de estado del sistema de almacenamiento
-    if (verificarDb) {
-      const supabase = obtenerClienteSupabase()
-      let supabaseOk = false
-      let mensajeSupabase = 'No configurado en variables de entorno'
-
-      if (supabase) {
-        try {
-          const { error } = await supabase.from('eventos').select('id').limit(1)
-          if (!error) {
-            supabaseOk = true
-            mensajeSupabase = 'Conexión activa y funcionando'
-          } else {
-            mensajeSupabase = `Error en consulta: ${error.message}`
-          }
-        } catch (e: any) {
-          mensajeSupabase = `Excepción al conectar: ${e.message}`
-        }
-      }
-
-      return NextResponse.json({
-        ok: true,
-        servidorDisco: true,
-        supabaseConfigurado: Boolean(supabase),
-        supabaseOk,
-        mensajeSupabase,
-      })
-    }
 
     if (!slug && !token && !id) {
       return NextResponse.json(
@@ -80,10 +50,16 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ ok: false, error: 'Evento no encontrado' }, { status: 404 })
+    return NextResponse.json(
+      { ok: false, error: 'Evento no encontrado o no disponible temporalmente. Si el problema persiste, comuníquese con el administrador del sistema.' },
+      { status: 404 }
+    )
   } catch (err: any) {
     console.error('Error en GET /api/eventos:', err)
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
+    return NextResponse.json(
+      { ok: false, error: 'Error del servidor al procesar la solicitud. Por favor, comuníquese con el administrador del sistema.' },
+      { status: 500 }
+    )
   }
 }
 
@@ -163,6 +139,9 @@ export async function POST(req: NextRequest) {
     })
   } catch (err: any) {
     console.error('Error en POST /api/eventos:', err)
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 })
+    return NextResponse.json(
+      { ok: false, error: 'Error del servidor al guardar el evento. Por favor, comuníquese con el administrador del sistema.' },
+      { status: 500 }
+    )
   }
 }

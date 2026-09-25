@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Error procesando confirmación RSVP:', error)
     return NextResponse.json(
-      { exito: false, error: 'Error procesando la solicitud: ' + error.message },
+      { exito: false, error: 'Error al registrar su confirmación. Por favor, comuníquese con el anfitrión o el administrador del sistema.' },
       { status: 500 }
     )
   }

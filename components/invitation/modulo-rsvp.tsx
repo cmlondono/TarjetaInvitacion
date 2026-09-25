@@ -40,6 +40,14 @@ export function ModuloRsvp({
   const [fechaConfirmacion, setFechaConfirmacion] = useState<string | null>(null)
   const [mostrarFormularioEdicion, setMostrarFormularioEdicion] = useState(false)
 
+  // Determinar si es texto de ejemplo / referencia en el editor o previsualización
+  const esTextoReferencia = Boolean(
+    esModoEdicionDirecta ||
+    esModoVistaPrevia ||
+    !invitado ||
+    invitado.id === 'preview-invitado'
+  )
+
   // Clave de almacenamiento local para persistir la respuesta en el navegador del invitado
   const storageKey = `tarjeton_rsvp_${evento.id}_${invitado?.codigoAcceso || 'anon'}`
 
@@ -275,16 +283,23 @@ export function ModuloRsvp({
               className="space-y-4"
             >
               {/* 1. INFORMACIÓN NOMINAL DEL INVITADO Y PASE RESERVADO */}
-              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-center justify-between">
+              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0">
                     <UserCheck size={14} />
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-slate-900 block leading-tight">
-                      {invitado?.nombre || 'Familia Ramírez Gómez'}
-                    </span>
-                    <span className="text-[10px] text-slate-500">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-slate-900 leading-tight">
+                        {invitado?.nombre || 'Familia Ramírez Gómez'}
+                      </span>
+                      {esTextoReferencia && (
+                        <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.2 rounded font-medium">
+                          (Texto de referencia)
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 block mt-0.5">
                       Pase autorizado para {invitado?.pases || pasesMaximos} {(invitado?.pases || pasesMaximos) === 1 ? 'persona' : 'personas'}
                     </span>
                   </div>

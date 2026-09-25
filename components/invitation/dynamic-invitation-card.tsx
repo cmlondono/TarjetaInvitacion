@@ -605,7 +605,7 @@ export function DynamicInvitationCard({
                               initial="oculto"
                               animate="visible"
                               variants={animacionAparicion}
-                              className="mt-2"
+                              className="mt-2 flex items-center justify-center gap-1.5 flex-wrap"
                             >
                               <span
                                 className="text-[11px] px-3 py-1 rounded-md font-mono uppercase tracking-wider font-medium"
@@ -618,6 +618,11 @@ export function DynamicInvitationCard({
                                 Válido para {invitado.pases}{' '}
                                 {invitado.pases === 1 ? 'persona' : 'personas'}
                               </span>
+                              {(esModoEdicionDirecta || esModoVistaPrevia || invitado.id === 'preview-invitado') && (
+                                <span className="text-[9.5px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-700 border border-amber-500/20 font-medium">
+                                  (Texto de referencia)
+                                </span>
+                              )}
                             </motion.div>
                           )}
 

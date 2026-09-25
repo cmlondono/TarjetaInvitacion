@@ -541,7 +541,7 @@ export function SobreAperturaAnimado({
                       >
                         {nombreMostrar}
                       </p>
-                      <div className="flex items-center justify-center gap-2 mt-0.5">
+                      <div className="flex items-center justify-center gap-1.5 mt-0.5 flex-wrap">
                         <span
                           className="text-[9px] sm:text-[10px] font-semibold tracking-wider"
                           style={{ color: colorSubtexto }}
@@ -550,6 +550,14 @@ export function SobreAperturaAnimado({
                             ? `Válido para ${invitado.pases} personas`
                             : 'Pase Protocolario Personal'}
                         </span>
+                        {(esModoEdicionDirecta || invitado?.id === 'preview-invitado') && (
+                          <span
+                            className="text-[8px] sm:text-[9px] font-medium tracking-wide opacity-80"
+                            style={{ color: colorSubtexto }}
+                          >
+                            • (Texto de referencia)
+                          </span>
+                        )}
                       </div>
                     </div>
                   )

@@ -1971,6 +1971,16 @@ export function VisualCustomizer({
                   <DynamicInvitationCard
                     evento={{ ...evento, secciones }}
                     visual={visual}
+                    invitado={{
+                      id: 'preview-invitado',
+                      eventoId: evento.id,
+                      nombre: 'Familia Ramírez Gómez',
+                      pases: 2,
+                      esPlural: true,
+                      codigoAcceso: 'preview',
+                      confirmado: false,
+                      estadoConfirmacion: 'pendiente',
+                    }}
                     esModoVistaPrevia={!modoEdicionDirecta}
                     esModoEdicionDirecta={modoEdicionDirecta}
                     alActualizarSeccion={(secId, campo, val) => actualizarCampoSeccion(secId, campo, val)}

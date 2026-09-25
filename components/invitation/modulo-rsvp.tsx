@@ -39,7 +39,6 @@ export function ModuloRsvp({
   const [confirmadoExitoso, setConfirmadoExitoso] = useState(false)
   const [fechaConfirmacion, setFechaConfirmacion] = useState<string | null>(null)
   const [mostrarFormularioEdicion, setMostrarFormularioEdicion] = useState(false)
-  const [errorNombre, setErrorNombre] = useState(false)
 
   // Clave de almacenamiento local para persistir la respuesta en el navegador del invitado
   const storageKey = `tarjeton_rsvp_${evento.id}_${invitado?.codigoAcceso || 'anon'}`
@@ -66,12 +65,7 @@ export function ModuloRsvp({
 
   // Confirmación directa con un solo clic en Sí o No (sin botón extra)
   const ejecutarConfirmacionDirecta = async (decision: 'confirmado' | 'no_asiste') => {
-    const nombreFinal = (invitado?.nombre || nombre).trim()
-    if (!nombreFinal) {
-      setErrorNombre(true)
-      return
-    }
-
+    const nombreFinal = (invitado?.nombre || nombre || 'Invitado').trim()
     setEnviando(true)
     setEstado(decision)
 
@@ -280,48 +274,22 @@ export function ModuloRsvp({
               exit={{ opacity: 0, scale: 0.98 }}
               className="space-y-4"
             >
-              {/* 1. NOMBRE Y PASE (como ya está y donde está) */}
-              {invitado?.nombre ? (
-                <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center text-xs font-bold">
-                      <UserCheck size={14} />
-                    </div>
-                    <div>
-                      <span className="text-xs font-bold text-slate-900 block leading-tight">
-                        {invitado.nombre}
-                      </span>
-                      <span className="text-[10px] text-slate-500">
-                        Pase autorizado para {invitado.pases} {invitado.pases === 1 ? 'persona' : 'personas'}
-                      </span>
-                    </div>
+              {/* 1. INFORMACIÓN NOMINAL DEL INVITADO Y PASE RESERVADO */}
+              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                    <UserCheck size={14} />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block leading-tight">
+                      {invitado?.nombre || 'Familia Ramírez Gómez'}
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      Pase autorizado para {invitado?.pases || pasesMaximos} {(invitado?.pases || pasesMaximos) === 1 ? 'persona' : 'personas'}
+                    </span>
                   </div>
                 </div>
-              ) : (
-                <div>
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 block mb-1">
-                    Tu Nombre Completo:
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={nombre}
-                    onChange={(e) => {
-                      setNombre(e.target.value)
-                      if (errorNombre) setErrorNombre(false)
-                    }}
-                    placeholder="Ej. Dra. Marcela Gómez"
-                    className={`w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 outline-none transition-all bg-white text-slate-900 ${
-                      errorNombre ? 'border-rose-500 ring-1 ring-rose-500' : ''
-                    }`}
-                  />
-                  {errorNombre && (
-                    <p className="text-[10px] text-rose-500 mt-1 font-medium">
-                      Por favor, escribe tu nombre antes de confirmar.
-                    </p>
-                  )}
-                </div>
-              )}
+              </div>
 
               {/* 2. LUEGO LOS CUPOS DE CONFIRMACIÓN */}
               <div>

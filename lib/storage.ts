@@ -279,11 +279,20 @@ export const EventoRepositorio = {
    * en la nube antes de que el usuario comparta el enlace o lo abra en el celular.
    */
   async guardarAsync(evento: DetalleEvento): Promise<DetalleEvento> {
-    // 1. Guardar local y en memoria
-    this.guardar(evento)
+    // 1. Guardar en memoria y disco de servidor de inmediato
+    ServidorAlmacen.guardarEvento(evento)
 
-    // 2. Esperar confirmación de la API del servidor
+    // 2. Guardar en navegador protegiendo contra cuota
     if (typeof window !== 'undefined') {
+      try {
+        const eventos = this.obtenerTodos().filter((e) => e.id !== evento.id)
+        eventos.push(evento)
+        localStorage.setItem(LOCAL_STORAGE_KEY_EVENTOS, JSON.stringify(eventos))
+      } catch (e) {
+        console.warn('Advertencia guardando en localStorage:', e)
+      }
+
+      // 3. Esperar confirmación de persistencia de la API del servidor (disco + Supabase)
       try {
         const respuesta = await fetch('/api/eventos', {
           method: 'POST',
@@ -292,10 +301,52 @@ export const EventoRepositorio = {
         })
         if (!respuesta.ok) {
           console.warn('La API de eventos respondió con estado no exitoso:', respuesta.status)
+        } else {
+          const resultado = await respuesta.json()
+          console.log('[Evento persistido exitosamente]', resultado)
         }
       } catch (err) {
         console.error('Error esperando persistencia en /api/eventos:', err)
       }
+    }
+
+    // 4. Sincronización directa con Supabase si está disponible en cliente
+    try {
+      const supabase = obtenerClienteSupabase()
+      if (supabase) {
+        supabase
+          .from('eventos')
+          .upsert({
+            id: evento.id,
+            token_admin: evento.tokenAdmin,
+            slug_publico: evento.slugPublico,
+            tipo_evento: evento.tipoEvento,
+            titulo: evento.titulo,
+            subtitulo: evento.subtitulo || null,
+            anfitriones: evento.anfitriones,
+            fecha_evento: evento.fechaEvento,
+            hora_evento: evento.horaEvento || '',
+            direccion: evento.direccion,
+            enlace_mapa: evento.enlaceMapa || '',
+            codigo_vestimenta: evento.codigoVestimenta || null,
+            paleta_vestimenta: evento.paletaVestimenta || [],
+            datos_bancarios: evento.datosBancarios || {},
+            whatsapp_numero: evento.whatsappNumero,
+            whatsapp_plantilla: evento.whatsappPlantilla,
+            fotos_galeria: evento.fotosGaleria || [],
+            imagen_portada: evento.imagenPortada || null,
+            imagen_retrato: evento.imagenRetrato || null,
+            es_premium: Boolean(evento.esPremium),
+            configuracion_visual: evento.configuracionVisual || {},
+            secciones: evento.secciones || [],
+            expira_en: evento.expiraEn,
+          })
+          .then(({ error }) => {
+            if (error) console.error('Error sincronizando evento con Supabase:', error.message)
+          })
+      }
+    } catch (err) {
+      console.error('Error en conexión Supabase:', err)
     }
 
     return evento

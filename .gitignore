@@ -19,3 +19,5 @@ node_modules
 scripts/
 public/ads/
 *.tsbuildinfo
+data/*.json
+!data/.gitkeep

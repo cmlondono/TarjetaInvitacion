@@ -7,13 +7,44 @@ import { DetalleEvento } from '@/types/invitation'
 /**
  * GET /api/eventos
  * Obtiene un evento por slug público, token de administración o id único.
+ * También permite diagnosticar la conexión con Supabase (?verificarDb=1).
  */
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
+    const verificarDb = searchParams.get('verificarDb')
     const slug = searchParams.get('slug')
     const token = searchParams.get('token')
     const id = searchParams.get('id')
+
+    // Diagnóstico de estado del sistema de almacenamiento
+    if (verificarDb) {
+      const supabase = obtenerClienteSupabase()
+      let supabaseOk = false
+      let mensajeSupabase = 'No configurado en variables de entorno'
+
+      if (supabase) {
+        try {
+          const { error } = await supabase.from('eventos').select('id').limit(1)
+          if (!error) {
+            supabaseOk = true
+            mensajeSupabase = 'Conexión activa y funcionando'
+          } else {
+            mensajeSupabase = `Error en consulta: ${error.message}`
+          }
+        } catch (e: any) {
+          mensajeSupabase = `Excepción al conectar: ${e.message}`
+        }
+      }
+
+      return NextResponse.json({
+        ok: true,
+        servidorDisco: true,
+        supabaseConfigurado: Boolean(supabase),
+        supabaseOk,
+        mensajeSupabase,
+      })
+    }
 
     if (!slug && !token && !id) {
       return NextResponse.json(
@@ -22,17 +53,17 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // 1. Buscar en memoria global del servidor
+    // 1. Buscar en almacenamiento persistente del servidor (memoria + disco JSON)
     let evento: DetalleEvento | null = null
     if (slug) evento = ServidorAlmacen.obtenerEventoPorSlug(slug)
     if (!evento && token) evento = ServidorAlmacen.obtenerEventoPorToken(token)
     if (!evento && id) evento = ServidorAlmacen.obtenerEventoPorId(id)
 
     if (evento) {
-      return NextResponse.json({ ok: true, evento, origen: 'servidor_memoria' })
+      return NextResponse.json({ ok: true, evento, origen: 'servidor_disco' })
     }
 
-    // 2. Si no está en memoria, consultar Supabase PostgreSQL si está configurado
+    // 2. Si no está en disco/memoria, consultar Supabase PostgreSQL si está configurado
     const supabase = obtenerClienteSupabase()
     if (supabase) {
       let query = supabase.from('eventos').select('*')
@@ -43,6 +74,7 @@ export async function GET(req: NextRequest) {
       const { data, error } = await query.maybeSingle()
       if (data && !error) {
         const eventoDb = mapearEventoDesdeDb(data)
+        // Guardar en disco local también como respaldo de alta velocidad
         ServidorAlmacen.guardarEvento(eventoDb)
         return NextResponse.json({ ok: true, evento: eventoDb, origen: 'supabase' })
       }
@@ -57,9 +89,9 @@ export async function GET(req: NextRequest) {
 
 /**
  * POST /api/eventos
- * Persiste un evento en el servidor y opcionalmente en Supabase.
+ * Persiste un evento en el servidor (disco y memoria) y en Supabase si está disponible.
  * Permite que dispositivos móviles, navegadores en incógnito y el renderizado SSR
- * tengan acceso inmediato al evento con todas sus fotos y configuraciones guardadas.
+ * tengan acceso inmediato al evento con todas sus fotos, secciones y configuraciones.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -73,13 +105,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 1. Guardar en memoria viva del servidor Node.js
+    // 1. Guardar de forma inmediata en el almacenamiento persistente del servidor (Disco JSON + Memoria)
     ServidorAlmacen.guardarEvento(evento)
 
     // 2. Sincronizar en Supabase si está disponible
-    try {
-      const supabase = obtenerClienteSupabase()
-      if (supabase) {
+    const supabase = obtenerClienteSupabase()
+    let guardadoEnSupabase = false
+
+    if (supabase) {
+      try {
         const { error } = await supabase.from('eventos').upsert({
           id: evento.id,
           token_admin: evento.tokenAdmin,
@@ -106,15 +140,27 @@ export async function POST(req: NextRequest) {
           expira_en: evento.expiraEn,
         })
 
-        if (error) {
-          console.warn('Aviso sincronizando evento con Supabase:', error)
+        if (!error) {
+          guardadoEnSupabase = true
+        } else {
+          console.error('[POST /api/eventos] Error sincronizando con Supabase:', error.message)
         }
+      } catch (dbErr: any) {
+        console.error('[POST /api/eventos] Error conectando con Supabase:', dbErr?.message)
       }
-    } catch (dbErr) {
-      console.warn('Error conectando a Supabase en POST /api/eventos:', dbErr)
+    } else {
+      console.info(
+        '[POST /api/eventos] Evento guardado en disco del servidor. Nota: Para compartir enlaces con invitados en internet (Vercel), configura NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+      )
     }
 
-    return NextResponse.json({ ok: true, evento })
+    return NextResponse.json({
+      ok: true,
+      evento,
+      persistencia: guardadoEnSupabase ? 'supabase_y_disco' : 'disco_local',
+      supabaseConfigurado: Boolean(supabase),
+      guardadoEnSupabase,
+    })
   } catch (err: any) {
     console.error('Error en POST /api/eventos:', err)
     return NextResponse.json({ ok: false, error: err.message }, { status: 500 })

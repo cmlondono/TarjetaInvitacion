@@ -64,6 +64,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
     'todos' | 'confirmados' | 'pendientes' | 'no_asiste' | 'enviados' | 'no_enviados'
   >('todos')
   const [sincronizando, setSincronizando] = useState(false)
+  const [estadoDb, setEstadoDb] = useState<{ supabaseConfigurado: boolean; mensaje: string } | null>(null)
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://tarjeton.online'
   const enlaceAdmin = `${baseUrl}/gestionar/${evento.tokenAdmin}`
@@ -165,6 +166,18 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
     try {
       localStorage.setItem('ultimo_evento_admin_token', evento.tokenAdmin)
     } catch {}
+
+    fetch('/api/eventos?verificarDb=1')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d) {
+          setEstadoDb({
+            supabaseConfigurado: Boolean(d.supabaseConfigurado && d.supabaseOk),
+            mensaje: d.mensajeSupabase,
+          })
+        }
+      })
+      .catch(() => {})
   }, [evento.tokenAdmin])
 
   // Escuchar retorno automático desde la pasarela de pagos de Mercado Pago
@@ -436,6 +449,29 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
             >
               <X size={16} />
             </button>
+          </div>
+        )}
+
+        {/* Banner de Estado de Base de Datos en la Nube */}
+        {estadoDb && !estadoDb.supabaseConfigurado && (
+          <div className="bg-amber-50/90 border border-amber-200/80 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 shadow-xs animate-in fade-in duration-200">
+            <AlertCircle size={20} className="text-amber-700 shrink-0 mt-0.5" />
+            <div className="flex-1 text-xs text-amber-950">
+              <p className="font-bold text-sm text-amber-900 mb-1">
+                Almacenamiento Local del Servidor Activo
+              </p>
+              <p className="text-amber-800 leading-relaxed mb-2">
+                Tu invitación y configuraciones se encuentran guardadas permanentemente en este servidor. Para que tus invitados puedan acceder desde cualquier celular por internet (en Vercel), asegúrate de ingresar tus llaves gratuitas de Supabase en tu archivo <code className="font-mono bg-amber-100 px-1.5 py-0.5 rounded text-amber-900 font-bold text-[11px]">.env.local</code> y en las variables de entorno de tu hosting.
+              </p>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-300/60 font-semibold">
+                  NEXT_PUBLIC_SUPABASE_URL
+                </span>
+                <span className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-900 bg-amber-100/80 px-2 py-0.5 rounded border border-amber-300/60 font-semibold">
+                  NEXT_PUBLIC_SUPABASE_ANON_KEY
+                </span>
+              </div>
+            </div>
           </div>
         )}
 

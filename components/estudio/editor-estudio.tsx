@@ -253,6 +253,7 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
 
   // En móvil abre la única hoja de diseño (Estilo · Experiencia · Datos) en la pestaña indicada
   const abrirHojaDiseno = (pestana: PanelDiseno) => {
+    setVistaInvitado(false)
     setPestanaMovil(pestana)
     setHoja('diseno')
   }
@@ -290,10 +291,16 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
     </div>
   )
 
+  /** Barra inferior del celular: cualquier herramienta cierra la vista previa y vuelve al modo diseño */
+  const abrirHerramienta = (id: Exclude<HojaMovil, null>) => {
+    setVistaInvitado(false)
+    setHoja(id)
+  }
+
   // ─────────── Lienzo (la invitación) ───────────
   const lienzo = (
     <div
-      className={`relative mx-auto bg-white overflow-hidden ${esMovil ? 'w-full min-h-full' : dispositivo === 'movil' ? 'w-[390px] rounded-[36px] border-[10px] border-slate-900 shadow-2xl' : 'w-full max-w-[760px] rounded-2xl border border-slate-300 shadow-xl'}`}
+      className={`relative mx-auto bg-white overflow-hidden ${esMovil ? (vistaInvitado ? 'w-full h-full overflow-y-auto' : 'w-full min-h-full') : dispositivo === 'movil' ? 'w-[390px] rounded-[36px] border-[10px] border-slate-900 shadow-2xl' : 'w-full max-w-[760px] rounded-2xl border border-slate-300 shadow-xl'}`}
       style={!esMovil ? { height: 'calc(100vh - 150px)', overflowY: 'auto' } : undefined}
       onClick={(e) => {
         if (e.target === e.currentTarget) estudio.acciones.seleccionar(null)
@@ -362,17 +369,20 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
 
         {esMovil ? (
           <>
-            <main className="flex-1 pb-36 bg-slate-200/60">
-              {vistaInvitado && (
-                <div className="flex items-center justify-between gap-2 px-4 py-2 bg-slate-900 text-white text-[13px] font-semibold">
+            {vistaInvitado ? (
+              // La vista previa ocupa su propia pantalla: el diseño no queda debajo ni se desplaza con ella
+              <div className="fixed inset-x-0 top-0 bottom-[76px] z-[45] flex flex-col bg-white">
+                <div className="flex items-center justify-between gap-2 px-4 py-2.5 bg-slate-900 text-white text-[13px] font-semibold shrink-0">
                   Así la verá tu invitado
                   <button type="button" onClick={() => setClaveApertura((c) => c + 1)} className="flex items-center gap-1.5 underline cursor-pointer">
                     <RotateCcw size={14} /> Repetir apertura
                   </button>
                 </div>
-              )}
-              {lienzo}
-            </main>
+                <div className="relative flex-1 min-h-0">{lienzo}</div>
+              </div>
+            ) : (
+              <main className="flex-1 pb-36 bg-slate-200/60">{lienzo}</main>
+            )}
 
             {seleccionTexto && !vistaInvitado ? (
               <div className="fixed inset-x-0 bottom-0 z-40 bg-white border-t border-slate-200 shadow-[0_-8px_24px_rgba(15,23,42,0.1)] pb-[env(safe-area-inset-bottom)]">
@@ -393,12 +403,12 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
                       ['diseno', 'Estilo', <Palette key="i" size={21} />],
                     ] as const
                   ).map(([id, nombre, icono]) => (
-                    <button key={id} type="button" onClick={() => (id === 'diseno' ? abrirHojaDiseno('estilo') : setHoja(id))} className="w-16 h-14 flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-slate-600 cursor-pointer">
+                    <button key={id} type="button" onClick={() => (id === 'diseno' ? abrirHojaDiseno('estilo') : abrirHerramienta(id))} className="w-16 h-14 flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-slate-600 cursor-pointer">
                       {icono}
                       {nombre}
                     </button>
                   ))}
-                  <button type="button" aria-label="Añadir" onClick={() => setHoja('bloques')} className="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg cursor-pointer">
+                  <button type="button" aria-label="Añadir" onClick={() => abrirHerramienta('bloques')} className="w-14 h-14 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg cursor-pointer">
                     <Plus size={26} />
                   </button>
                   <button type="button" onClick={() => abrirHojaDiseno('datos')} className="w-16 h-14 flex flex-col items-center justify-center gap-1 text-[11px] font-semibold text-slate-600 cursor-pointer">
@@ -409,7 +419,8 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
                     type="button"
                     aria-pressed={vistaInvitado}
                     onClick={() => {
-                      setVistaInvitado(!vistaInvitado)
+                      if (vistaInvitado) return setVistaInvitado(false)
+                      setVistaInvitado(true)
                       setClaveApertura((c) => c + 1)
                     }}
                     className={`w-16 h-14 flex flex-col items-center justify-center gap-1 text-[11px] font-semibold cursor-pointer ${vistaInvitado ? 'text-amber-600' : 'text-slate-600'}`}

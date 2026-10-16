@@ -194,6 +194,8 @@ export function Invitacion({
           width: '100%',
           minHeight: contenida ? '100%' : '100vh',
           boxSizing: 'border-box',
+          // Dentro del editor, mientras se ve la apertura, la invitación no se desplaza por debajo
+          ...(contenida && mostrarApertura && !abierta ? { height: '100%', overflow: 'hidden' } : {}),
         }}
       >
         {recorrido === 'historias' ? (

@@ -310,7 +310,30 @@ export type MetodoConfirmacion = 'tarjeton' | 'whatsapp' | 'ambos'
 
 // ─────────── Rediseño v2: kits de estilo y experiencia del invitado ───────────
 
-export type TipoApertura = 'sobre' | 'telon' | 'raspa' | 'caja' | 'directo'
+export type TipoApertura =
+  | 'sobre'
+  | 'telon'
+  | 'raspa'
+  | 'caja'
+  | 'puertas' // Dos puertas que se abren hacia adentro
+  | 'libro' // Tarjeta doblada que se despliega
+  | 'boleto' // Boleto que se rasga por la línea punteada
+  | 'globo' // Globo que se revienta
+  | 'deslizar' // Portada a pantalla completa que sube
+  | 'directo'
+
+/**
+ * Foto de fondo acomodable (invitación o apertura). La opacidad la mezcla con el color de fondo
+ * del estilo, así el texto se sigue leyendo.
+ */
+export interface FotoFondo {
+  url: string
+  opacidad?: number // 0–1 (por defecto 0.35)
+  x?: number // 0–100: punto de la foto que queda centrado (horizontal)
+  y?: number // 0–100: (vertical)
+  zoom?: number // 100–300 (%)
+  desenfoque?: number // px
+}
 export type TipoRecorrido = 'pagina' | 'historias' | 'menu'
 export type TipoOrnamento =
   | 'ramas'
@@ -334,6 +357,11 @@ export interface ExperienciaInvitado {
   saludoPersonal: boolean
   confetiAlConfirmar: boolean
   botonCalendario: boolean
+  // Personalización de la apertura (vacío = lo del estilo)
+  colorApertura?: string
+  tituloApertura?: string // Por defecto, los nombres del evento
+  textoApertura?: string // Instrucción, p. ej. «Toca para abrir»
+  fotoApertura?: FotoFondo
 }
 
 export type FormaTarjeta = 'clasica' | 'arco' | 'doble_borde' | 'biselada'
@@ -395,6 +423,7 @@ export interface ConfiguracionVisual {
   esquinas?: TipoEsquinas
   ornamento?: TipoOrnamento // Ornamento del kit, siempre en bordes o detrás del texto
   experiencia?: ExperienciaInvitado
+  fotoFondo?: FotoFondo // Foto detrás de toda la invitación
   mostrarCuentaRegresiva: boolean
   mostrarUbicacion: boolean
   mostrarDressCode: boolean

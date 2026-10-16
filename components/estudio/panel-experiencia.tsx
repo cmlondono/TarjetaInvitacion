@@ -6,13 +6,19 @@ import type { ConfiguracionVisual, DetalleEvento, ExperienciaInvitado, MusicaFon
 import { experienciaDe } from '@/lib/estudio/kits'
 import { analizarMusica, problemaEnlaceMusica, TAMANO_MAXIMO_AUDIO, TIPOS_AUDIO_PERMITIDOS } from '@/lib/estudio/musica'
 import { obtenerClienteSupabase } from '@/lib/supabase'
-import { Campo, Interruptor, Segmentos, TituloGrupo } from './ui'
+import { INSTRUCCIONES_APERTURA } from '@/components/invitacion/apertura'
+import { Campo, EditorFotoFondo, Interruptor, Segmentos, TituloGrupo } from './ui'
 
 const APERTURAS: { id: TipoApertura; nombre: string; descripcion: string }[] = [
   { id: 'sobre', nombre: 'Sobre con lacre', descripcion: 'Se abre al tocar el sello' },
   { id: 'telon', nombre: 'Telón', descripcion: 'Las cortinas se corren' },
   { id: 'raspa', nombre: 'Raspa y descubre', descripcion: 'Revela la fecha con el dedo' },
   { id: 'caja', nombre: 'Caja de regalo', descripcion: 'Ideal para cumpleaños' },
+  { id: 'puertas', nombre: 'Puertas', descripcion: 'Dos puertas se abren hacia adentro' },
+  { id: 'libro', nombre: 'Tarjeta doblada', descripcion: 'La portada se despliega' },
+  { id: 'boleto', nombre: 'Boleto', descripcion: 'Se rasga por la línea punteada' },
+  { id: 'globo', nombre: 'Globo', descripcion: 'Se revienta con confeti' },
+  { id: 'deslizar', nombre: 'Portada que sube', descripcion: 'Foto y nombres a pantalla completa' },
   { id: 'directo', nombre: 'Directo', descripcion: 'Sin animación' },
 ]
 
@@ -31,14 +37,17 @@ export const PRESETS_MUSICA = [
 
 interface PanelExperienciaProps {
   visual: ConfiguracionVisual
-  evento: Pick<DetalleEvento, 'id' | 'tokenAdmin'>
-  alCambiar: (visual: ConfiguracionVisual) => void
+  evento: Pick<DetalleEvento, 'id' | 'tokenAdmin' | 'anfitriones'>
+  /** `continuo`: cambio mientras se arrastra un control (un solo paso de deshacer) */
+  alCambiar: (visual: ConfiguracionVisual, continuo?: boolean) => void
   alProbarApertura: () => void
 }
 
 export function PanelExperiencia({ visual, evento, alCambiar, alProbarApertura }: PanelExperienciaProps) {
   const exp = experienciaDe(visual)
-  const setExp = (cambios: Partial<ExperienciaInvitado>) => alCambiar({ ...visual, experiencia: { ...exp, ...cambios }, animacionSobre: (cambios.apertura ?? exp.apertura) === 'sobre' })
+  const setExp = (cambios: Partial<ExperienciaInvitado>, continuo?: boolean) =>
+    alCambiar({ ...visual, experiencia: { ...exp, ...cambios }, animacionSobre: (cambios.apertura ?? exp.apertura) === 'sobre' }, continuo)
+  const coloresTema = Array.from(new Set([visual.colorPrimario, visual.colorSecundario, visual.colorTexto, visual.colorTarjeta].filter(Boolean)))
   const musica = visual.musicaFondo || { activa: false, url: '', autoReproducir: true }
   const setMusica = (cambios: Partial<typeof musica>) => alCambiar({ ...visual, musicaFondo: { ...musica, ...cambios } })
 
@@ -63,6 +72,37 @@ export function PanelExperiencia({ visual, evento, alCambiar, alProbarApertura }
           })}
         </div>
       </div>
+
+      {exp.apertura !== 'directo' && (
+        <div className="flex flex-col gap-3.5 p-3.5 rounded-2xl border border-slate-200">
+          <TituloGrupo>Personaliza la apertura</TituloGrupo>
+          <Campo etiqueta="Texto principal" valor={exp.tituloApertura} alCambiar={(v) => setExp({ tituloApertura: v || undefined }, true)} placeholder={evento.anfitriones || 'Los nombres del evento'} maximo={60} />
+          <Campo etiqueta="Instrucción" valor={exp.textoApertura} alCambiar={(v) => setExp({ textoApertura: v || undefined }, true)} placeholder={INSTRUCCIONES_APERTURA[exp.apertura]} maximo={50} />
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[13px] font-semibold text-slate-700">Color</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" aria-pressed={!exp.colorApertura} onClick={() => setExp({ colorApertura: undefined })} className={`min-h-9 px-3 rounded-full text-[12px] font-semibold border cursor-pointer ${!exp.colorApertura ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-slate-300'}`}>
+                Del estilo
+              </button>
+              {coloresTema.map((c) => (
+                <button key={c} type="button" aria-label={`Color ${c}`} aria-pressed={exp.colorApertura === c} onClick={() => setExp({ colorApertura: c })} className={`w-9 h-9 rounded-full border cursor-pointer ${exp.colorApertura === c ? 'ring-2 ring-amber-500 ring-offset-2 border-transparent' : 'border-slate-300'}`} style={{ backgroundColor: c }} />
+              ))}
+              <label className="relative w-9 h-9 rounded-full border border-dashed border-slate-400 flex items-center justify-center text-slate-600 text-lg cursor-pointer overflow-hidden" aria-label="Otro color" style={exp.colorApertura && !coloresTema.includes(exp.colorApertura) ? { backgroundColor: exp.colorApertura, borderStyle: 'solid' } : undefined}>
+                {exp.colorApertura && !coloresTema.includes(exp.colorApertura) ? '' : '+'}
+                <input type="color" value={exp.colorApertura || visual.colorPrimario || '#000000'} onChange={(e) => setExp({ colorApertura: e.target.value }, true)} className="absolute inset-0 opacity-0 cursor-pointer" />
+              </label>
+            </div>
+          </div>
+          <EditorFotoFondo
+            etiqueta="Foto de fondo de la apertura"
+            ayuda={exp.apertura === 'telon' || exp.apertura === 'puertas' ? 'Se ve sobre el telón o las puertas y se abre con ellos.' : 'Es lo primero que ve tu invitado.'}
+            foto={exp.fotoApertura}
+            alCambiar={(fotoApertura, continuo) => setExp({ fotoApertura }, continuo)}
+            carpeta={evento.id}
+            colorFondo={visual.colorFondo}
+          />
+        </div>
+      )}
 
       <div className="flex flex-col gap-2.5">
         <TituloGrupo>Cómo se recorre</TituloGrupo>

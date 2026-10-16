@@ -8,7 +8,7 @@ import { CATALOGO_FUENTES, familiaFuente } from '@/lib/editor/estilos'
 import { MuestraOrnamento } from '@/components/invitacion/ornamentos'
 import { textoSobre } from '@/components/invitacion/tema'
 import { Check } from 'lucide-react'
-import { Segmentos, TituloGrupo } from './ui'
+import { EditorFotoFondo, Segmentos, TituloGrupo } from './ui'
 
 function TarjetaKit({ kit, activo, alElegir }: { kit: KitEstilo; activo: boolean; alElegir: () => void }) {
   const caligrafica = ['greatvibes', 'alexbrush', 'parisienne', 'dancing', 'pacifico'].includes(kit.fuenteTitulo)
@@ -74,10 +74,12 @@ const ORNAMENTOS: { id: TipoOrnamento; nombre: string }[] = [
 interface PanelEstilosProps {
   visual: ConfiguracionVisual
   tipoEvento: TipoEvento
-  alCambiar: (visual: ConfiguracionVisual) => void
+  eventoId: string
+  /** `continuo`: cambio mientras se arrastra un control (un solo paso de deshacer) */
+  alCambiar: (visual: ConfiguracionVisual, continuo?: boolean) => void
 }
 
-export function PanelEstilos({ visual, tipoEvento, alCambiar }: PanelEstilosProps) {
+export function PanelEstilos({ visual, tipoEvento, eventoId, alCambiar }: PanelEstilosProps) {
   const [filtro, setFiltro] = useState<'evento' | 'todos'>('evento')
   const info = infoEvento(tipoEvento)
   const kits = filtro === 'todos' ? KITS : KITS.filter((k) => k.eventos.includes(tipoEvento))
@@ -120,6 +122,18 @@ export function PanelEstilos({ visual, tipoEvento, alCambiar }: PanelEstilosProp
             <span className="text-[12px] font-mono text-slate-500 uppercase">{visual[r.id]}</span>
           </label>
         ))}
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <TituloGrupo>Foto de fondo</TituloGrupo>
+        <EditorFotoFondo
+          etiqueta="Foto detrás de toda la invitación"
+          ayuda="Queda quieta mientras el invitado baja. Bájale la opacidad para que los textos se lean bien."
+          foto={visual.fotoFondo}
+          alCambiar={(fotoFondo, continuo) => alCambiar({ ...visual, fotoFondo }, continuo)}
+          carpeta={eventoId}
+          colorFondo={visual.colorFondo}
+        />
       </div>
 
       <div className="flex flex-col gap-3">

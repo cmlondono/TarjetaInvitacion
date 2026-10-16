@@ -29,6 +29,7 @@ import { BloqueCollage, BloqueConfirmacion, BloqueJuego, BloqueListaRegalos, Blo
 import { ConfirmacionAsistencia, leerRespuestaGuardada, type RespuestaInvitado } from './confirmacion'
 import { AperturaInvitacion } from './apertura'
 import { useMusicaFondo } from './musica'
+import { CapaFotoFondo } from './foto-fondo'
 
 const BLOQUES: Partial<Record<TipoSeccion, (p: PropsBloque) => React.ReactElement | null>> = {
   cabecera: BloquePortada,
@@ -198,8 +199,14 @@ export function Invitacion({
           ...(contenida && mostrarApertura && !abierta ? { height: '100%', overflow: 'hidden' } : {}),
         }}
       >
+        {visual.fotoFondo?.url && (
+          // Foto de fondo: queda quieta mientras se recorre la invitación (alto de la pantalla o del marco del editor)
+          <div aria-hidden="true" style={{ position: 'sticky', top: 0, height: 'var(--inv-alto-visor, 100dvh)', marginBottom: 'calc(-1 * var(--inv-alto-visor, 100dvh))', zIndex: 0, pointerEvents: 'none' }}>
+            <CapaFotoFondo foto={visual.fotoFondo} />
+          </div>
+        )}
         {recorrido === 'historias' ? (
-          <div style={{ position: 'relative', height: contenida ? '100%' : '100dvh', minHeight: contenida ? 640 : undefined }}>
+          <div style={{ position: 'relative', zIndex: 1, height: contenida ? '100%' : '100dvh', minHeight: contenida ? 640 : undefined }}>
             <div style={{ position: 'absolute', top: 10, left: 12, right: 12, zIndex: 5, display: 'flex', gap: 4 }}>
               {secciones.map((s, i) => (
                 <span key={s.id} style={{ flex: 1, height: 3, borderRadius: 999, backgroundColor: i <= indiceHistoria ? 'var(--inv-acento)' : 'var(--inv-linea)' }} />
@@ -220,7 +227,7 @@ export function Invitacion({
             <p style={{ position: 'absolute', bottom: 8, left: 0, right: 0, margin: 0, textAlign: 'center', fontSize: 12, opacity: 0.6 }}>Desliza para ver más →</p>
           </div>
         ) : (
-          <div style={{ maxWidth: 440, margin: '0 auto', padding: '16px 16px 28px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ position: 'relative', zIndex: 1, maxWidth: 440, margin: '0 auto', padding: '16px 16px 28px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', gap: 14 }}>
             {recorrido === 'menu' && (
               <nav aria-label="Secciones" style={{ position: 'sticky', top: 0, zIndex: 5, margin: '-16px -16px 0', padding: '10px 16px', backgroundColor: 'var(--inv-fondo)', display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
                 {secciones.map((s) => (
@@ -259,6 +266,7 @@ export function Invitacion({
             evento={evento}
             invitado={invitado}
             saludoPersonal={experiencia.saludoPersonal}
+            personalizacion={experiencia}
             contenida={contenida}
             alAbrir={alAbrir}
           />

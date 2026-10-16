@@ -194,8 +194,8 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
     },
   }
 
-  const cambiarVisual = (v: ConfiguracionVisual) => {
-    historial.cortarGrupo()
+  const cambiarVisual = (v: ConfiguracionVisual, continuo = false) => {
+    if (!continuo) historial.cortarGrupo()
     setVisual(v)
   }
 
@@ -273,7 +273,7 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
           </button>
         ))}
       </div>
-      {pestana === 'estilo' && <PanelEstilos visual={visual} tipoEvento={evento.tipoEvento} alCambiar={cambiarVisual} />}
+      {pestana === 'estilo' && <PanelEstilos visual={visual} tipoEvento={evento.tipoEvento} eventoId={evento.id} alCambiar={cambiarVisual} />}
       {pestana === 'experiencia' && (
         <PanelExperiencia
           evento={evento}
@@ -298,10 +298,12 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
   }
 
   // ─────────── Lienzo (la invitación) ───────────
+  // Cuando el marco tiene alto propio, la foto de fondo de la invitación se ajusta a él (no a la ventana)
+  const visor = { containerType: 'size', ['--inv-alto-visor' as string]: '100cqh' } as React.CSSProperties
   const lienzo = (
     <div
       className={`relative mx-auto bg-white overflow-hidden ${esMovil ? (vistaInvitado ? 'w-full h-full overflow-y-auto' : 'w-full min-h-full') : dispositivo === 'movil' ? 'w-[390px] rounded-[36px] border-[10px] border-slate-900 shadow-2xl' : 'w-full max-w-[760px] rounded-2xl border border-slate-300 shadow-xl'}`}
-      style={!esMovil ? { height: 'calc(100vh - 150px)', overflowY: 'auto' } : undefined}
+      style={!esMovil ? { height: 'calc(100vh - 150px)', overflowY: 'auto', ...visor } : vistaInvitado ? visor : undefined}
       onClick={(e) => {
         if (e.target === e.currentTarget) estudio.acciones.seleccionar(null)
       }}

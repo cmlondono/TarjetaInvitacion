@@ -9,7 +9,6 @@ import type {
   EstiloSeccion,
   HotelHospedaje,
   OpcionJuego,
-  OpcionRsvp,
   PersonaDestacada,
   RegaloReservable,
   SeccionModular,
@@ -17,7 +16,6 @@ import type {
 import { CATALOGO_SECCIONES } from '@/lib/modular-defaults'
 import { CATALOGO_ANIMACIONES } from '@/lib/editor/estilos'
 import { MuestraOrnamento } from '@/components/invitacion/ornamentos'
-import { OPCIONES_COMIDA_POR_DEFECTO, PREGUNTA_COMIDA_POR_DEFECTO } from '@/components/invitacion/confirmacion'
 import type { TemaInvitacion } from '@/components/invitacion/tema'
 import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, ShieldCheck, Sparkles, Trash2, Type } from 'lucide-react'
 import {
@@ -31,6 +29,7 @@ import {
   TituloGrupo,
   idCorto,
 } from './ui'
+import { AjustesConfirmacion } from './ajustes-confirmacion'
 
 export interface ActualizadoresBloque {
   alCampo: (sId: string, campo: keyof SeccionModular, valor: unknown) => void
@@ -447,45 +446,7 @@ function Contenido({ seccion, evento, act }: { seccion: SeccionModular; evento: 
           <Campo etiqueta="Pregunta" valor={seccion.titulo} alCambiar={(v) => act.alCampo(s, 'titulo', v)} placeholder="¿Nos acompañas?" />
           <Campo etiqueta="Texto del botón" valor={d.textoBoton} alCambiar={dato('textoBoton')} placeholder="Confirmar asistencia" />
           <Campo etiqueta="Fecha límite para responder (opcional)" valor={d.fechaLimiteRsvp} alCambiar={dato('fechaLimiteRsvp')} placeholder="20 de febrero" />
-          <Segmentos
-            etiqueta="¿Cómo te llegan las respuestas?"
-            opciones={[
-              { id: 'tarjeton', nombre: 'En mi panel' },
-              { id: 'ambos', nombre: 'Panel y WhatsApp' },
-              { id: 'whatsapp', nombre: 'WhatsApp' },
-            ]}
-            valor={evento.metodoConfirmacion || 'tarjeton'}
-            alCambiar={(v) => {
-              act.alEvento({ metodoConfirmacion: v })
-              act.alDato(s, 'metodoConfirmacion', v)
-            }}
-          />
-          {evento.metodoConfirmacion !== 'tarjeton' && evento.metodoConfirmacion && (
-            <Campo etiqueta="Tu WhatsApp (con indicativo)" tipo="tel" valor={evento.whatsappNumero} alCambiar={(v) => act.alEvento({ whatsappNumero: v.replace(/[^\d]/g, '') })} placeholder="573001234567" />
-          )}
-          <div className="flex flex-col gap-3 p-3 rounded-xl border border-slate-200">
-            <Interruptor
-              etiqueta="Preguntar por la comida"
-              descripcion={d.preguntarComida === false ? 'Tus invitados no verán esta pregunta' : 'Vegano, sin gluten, menú infantil…'}
-              activo={d.preguntarComida !== false}
-              alCambiar={(v) => act.alDato(s, 'preguntarComida', v)}
-            />
-            {d.preguntarComida !== false && (
-              <>
-                <Campo etiqueta="Pregunta" valor={d.preguntaComida} alCambiar={dato('preguntaComida')} placeholder={PREGUNTA_COMIDA_POR_DEFECTO} maximo={70} />
-                <EditorLista<OpcionRsvp>
-                  etiqueta="Opciones que puede elegir"
-                  items={d.opcionesComida ?? OPCIONES_COMIDA_POR_DEFECTO}
-                  alCambiar={dato('opcionesComida')}
-                  crear={() => ({ id: idCorto('cm'), texto: '' })}
-                  textoAgregar="Agregar opción"
-                  maximo={10}
-                  render={(o, actualizar) => <Campo etiqueta="Opción" valor={o.texto} alCambiar={(v) => actualizar({ texto: v })} placeholder="Ej: Sin mariscos" maximo={30} />}
-                />
-                <p className="m-0 text-[12px] text-slate-500">Siempre aparece también «Ninguna». Lo que elijan llega con su respuesta en tu panel.</p>
-              </>
-            )}
-          </div>
+          <AjustesConfirmacion seccion={seccion} evento={evento} alDato={act.alDato} alEvento={act.alEvento} />
           <p className="m-0 text-[12px] text-slate-500">Cada invitado ve su nombre y cuántos lugares tiene. Las respuestas llegan a tu panel de invitados.</p>
         </div>
       )

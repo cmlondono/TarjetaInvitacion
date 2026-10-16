@@ -287,14 +287,32 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
           }}
         />
       )}
-      {pestana === 'datos' && <PanelDatos evento={evento} alCambiar={(c) => setEvento((prev) => ({ ...prev, ...c }))} />}
+      {pestana === 'datos' && (
+        <PanelDatos
+          evento={evento}
+          alCambiar={(c) => setEvento((prev) => ({ ...prev, ...c }))}
+          confirmacion={secciones.find((s) => s.tipo === 'confirmacion_rsvp')}
+          alDato={edicion.alDato}
+          alAgregarConfirmacion={() => {
+            setPanelDiseno(null)
+            setHoja(null)
+            agregarBloque('confirmacion_rsvp')
+          }}
+        />
+      )}
     </div>
   )
 
   /** Barra inferior del celular: cualquier herramienta cierra la vista previa y vuelve al modo diseño */
   const abrirHerramienta = (id: Exclude<HojaMovil, null>) => {
     setVistaInvitado(false)
-    setHoja(id)
+    // Estilo, Experiencia y Datos viven en la misma hoja con sus tres pestañas
+    if (id === 'datos' || id === 'diseno') {
+      setPestanaMovil(id === 'datos' ? 'datos' : 'estilo')
+      setHoja('diseno')
+    } else {
+      setHoja(id)
+    }
   }
 
   // ─────────── Lienzo (la invitación) ───────────

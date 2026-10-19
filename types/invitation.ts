@@ -335,6 +335,8 @@ export interface FotoFondo {
   desenfoque?: number // px
 }
 export type TipoRecorrido = 'pagina' | 'historias' | 'menu'
+/** Escena animada de fondo (dibujos originales para fiestas infantiles y temáticas) */
+export type TipoEscena = 'comic' | 'ciudad' | 'tormenta' | 'castillo' | 'hielo' | 'hadas'
 export type TipoOrnamento =
   | 'ramas'
   | 'filigrana'
@@ -424,6 +426,7 @@ export interface ConfiguracionVisual {
   ornamento?: TipoOrnamento // Ornamento del kit, siempre en bordes o detrás del texto
   experiencia?: ExperienciaInvitado
   fotoFondo?: FotoFondo // Foto detrás de toda la invitación
+  escena?: TipoEscena // Fondo animado
   mostrarCuentaRegresiva: boolean
   mostrarUbicacion: boolean
   mostrarDressCode: boolean

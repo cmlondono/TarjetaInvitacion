@@ -2,10 +2,11 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import type { DetalleEvento, ExperienciaInvitado, FotoFondo, Invitado, TipoApertura } from '@/types/invitation'
+import type { DetalleEvento, ExperienciaInvitado, FotoFondo, Invitado, TipoApertura, TipoEscena } from '@/types/invitation'
 import { textoSobre, type TemaInvitacion } from './tema'
 import { esInvitadoReal, fechaLarga } from './contexto'
 import { CapaFotoFondo } from './foto-fondo'
+import { CapaEscena } from './escenas'
 
 /** 'Valentina & Andrés' → 'V&A' · 'Isabella' → 'I' */
 export function monograma(nombres: string): string {
@@ -141,12 +142,14 @@ interface AperturaProps {
   saludoPersonal: boolean
   /** Color, textos y foto que eligió el anfitrión (vacío = lo del estilo) */
   personalizacion?: Pick<ExperienciaInvitado, 'colorApertura' | 'tituloApertura' | 'textoApertura' | 'fotoApertura'>
+  /** Fondo animado del estilo: también se ve detrás de la apertura */
+  escena?: TipoEscena
   /** Dentro de un marco (vista previa del editor) en lugar de pantalla completa */
   contenida?: boolean
   alAbrir: () => void
 }
 
-export function AperturaInvitacion({ tipo, tema, evento, invitado, saludoPersonal, personalizacion = {}, contenida = false, alAbrir }: AperturaProps) {
+export function AperturaInvitacion({ tipo, tema, evento, invitado, saludoPersonal, personalizacion = {}, escena, contenida = false, alAbrir }: AperturaProps) {
   const [abriendo, setAbriendo] = useState(false)
   const [visible, setVisible] = useState(tipo !== 'directo')
 
@@ -174,6 +177,13 @@ export function AperturaInvitacion({ tipo, tema, evento, invitado, saludoPersona
   const real = esInvitadoReal(invitado)
   const fecha = fechaLarga(evento.fechaEvento)
   const tamanoTitulo = (base: number) => (tema.tituloCaligrafico ? base * 1.3 : base)
+  // Texto directo sobre el fondo: si el color de letra del estilo no contrasta con el fondo, se usa blanco o negro
+  const tintaFondo = textoSobre(tema.fondo) === textoSobre(tema.tinta) ? textoSobre(tema.fondo) : tema.tinta
+  // Sobre una escena animada o una foto, los títulos van en una tarjeta para leerse siempre
+  const conFondo = Boolean(escena || foto)
+  const tarjetaTitulo: React.CSSProperties = conFondo
+    ? { padding: '12px 20px', borderRadius: 18, backgroundColor: `color-mix(in srgb, ${tema.tarjeta} 88%, transparent)`, color: tema.tinta, maxWidth: '100%', boxSizing: 'border-box' }
+    : { maxWidth: '100%' }
 
   return (
     <AnimatePresence>
@@ -189,7 +199,7 @@ export function AperturaInvitacion({ tipo, tema, evento, invitado, saludoPersona
             zIndex: 80,
             // Puertas y portada dejan ver la invitación mientras se abren
             backgroundColor: tipo === 'puertas' || tipo === 'deslizar' ? 'transparent' : tema.fondo,
-            color: tema.tinta,
+            color: tintaFondo,
             fontFamily: tema.familiaCuerpo,
             display: 'flex',
             flexDirection: 'column',
@@ -200,6 +210,7 @@ export function AperturaInvitacion({ tipo, tema, evento, invitado, saludoPersona
             overflow: 'hidden',
           }}
         >
+          {!pantallaCompleta && <CapaEscena escena={escena} colores={{ fondo: tema.fondo, acento: tema.acento, detalle: tema.detalle }} />}
           {!pantallaCompleta && <CapaFotoFondo foto={foto} />}
 
           {real && saludoPersonal && (
@@ -231,7 +242,7 @@ export function AperturaInvitacion({ tipo, tema, evento, invitado, saludoPersona
 
           {tipo === 'telon' && (
             <button type="button" onClick={abrir} aria-label="Abrir el telón" style={{ position: 'absolute', inset: 0, border: 0, padding: 0, background: 'none', cursor: 'pointer' }}>
-              <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: tema.familiaTitulo, fontSize: tamanoTitulo(34), color: tema.tinta, padding: 24, textAlign: 'center' }}>{titulo}</span>
+              <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: tema.familiaTitulo, fontSize: tamanoTitulo(34), color: tintaFondo, padding: 24, textAlign: 'center' }}>{titulo}</span>
               {(['left', 'right'] as const).map((lado) => (
                 <motion.span
                   key={lado}
@@ -264,18 +275,23 @@ export function AperturaInvitacion({ tipo, tema, evento, invitado, saludoPersona
                   style={{ position: 'absolute', top: 0, bottom: 0, [lado]: 0, width: '50%', overflow: 'hidden', transformOrigin: `${lado} center`, backgroundColor: color, boxShadow: 'inset 0 0 50px rgba(0,0,0,0.28)' }}
                 >
                   <MitadDeFoto lado={lado} foto={foto} />
+                  {!foto && escena && (
+                    <span style={{ position: 'absolute', top: 0, bottom: 0, [lado]: 0, width: '200%', opacity: 0.6 }}>
+                      <CapaEscena escena={escena} colores={{ fondo: tema.fondo, acento: tema.acento, detalle: tema.detalle }} />
+                    </span>
+                  )}
                   <span style={{ position: 'absolute', inset: '7% 14%', border: `2px solid color-mix(in srgb, ${textoColor} 30%, transparent)`, borderRadius: 8 }} />
                   <span style={{ position: 'absolute', top: '50%', [lado === 'left' ? 'right' : 'left']: 14, width: 8, height: 46, marginTop: -23, borderRadius: 4, backgroundColor: tema.detalle, boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }} />
                 </motion.span>
               ))}
               <motion.span animate={{ opacity: abriendo ? 0 : 1 }} transition={{ duration: 0.3 }} style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, pointerEvents: 'none' }}>
-                <span style={{ padding: '14px 22px', borderRadius: 18, backgroundColor: `color-mix(in srgb, ${color} 75%, transparent)`, color: textoColor, fontFamily: tema.familiaTitulo, fontSize: tamanoTitulo(30), lineHeight: 1.1, textAlign: 'center' }}>{titulo}</span>
+                <span style={{ maxWidth: '100%', boxSizing: 'border-box', padding: '14px 22px', borderRadius: 18, backgroundColor: `color-mix(in srgb, ${color} 82%, #000)`, boxShadow: '0 8px 24px rgba(0,0,0,0.25)', color: textoColor, fontFamily: tema.familiaTitulo, fontSize: tamanoTitulo(30), lineHeight: 1.1, textAlign: 'center' }}>{titulo}</span>
               </motion.span>
             </button>
           )}
 
           {tipo === 'raspa' && (
-            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '26px 20px', borderRadius: tema.radioTarjeta, backgroundColor: tema.tarjeta, border: `2px solid ${color}`, textAlign: 'center' }}>
+            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '26px 20px', borderRadius: tema.radioTarjeta, backgroundColor: tema.tarjeta, color: tema.tinta, border: `2px solid ${color}`, textAlign: 'center' }}>
               <span style={{ fontFamily: tema.familiaTitulo, fontSize: tamanoTitulo(30), lineHeight: 1.1 }}>{titulo}</span>
               <Raspadita tema={tema} alDescubrir={abrir} fecha={fecha} />
             </div>
@@ -335,7 +351,7 @@ export function AperturaInvitacion({ tipo, tema, evento, invitado, saludoPersona
 
           {tipo === 'globo' && (
             <>
-              <span style={{ position: 'relative', fontFamily: tema.familiaTitulo, fontSize: tamanoTitulo(30), lineHeight: 1.1, textAlign: 'center' }}>{titulo}</span>
+              <span style={{ position: 'relative', fontFamily: tema.familiaTitulo, fontSize: tamanoTitulo(30), lineHeight: 1.1, textAlign: 'center', ...tarjetaTitulo }}>{titulo}</span>
               <button type="button" onClick={abrir} aria-label="Reventar el globo" style={{ position: 'relative', width: 160, height: 230, border: 0, padding: 0, background: 'none', cursor: 'pointer' }}>
                 <motion.svg
                   viewBox="0 0 120 180"
@@ -347,7 +363,7 @@ export function AperturaInvitacion({ tipo, tema, evento, invitado, saludoPersona
                 >
                   <path d="M60 4C30 4 10 28 10 58c0 34 28 62 46 70l-5 8h18l-5-8c18-8 46-36 46-70C110 28 90 4 60 4z" fill={color} />
                   <ellipse cx="40" cy="40" rx="9" ry="16" fill="#fff" opacity="0.35" transform="rotate(-25 40 40)" />
-                  <path d="M60 136c-6 14 8 22 0 42" stroke={tema.tinta} strokeOpacity="0.5" strokeWidth="1.5" fill="none" />
+                  <path d="M60 136c-6 14 8 22 0 42" stroke={tintaFondo} strokeOpacity="0.5" strokeWidth="1.5" fill="none" />
                 </motion.svg>
                 {abriendo && <Estallido colores={[color, tema.detalle, tema.acento, '#F6C445']} />}
               </button>
@@ -361,11 +377,14 @@ export function AperturaInvitacion({ tipo, tema, evento, invitado, saludoPersona
               aria-label="Abrir la invitación"
               animate={abriendo ? { y: '-100%' } : { y: 0 }}
               transition={{ duration: 0.75, ease: [0.7, 0, 0.3, 1] }}
-              style={{ position: 'absolute', inset: 0, border: 0, padding: 24, backgroundColor: tema.fondo, color: tema.tinta, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, textAlign: 'center', font: 'inherit', boxShadow: '0 12px 30px rgba(0,0,0,0.25)' }}
+              style={{ position: 'absolute', inset: 0, border: 0, padding: 24, backgroundColor: tema.fondo, color: tintaFondo, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, textAlign: 'center', font: 'inherit', boxShadow: '0 12px 30px rgba(0,0,0,0.25)' }}
             >
+              <CapaEscena escena={escena} colores={{ fondo: tema.fondo, acento: tema.acento, detalle: tema.detalle }} />
               <CapaFotoFondo foto={foto} />
-              <span style={{ position: 'relative', fontSize: 12, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color }}>{fecha}</span>
-              <span style={{ position: 'relative', fontFamily: tema.familiaTitulo, fontSize: tamanoTitulo(40), lineHeight: 1.05 }}>{titulo}</span>
+              <span style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, ...tarjetaTitulo, width: 'min(100%, 380px)', boxSizing: 'border-box', padding: conFondo ? '18px 22px' : 0 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color }}>{fecha}</span>
+                <span style={{ maxWidth: '100%', whiteSpace: 'normal', overflowWrap: 'break-word', fontFamily: tema.familiaTitulo, fontSize: tamanoTitulo(40), lineHeight: 1.05 }}>{titulo}</span>
+              </span>
               <motion.span
                 animate={{ y: [0, -6, 0] }}
                 transition={{ duration: 1.6, repeat: Infinity }}
@@ -387,8 +406,8 @@ export function AperturaInvitacion({ tipo, tema, evento, invitado, saludoPersona
                 padding: '8px 14px',
                 borderRadius: 999,
                 pointerEvents: 'none',
-                backgroundColor: tipo === 'telon' || tipo === 'puertas' ? 'rgba(0,0,0,0.4)' : foto ? `color-mix(in srgb, ${tema.fondo} 80%, transparent)` : 'transparent',
-                color: tipo === 'telon' || tipo === 'puertas' ? '#FFFFFF' : tema.tinta,
+                backgroundColor: tipo === 'telon' || tipo === 'puertas' ? 'rgba(0,0,0,0.4)' : conFondo ? `color-mix(in srgb, ${tema.tarjeta} 85%, transparent)` : 'transparent',
+                color: tipo === 'telon' || tipo === 'puertas' ? '#FFFFFF' : conFondo ? tema.tinta : tintaFondo,
                 opacity: 0.9,
               }}
             >

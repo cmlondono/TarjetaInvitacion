@@ -6,6 +6,7 @@ import type {
   TipoApertura,
   TipoEsquinas,
   TipoEvento,
+  TipoEscena,
   TipoOrnamento,
 } from '@/types/invitation'
 
@@ -31,6 +32,8 @@ export interface KitEstilo {
   esquinas: TipoEsquinas
   apertura: TipoApertura
   efectoFondo: EfectoFondo
+  /** Fondo animado (opcional) */
+  escena?: TipoEscena
   /** Frase corta para mostrar en la tarjeta del kit */
   muestra: { kicker: string; titulo: string }
 }
@@ -117,8 +120,31 @@ const FILAS: FilaKit[] = [
   // ─── Grados y empresa ───
   ['toga', 'Toga y birrete', 'Telón · líneas · azul noche y dorado', ['grado'], '#0F172A', '#FFFFFF', '#0F172A', '#0F172A', '#C9A227', 'fraunces', 'montserrat', 'lineas', 'suaves', 'telon', 'particulas_doradas', '¡Me gradué!', 'Camila Rodríguez'],
   ['protocolo', 'Protocolo clásico', 'Sobre · filigrana · azul noche y dorado', ['corporativo', 'grado', 'boda'], '#F4F1EA', '#FFFFFF', '#0F172A', '#0F172A', '#C9A227', 'cinzel', 'montserrat', 'filigrana', 'rectas', 'sobre', 'ninguno', 'Convocatoria', 'Gala Anual 2027'],
+  // ─── Superhéroes y princesas con fondo animado (dibujos originales) ───
+  ['heroe_comic', 'Cómic ¡POW!', 'Puertas · cómic animado · rojo, azul y amarillo', ['cumpleanos_infantil', 'cumpleanos'], '#FDE047', '#FFFFFF', '#0B1A3D', '#DC2626', '#2563EB', 'bricolage', 'fredoka', 'estrellas', 'suaves', 'puertas', 'ninguno', '¡Misión cumpleaños!', 'Mis 7 años · Tomás'],
+  ['heroe_ciudad', 'Héroe de la ciudad', 'Portada que sube · ciudad de noche animada', ['cumpleanos_infantil', 'cumpleanos'], '#0B1033', '#FFFFFF', '#0B1A3D', '#DC2626', '#FACC15', 'bricolage', 'dmsans', 'estrellas', 'suaves', 'deslizar', 'ninguno', '¡Al rescate!', 'Mis 6 años · Samuel'],
+  ['heroe_trueno', 'Trueno y relámpago', 'Boleto · tormenta de rayos animada · azul y dorado', ['cumpleanos_infantil', 'cumpleanos'], '#111827', '#F8FAFC', '#0F172A', '#1D4ED8', '#FACC15', 'bricolage', 'dmsans', 'lineas', 'rectas', 'boleto', 'ninguno', '¡Que retumbe la fiesta!', 'Mis 8 años · Emiliano'],
+  ['heroe_fuerza', 'Fuerza verde', 'Caja de regalo · cómic animado · verde y morado', ['cumpleanos_infantil', 'cumpleanos'], '#BBF7D0', '#FFFFFF', '#14240F', '#16A34A', '#7C3AED', 'bricolage', 'fredoka', 'estrellas', 'suaves', 'caja', 'ninguno', '¡Fuerza de cumpleaños!', 'Mis 5 años · Nicolás'],
+  ['princesa_castillo', 'Castillo encantado', 'Tarjeta doblada · castillo animado · rosa y dorado', ['cumpleanos_infantil', 'quince_anos'], '#FBCFE8', '#FFFFFF', '#5A1E3C', '#DB2777', '#F7C948', 'pacifico', 'fredoka', 'corazones', 'redondas', 'libro', 'ninguno', 'Érase una vez…', 'Mis 5 años · Isabella'],
+  ['princesa_hielo', 'Reino de hielo', 'Puertas · aurora y copos animados · azul hielo', ['cumpleanos_infantil', 'navidad'], '#DBEAFE', '#FFFFFF', '#0C2D4D', '#2563EB', '#67E8F9', 'pacifico', 'fredoka', 'copos', 'redondas', 'puertas', 'ninguno', 'Una fiesta de cristal', 'Mis 6 años · Valeria'],
+  ['princesa_hadas', 'Jardín de hadas', 'Globo · luciérnagas y mariposas animadas', ['cumpleanos_infantil', 'baby_shower'], '#FCE7F3', '#FFFFFF', '#3B2A4A', '#C026D3', '#34D399', 'pacifico', 'fredoka', 'mariposas', 'redondas', 'globo', 'ninguno', 'Un jardín mágico', 'Mis 4 años · Sofía'],
+  ['princesa_real', 'Princesa real', 'Sobre · castillo animado · morado y dorado', ['cumpleanos_infantil', 'quince_anos'], '#E9D5FF', '#FFFFFF', '#3B0764', '#7E22CE', '#FBBF24', 'greatvibes', 'fredoka', 'filigrana', 'redondas', 'sobre', 'ninguno', 'Te invito a mi palacio', 'Mis 7 años · Mariana'],
   ['minimal', 'Minimal', 'Directo · sin ornamentos · blanco y negro', ['boda', 'grado', 'corporativo', 'cumpleanos', 'baby_shower', 'quince_anos', 'bautizo', 'otro', 'aniversario', 'paseo', 'revelacion_genero', 'primera_comunion'], '#EFEFEB', '#FFFFFF', '#171717', '#171717', '#B5B5AE', 'dmsans', 'dmsans', 'lineas', 'rectas', 'directo', 'ninguno', 'Celebremos', 'Ana & Luis'],
 ]
+
+/** Kits con fondo animado */
+const ESCENA_DEL_KIT: Record<string, TipoEscena> = {
+  superheroes: 'comic',
+  princesa: 'castillo',
+  heroe_comic: 'comic',
+  heroe_ciudad: 'ciudad',
+  heroe_trueno: 'tormenta',
+  heroe_fuerza: 'comic',
+  princesa_castillo: 'castillo',
+  princesa_hielo: 'hielo',
+  princesa_hadas: 'hadas',
+  princesa_real: 'castillo',
+}
 
 export const KITS: KitEstilo[] = FILAS.map(
   ([id, nombre, descripcion, eventos, fondo, tarjeta, texto, acento, detalle, fuenteTitulo, fuenteCuerpo, ornamento, esquinas, apertura, efectoFondo, kicker, titulo]) => ({
@@ -133,6 +159,7 @@ export const KITS: KitEstilo[] = FILAS.map(
     esquinas,
     apertura,
     efectoFondo,
+    escena: ESCENA_DEL_KIT[id],
     muestra: { kicker, titulo },
   })
 )
@@ -180,6 +207,7 @@ export function aplicarKit(
     ornamento: kit.ornamento,
     esquinas: kit.esquinas,
     efectoFondo: kit.efectoFondo,
+    escena: kit.escena,
     experiencia: opciones.cambiarApertura ? { ...experiencia, apertura: kit.apertura } : experiencia,
   }
 }

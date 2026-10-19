@@ -30,6 +30,7 @@ import { ConfirmacionAsistencia, leerRespuestaGuardada, type RespuestaInvitado }
 import { AperturaInvitacion } from './apertura'
 import { useMusicaFondo } from './musica'
 import { CapaFotoFondo } from './foto-fondo'
+import { CapaEscena } from './escenas'
 
 const BLOQUES: Partial<Record<TipoSeccion, (p: PropsBloque) => React.ReactElement | null>> = {
   cabecera: BloquePortada,
@@ -199,9 +200,10 @@ export function Invitacion({
           ...(contenida && mostrarApertura && !abierta ? { height: '100%', overflow: 'hidden' } : {}),
         }}
       >
-        {visual.fotoFondo?.url && (
-          // Foto de fondo: queda quieta mientras se recorre la invitación (alto de la pantalla o del marco del editor)
+        {(visual.fotoFondo?.url || visual.escena) && (
+          // Fondo animado y foto de fondo: quedan quietos mientras se recorre la invitación (alto de la pantalla o del marco del editor)
           <div aria-hidden="true" style={{ position: 'sticky', top: 0, height: 'var(--inv-alto-visor, 100dvh)', marginBottom: 'calc(-1 * var(--inv-alto-visor, 100dvh))', zIndex: 0, pointerEvents: 'none' }}>
+            <CapaEscena escena={visual.escena} colores={{ fondo: tema.fondo, acento: tema.acento, detalle: tema.detalle }} />
             <CapaFotoFondo foto={visual.fotoFondo} />
           </div>
         )}
@@ -267,6 +269,7 @@ export function Invitacion({
             invitado={invitado}
             saludoPersonal={experiencia.saludoPersonal}
             personalizacion={experiencia}
+            escena={visual.escena}
             contenida={contenida}
             alAbrir={alAbrir}
           />

@@ -6,6 +6,7 @@ import { KITS, aplicarKit, type KitEstilo } from '@/lib/estudio/kits'
 import { infoEvento } from '@/lib/estudio/eventos'
 import { CATALOGO_FUENTES, familiaFuente } from '@/lib/editor/estilos'
 import { MuestraOrnamento } from '@/components/invitacion/ornamentos'
+import { CapaEscena, CATALOGO_ESCENAS } from '@/components/invitacion/escenas'
 import { textoSobre } from '@/components/invitacion/tema'
 import { Check } from 'lucide-react'
 import { EditorFotoFondo, Segmentos, TituloGrupo } from './ui'
@@ -19,9 +20,10 @@ function TarjetaKit({ kit, activo, alElegir }: { kit: KitEstilo; activo: boolean
       aria-pressed={activo}
       className={`relative flex flex-col rounded-2xl overflow-hidden bg-white text-left cursor-pointer transition-shadow ${activo ? 'ring-2 ring-amber-500 shadow-lg' : 'border border-slate-200 hover:shadow-md'}`}
     >
-      <span className="flex p-3.5 h-40 box-border" style={{ backgroundColor: kit.colores.fondo }}>
+      <span className="relative flex p-3.5 h-40 box-border" style={{ backgroundColor: kit.colores.fondo }}>
+        <CapaEscena escena={kit.escena} colores={{ fondo: kit.colores.fondo, acento: kit.colores.acento, detalle: kit.colores.detalle }} />
         <span
-          className="flex-1 flex flex-col items-center justify-center gap-1 text-center p-2.5"
+          className="relative flex-1 flex flex-col items-center justify-center gap-1 text-center p-2.5"
           style={{ backgroundColor: kit.colores.tarjeta, borderRadius: kit.esquinas === 'rectas' ? 4 : kit.esquinas === 'redondas' ? 20 : 12 }}
         >
           <span style={{ fontFamily: familiaFuente(kit.fuenteCuerpo), fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: kit.colores.acento }}>{kit.muestra.kicker}</span>
@@ -122,6 +124,24 @@ export function PanelEstilos({ visual, tipoEvento, eventoId, alCambiar }: PanelE
             <span className="text-[12px] font-mono text-slate-500 uppercase">{visual[r.id]}</span>
           </label>
         ))}
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <TituloGrupo>Fondo animado</TituloGrupo>
+        <p className="m-0 text-[13px] text-slate-600">Dibujos que se mueven detrás de la invitación. Toman los colores de tu estilo.</p>
+        <div className="grid grid-cols-3 gap-2">
+          {[{ id: undefined, nombre: 'Ninguno', descripcion: 'Solo el color de fondo' }, ...CATALOGO_ESCENAS].map((e) => {
+            const activa = visual.escena === e.id
+            return (
+              <button key={e.id || 'ninguno'} type="button" aria-pressed={activa} onClick={() => set('escena', e.id)} title={e.descripcion} className={`flex flex-col rounded-xl overflow-hidden text-left cursor-pointer ${activa ? 'ring-2 ring-amber-500' : 'border border-slate-200 hover:border-slate-300'}`}>
+                <span className="relative block h-24" style={{ backgroundColor: visual.colorFondo }}>
+                  <CapaEscena escena={e.id} colores={{ fondo: visual.colorFondo, acento: visual.colorPrimario, detalle: visual.colorSecundario }} />
+                </span>
+                <span className="px-2 py-1.5 text-[12px] font-semibold text-slate-800 leading-tight">{e.nombre}</span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">

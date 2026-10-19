@@ -170,6 +170,52 @@ export const PLANTILLAS: Plantilla[] = [
     nombresEjemplo: 'Nivel 12 · Matías', lugarEjemplo: 'Sala de videojuegos Arena', hora: '16:00', kicker: 'Nivel desbloqueado',
     momentos: [['16:00', 'Torneo'], ['18:00', 'Pizza y torta']],
   },
+  // Superhéroes y princesas con fondo animado (dibujos originales, sin personajes con derechos de autor)
+  {
+    id: 'inf-heroe-comic', nombre: 'Héroe de cómic', descripcion: 'Fondo de cómic animado: ¡POW! ¡ZAS! ¡BOOM!', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'heroe_comic',
+    nombresEjemplo: 'Mis 7 años · Tomás', lugarEjemplo: 'Salón de fiestas Pequeños Gigantes', hora: '15:00', kicker: '¡Misión cumpleaños!', destacada: true,
+    momentos: [['15:00', 'Entrenamiento de héroes'], ['16:30', 'Torta y piñata']],
+    vestimenta: { etiqueta: 'Ven con tu capa o tu disfraz de héroe' }, regalos: ['Figura de acción', 'Lego', 'Capa y antifaz'], extras: ['lista_regalos'],
+  },
+  {
+    id: 'inf-heroe-ciudad', nombre: 'Héroe de la ciudad', descripcion: 'Ciudad de noche animada con un héroe volando', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'heroe_ciudad',
+    nombresEjemplo: 'Mis 6 años · Samuel', lugarEjemplo: 'Parque de los niños', hora: '16:00', kicker: '¡Al rescate!',
+    momentos: [['16:00', 'Misión: juegos'], ['17:30', 'Torta de héroes']],
+    vestimenta: { etiqueta: 'Disfraz de superhéroe' }, regalos: ['Linterna de héroe', 'Rompecabezas', 'Cómic'], extras: ['lista_regalos'],
+  },
+  {
+    id: 'inf-heroe-trueno', nombre: 'Trueno y relámpago', descripcion: 'Tormenta de rayos animada para héroes poderosos', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'heroe_trueno',
+    nombresEjemplo: 'Mis 8 años · Emiliano', lugarEjemplo: 'Casa del árbol, Chía', hora: '15:00', kicker: '¡Que retumbe la fiesta!',
+    vestimenta: { etiqueta: 'Trae tu martillo, escudo o capa' }, extras: ['juego_adivinar'],
+  },
+  {
+    id: 'inf-heroe-fuerza', nombre: 'Fuerza verde', descripcion: 'Cómic animado en verde y morado, ¡con mucha fuerza!', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'heroe_fuerza',
+    nombresEjemplo: 'Mis 5 años · Nicolás', lugarEjemplo: 'Parque inflable Brinca Brinca', hora: '14:00', kicker: '¡Fuerza de cumpleaños!',
+    momentos: [['14:00', 'Inflables'], ['15:30', 'Torta y sorpresas']],
+    vestimenta: { etiqueta: 'Ropa cómoda para saltar' }, regalos: ['Muñeco de acción', 'Plastilina', 'Carro a control remoto'], extras: ['lista_regalos'],
+  },
+  {
+    id: 'inf-princesa-castillo', nombre: 'Castillo encantado', descripcion: 'Castillo animado con destellos y corazones', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'princesa_castillo',
+    nombresEjemplo: 'Mis 5 años · Isabella', lugarEjemplo: 'Salón Reino Mágico', hora: '15:00', kicker: 'Érase una vez…', destacada: true,
+    momentos: [['15:00', 'Llegada al castillo'], ['16:00', 'Baile real'], ['17:00', 'Torta']],
+    vestimenta: { etiqueta: 'Ven vestida de princesa o príncipe' }, regalos: ['Corona y varita', 'Muñeca', 'Kit de maquillaje infantil'], extras: ['lista_regalos'],
+  },
+  {
+    id: 'inf-princesa-hielo', nombre: 'Reino de hielo', descripcion: 'Aurora y copos de nieve animados', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'princesa_hielo',
+    nombresEjemplo: 'Mis 6 años · Valeria', lugarEjemplo: 'Pista de patinaje Ice Park', hora: '11:00', kicker: 'Una fiesta de cristal',
+    vestimenta: { etiqueta: 'Tonos azul y blanco', colores: ['#2563EB', '#A5F3FC', '#FFFFFF'] }, regalos: ['Bola de nieve musical', 'Libro de cuentos', 'Peluche'], extras: ['lista_regalos'],
+  },
+  {
+    id: 'inf-princesa-hadas', nombre: 'Jardín de hadas', descripcion: 'Luciérnagas, flores y mariposas que vuelan', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'princesa_hadas',
+    nombresEjemplo: 'Mis 4 años · Sofía', lugarEjemplo: 'Jardín de la casa de los abuelos', hora: '15:00', kicker: 'Un jardín mágico',
+    vestimenta: { etiqueta: 'Ven con alas de hada' }, regalos: ['Alas de hada', 'Kit de jardinería infantil', 'Libro de hadas'], extras: ['lista_regalos'],
+  },
+  {
+    id: 'inf-princesa-real', nombre: 'Princesa real', descripcion: 'Palacio animado en morado y dorado', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'princesa_real',
+    nombresEjemplo: 'Mis 7 años · Mariana', lugarEjemplo: 'Club Los Lagartos, salón principal', hora: '16:00', kicker: 'Te invito a mi palacio',
+    momentos: [['16:00', 'Recepción real'], ['17:00', 'Show de magia'], ['18:00', 'Torta']],
+    vestimenta: { etiqueta: 'Elegante de princesa', colores: ['#7E22CE', '#FBBF24', '#F5D0FE'] }, extras: ['galeria_fotos'],
+  },
 
   // ─────────── Cumpleaños de jóvenes y adultos ───────────
   {

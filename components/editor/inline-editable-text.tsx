@@ -207,7 +207,8 @@ export function InlineEditableText({
     )
   }
 
-  const esVacio = !valor || valor.trim() === ''
+  // Los textos calculados (fecha, contador) traen su contenido en children: nunca están vacíos
+  const esVacio = children == null && (!valor || valor.trim() === '')
 
   return (
     <Etiqueta

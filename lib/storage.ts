@@ -469,7 +469,7 @@ export const InvitadoRepositorio = {
       fetch('/api/invitados', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventoId: evento.id, invitado: nuevoInvitado }),
+        body: JSON.stringify({ eventoId: evento.id, tokenAdmin: evento.tokenAdmin, invitado: nuevoInvitado }),
       }).catch((e) => console.warn('Aviso sincronizando con /api/invitados:', e))
     }
 

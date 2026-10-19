@@ -102,21 +102,15 @@ export function PaginaInvitacionCliente({
 
         if (invitadoReal) {
           setInvitado(invitadoReal)
-        } else {
-          // Consultar API remota por si el pase fue expedido en otro dispositivo
+        } else if (tokenParam) {
+          // Consultar al servidor solo este pase (por su código), por si fue expedido en otro dispositivo
           fetch(
-            `/api/invitados?eventoId=${encodeURIComponent(eventoActual.id)}&slug=${encodeURIComponent(slug)}`
+            `/api/invitados?eventoId=${encodeURIComponent(eventoActual.id)}&codigo=${encodeURIComponent(tokenParam)}`
           )
             .then((res) => res.json())
             .then((data) => {
               if (data.invitados && Array.isArray(data.invitados)) {
-                const coincidencia = data.invitados.find(
-                  (i: Invitado) =>
-                    (tokenParam && i.codigoAcceso === tokenParam) ||
-                    (nombreParam &&
-                      i.nombre &&
-                      i.nombre.trim().toLowerCase() === nombreParam.trim().toLowerCase())
-                )
+                const coincidencia = data.invitados.find((i: Invitado) => i.codigoAcceso === tokenParam)
                 if (coincidencia) {
                   setInvitado(coincidencia)
                 }

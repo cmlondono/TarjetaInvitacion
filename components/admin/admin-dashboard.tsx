@@ -87,7 +87,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
 
       // 2. Traer confirmaciones remotas del servidor (Supabase y caché del servidor)
       const res = await fetch(
-        `/api/invitados?eventoId=${encodeURIComponent(evento.id)}&slug=${encodeURIComponent(evento.slugPublico || '')}`
+        `/api/invitados?eventoId=${encodeURIComponent(evento.id)}&tokenAdmin=${encodeURIComponent(evento.tokenAdmin || '')}`
       )
       if (res.ok) {
         const data = await res.json()

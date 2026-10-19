@@ -16,6 +16,7 @@ export const CATALOGO_ESCENAS: { id: TipoEscena; nombre: string; descripcion: st
   { id: 'castillo', nombre: 'Castillo encantado', descripcion: 'Destellos y corazones que suben' },
   { id: 'hielo', nombre: 'Reino de hielo', descripcion: 'Aurora y copos de nieve' },
   { id: 'hadas', nombre: 'Jardín de hadas', descripcion: 'Luciérnagas, flores y mariposas' },
+  { id: 'aranas', nombre: 'Telarañas y arañitas', descripcion: 'Ciudad de noche con arañitas héroes colgando' },
 ]
 
 interface Colores {
@@ -82,6 +83,8 @@ const ESTILOS = `
 @keyframes esc-flotar { 0%,100% { transform: translate(0, 0) } 25% { transform: translate(14px, -12px) } 50% { transform: translate(-6px, -24px) } 75% { transform: translate(-14px, -6px) } }
 @keyframes esc-aleteo { 0%,100% { transform: scaleX(1) } 50% { transform: scaleX(.2) } }
 @keyframes esc-mariposa { 0% { transform: translate(-60px, 640px) } 50% { transform: translate(210px, 420px) } 100% { transform: translate(470px, 180px) } }
+@keyframes esc-colgar { 0%,100% { transform: translateY(-30px) } 50% { transform: translateY(40px) } }
+@keyframes esc-pendulo { 0%,100% { transform: rotate(-28deg) } 50% { transform: rotate(28deg) } }
 @keyframes esc-mecer { 0%,100% { transform: rotate(-5deg) } 50% { transform: rotate(5deg) } }
 @media (prefers-reduced-motion: reduce) { [data-escena] * { animation: none !important } }
 `
@@ -126,6 +129,21 @@ function Comic({ fondo, acento, detalle, id }: Colores & { id: string }) {
   )
 }
 
+/** Edificios con ventanas que se encienden */
+function Horizonte({ luz }: { luz: string }) {
+  return (
+    <>
+      <path
+        d="M0 800 V640 H34 V600 H70 V660 H96 V560 H140 V620 H160 V590 H196 V530 H232 V610 H258 V575 H300 V640 H322 V590 H360 V650 H400 V800 Z"
+        fill="#05081A"
+      />
+      {VENTANAS.map((v, i) => (
+        <rect key={i} x={v.x} y={v.y} width="5" height="7" fill={luz} style={anim('esc-titilar', v.dur, v.d)} />
+      ))}
+    </>
+  )
+}
+
 function Ciudad({ acento, detalle, id }: Colores & { id: string }) {
   return (
     <>
@@ -157,14 +175,7 @@ function Ciudad({ acento, detalle, id }: Colores & { id: string }) {
         <circle cx="25" cy="7" r="6" fill="#F8FAFC" />
         <path d="M28 4 L44 -2" stroke="#F8FAFC" strokeWidth="4" strokeLinecap="round" />
       </g>
-      {/* Edificios con ventanas que se encienden */}
-      <path
-        d="M0 800 V640 H34 V600 H70 V660 H96 V560 H140 V620 H160 V590 H196 V530 H232 V610 H258 V575 H300 V640 H322 V590 H360 V650 H400 V800 Z"
-        fill="#05081A"
-      />
-      {VENTANAS.map((v, i) => (
-        <rect key={i} x={v.x} y={v.y} width="5" height="7" fill={detalle} style={anim('esc-titilar', v.dur, v.d)} />
-      ))}
+      <Horizonte luz={detalle} />
     </>
   )
 }
@@ -360,7 +371,103 @@ function Hadas({ fondo, acento, detalle, id }: Colores & { id: string }) {
   )
 }
 
+/** Telaraña de esquina: hilos que salen de la esquina y anillos con una leve curva */
+function telarana(cx: number, cy: number, radio: number, desde: number, hasta: number) {
+  const rayos = 7
+  const anillos = 5
+  const angulo = (i: number) => ((desde + ((hasta - desde) * i) / (rayos - 1)) * Math.PI) / 180
+  const punto = (i: number, r: number) => [redondear(cx + Math.cos(angulo(i)) * r), redondear(cy + Math.sin(angulo(i)) * r)]
+  let d = ''
+  for (let i = 0; i < rayos; i++) {
+    const [x, y] = punto(i, radio)
+    d += `M${cx} ${cy} L${x} ${y} `
+  }
+  for (let k = 1; k <= anillos; k++) {
+    const r = (radio * k) / anillos
+    for (let i = 0; i < rayos - 1; i++) {
+      const [x1, y1] = punto(i, r)
+      const [x2, y2] = punto(i + 1, r)
+      // El hilo se curva un poco hacia la esquina, como una telaraña real
+      const [mx, my] = [redondear(cx + ((x1 + x2) / 2 - cx) * 0.9), redondear(cy + ((y1 + y2) / 2 - cy) * 0.9)]
+      d += `M${x1} ${y1} Q${mx} ${my} ${x2} ${y2} `
+    }
+  }
+  return d
+}
+
+/** Arañita de caricatura con antifaz; `capa` la convierte en Arañín, el héroe de la escena */
+function Aranita({ tamano, cuerpo, antifaz, capa }: { tamano: number; cuerpo: string; antifaz: string; capa?: string }) {
+  const t = tamano
+  const patas = [-1, 1].flatMap((lado) =>
+    [-0.55, -0.15, 0.25, 0.6].map((f, i) => {
+      const y = f * t
+      return `M${redondear(lado * t * 0.55)} ${redondear(y)} Q${redondear(lado * t * 1.25)} ${redondear(y - t * 0.55)} ${redondear(lado * t * (1.5 + i * 0.05))} ${redondear(y + t * 0.35)}`
+    })
+  )
+  return (
+    <g>
+      {capa && <path d={`M${-t * 0.5} ${-t * 0.2} L${-t * 0.9} ${t * 1.5} L${t * 0.9} ${t * 1.5} L${t * 0.5} ${-t * 0.2} Z`} fill={capa} />}
+      {patas.map((d, i) => (
+        <path key={i} d={d} fill="none" stroke={cuerpo} strokeWidth={t * 0.16} strokeLinecap="round" />
+      ))}
+      {/* Borde claro: se distinguen sobre el cielo de noche */}
+      <circle cx="0" cy={t * 0.35} r={t * 0.75} fill={cuerpo} stroke="rgba(255,255,255,0.45)" strokeWidth={t * 0.07} />
+      <circle cx="0" cy={-t * 0.45} r={t * 0.6} fill={cuerpo} stroke="rgba(255,255,255,0.45)" strokeWidth={t * 0.07} />
+      <rect x={-t * 0.62} y={-t * 0.7} width={t * 1.24} height={t * 0.42} rx={t * 0.2} fill={antifaz} />
+      <circle cx={-t * 0.24} cy={-t * 0.5} r={t * 0.16} fill="#FFFFFF" />
+      <circle cx={t * 0.24} cy={-t * 0.5} r={t * 0.16} fill="#FFFFFF" />
+      <circle cx={-t * 0.22} cy={-t * 0.48} r={t * 0.07} fill="#111" />
+      <circle cx={t * 0.26} cy={-t * 0.48} r={t * 0.07} fill="#111" />
+      <path d={`M${-t * 0.18} ${-t * 0.18} Q0 ${-t * 0.02} ${t * 0.18} ${-t * 0.18}`} fill="none" stroke="#FFFFFF" strokeWidth={t * 0.08} strokeLinecap="round" />
+    </g>
+  )
+}
+
+const ARANITAS = lista(7, 37, (r, i) => ({ x: 30 + i * 55 + r() * 20, hilo: 90 + r() * 260, t: 9 + r() * 6, d: r() * 3, dur: 2.4 + r() * 2 }))
+
+function Aranas({ acento, detalle, id }: Colores & { id: string }) {
+  const hilo = 'rgba(255,255,255,0.55)'
+  return (
+    <>
+      <defs>
+        <linearGradient id={`${id}-cielo`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style={{ stopColor: '#060A22' }} />
+          <stop offset="1" style={{ stopColor: `color-mix(in srgb, ${detalle} 45%, #0B1033)` }} />
+        </linearGradient>
+      </defs>
+      <rect width="400" height="800" fill={`url(#${id}-cielo)`} />
+      {ESTRELLAS.map((e, i) => (
+        <circle key={i} cx={e.x} cy={e.y} r={e.t * 0.8} fill="#fff" style={anim('esc-titilar', e.dur, e.d)} />
+      ))}
+      <Horizonte luz="#FDE68A" />
+      {/* Telarañas en las esquinas */}
+      <path d={telarana(0, 0, 150, 0, 90)} fill="none" stroke={hilo} strokeWidth="1.4" />
+      <path d={telarana(400, 0, 130, 90, 180)} fill="none" stroke={hilo} strokeWidth="1.4" />
+      <path d={telarana(400, 800, 120, 180, 270)} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.2" />
+      {/* Arañitas que suben y bajan por su hilo */}
+      {ARANITAS.map((a, i) => (
+        <g key={i} transform={`translate(${redondear(a.x)} 0)`}>
+          <g style={anim('esc-colgar', a.dur, a.d)}>
+            <line x1="0" y1="-40" x2="0" y2={redondear(a.hilo)} stroke={hilo} strokeWidth="1.2" />
+            <g transform={`translate(0 ${redondear(a.hilo + a.t)})`}>
+              <Aranita tamano={redondear(a.t)} cuerpo={i % 2 ? '#1F2937' : '#111827'} antifaz={i % 2 ? detalle : acento} />
+            </g>
+          </g>
+        </g>
+      ))}
+      {/* Arañín, el héroe, se columpia de lado a lado */}
+      <g style={{ ...anim('esc-pendulo', 3.6), transformOrigin: '200px 0px' }}>
+        <line x1="200" y1="0" x2="200" y2="330" stroke="rgba(255,255,255,0.8)" strokeWidth="2" />
+        <g transform="translate(200 362)">
+          <Aranita tamano={30} cuerpo="#111827" antifaz={acento} capa={detalle} />
+        </g>
+      </g>
+    </>
+  )
+}
+
 const ESCENAS: Record<TipoEscena, (p: Colores & { id: string }) => React.ReactElement> = {
+  aranas: Aranas,
   comic: Comic,
   ciudad: Ciudad,
   tormenta: Tormenta,

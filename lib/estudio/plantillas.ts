@@ -195,6 +195,12 @@ export const PLANTILLAS: Plantilla[] = [
     vestimenta: { etiqueta: 'Ropa cómoda para saltar' }, regalos: ['Muñeco de acción', 'Plastilina', 'Carro a control remoto'], extras: ['lista_regalos'],
   },
   {
+    id: 'inf-heroe-aranas', nombre: 'Arañitas héroes', descripcion: 'Telarañas, arañitas con antifaz y Arañín columpiándose en la ciudad', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'heroe_aranas',
+    nombresEjemplo: 'Mis 6 años · Mateo', lugarEjemplo: 'Salón de fiestas Ciudad Aventura', hora: '15:00', kicker: '¡Atrapados en la diversión!', destacada: true,
+    momentos: [['15:00', 'Entrenamiento arácnido'], ['16:00', 'Juegos y telarañas'], ['17:00', 'Torta y piñata']],
+    vestimenta: { etiqueta: 'Ven disfrazado de tu héroe favorito', colores: ['#DC2626', '#2563EB'] }, regalos: ['Figura de acción', 'Lanzador de telarañas de juguete', 'Rompecabezas de la ciudad'], extras: ['lista_regalos'],
+  },
+  {
     id: 'inf-princesa-castillo', nombre: 'Castillo encantado', descripcion: 'Castillo animado con destellos y corazones', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'princesa_castillo',
     nombresEjemplo: 'Mis 5 años · Isabella', lugarEjemplo: 'Salón Reino Mágico', hora: '15:00', kicker: 'Érase una vez…', destacada: true,
     momentos: [['15:00', 'Llegada al castillo'], ['16:00', 'Baile real'], ['17:00', 'Torta']],

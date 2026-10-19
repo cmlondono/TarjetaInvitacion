@@ -70,6 +70,9 @@ export function estiloTextoACss(
   }
   if (estilo.interletrado !== undefined) css.letterSpacing = `${estilo.interletrado}em`
   if (estilo.interlineado) css.lineHeight = estilo.interlineado
+  // Textos de bloque movidos por el anfitrión: se desplazan en % del ancho del bloque (cqw), igual en cualquier pantalla
+  if (estilo.x || estilo.y) css.translate = `${estilo.x ?? 0}cqw ${estilo.y ?? 0}cqw`
+  if (estilo.rotacion) css.rotate = `${estilo.rotacion}deg`
   if (estilo.sombra) css.textShadow = SOMBRAS_TEXTO[estilo.sombra]?.(estilo.sombraColor)
   if (estilo.contornoColor && estilo.contornoGrosor) {
     // El trazo se pinta detrás del relleno: la letra no se adelgaza, el borde crece hacia afuera

@@ -527,6 +527,11 @@ export interface EstiloTexto {
   marcoColor?: string // recuadro alrededor del texto
   marcoGrosor?: number // px
   curva?: number // -100…100: texto en arco (solo textos libres); positivo ⌒, negativo ∪
+  // Solo textos propios de un bloque (título, nombres, frases…)
+  oculto?: boolean // El anfitrión lo quitó: el invitado no lo ve
+  x?: number // Desplazamiento desde su lugar, en % del ancho del bloque
+  y?: number
+  rotacion?: number // grados
 }
 
 export type TipoElementoLienzo = 'texto' | 'imagen' | 'sticker' | 'icono' | 'forma'

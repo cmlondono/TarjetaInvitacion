@@ -376,7 +376,6 @@ function controlesComunesElemento(
 
     <BotonAccion key="bloquear" etiqueta={elemento.bloqueado ? 'Desbloquear' : 'Bloquear'} icono={<Lock size={TAMANO_ICONO} />} activo={elemento.bloqueado} alPulsar={() => actualizar({ bloqueado: !elemento.bloqueado })} esMovil={esMovil} />,
     <BotonAccion key="duplicar" etiqueta="Duplicar" icono={<Copy size={TAMANO_ICONO} />} alPulsar={() => acciones.duplicarElemento(sId, elemento.id)} esMovil={esMovil} />,
-    <BotonAccion key="eliminar" etiqueta="Eliminar" icono={<Trash2 size={TAMANO_ICONO} />} peligro alPulsar={() => acciones.eliminarElemento(sId, elemento.id)} esMovil={esMovil} />,
   ]
 }
 
@@ -412,9 +411,35 @@ export function BarraContextual({ seleccion, secciones, visual, acciones, esMovi
   } else if (seleccion.tipo === 'texto') {
     const clave = `${seleccion.seccionId}:${seleccion.campo}`
     const estilo = seccion.estilosTexto?.[seleccion.campo]
+    const cambiar = (c: Partial<EstiloTexto>) => acciones.actualizarEstiloTexto(seleccion.seccionId, seleccion.campo, c)
+    const movible = !seleccion.campo.includes('.')
     titulo = 'Texto'
     herramientas = [
       <BotonAccion key="escribir" etiqueta="Escribir" icono={<PencilLine size={TAMANO_ICONO} />} alPulsar={() => acciones.editarTexto(clave)} esMovil={esMovil} />,
+      <BotonAccion
+        key="quitar"
+        etiqueta={estilo?.oculto ? 'Mostrar' : 'Quitar'}
+        icono={estilo?.oculto ? <Eye size={TAMANO_ICONO} /> : <EyeOff size={TAMANO_ICONO} />}
+        peligro={!estilo?.oculto}
+        alPulsar={() => cambiar({ oculto: estilo?.oculto ? undefined : true })}
+        esMovil={esMovil}
+      />,
+      ...(movible
+        ? [
+            <PanelHerramienta key="posicion" id="posicion" etiqueta="Posición" titulo="Posición del texto" icono={<Layers size={TAMANO_ICONO} />} {...comunes}>
+              <p className="text-[11px] text-slate-500 mb-2">Arrastra el texto para moverlo a cualquier parte del bloque.</p>
+              <Deslizador etiqueta="Rotación" valor={estilo?.rotacion ?? 0} min={-180} max={180} unidad="°" alCambiar={(v) => cambiar({ rotacion: v || undefined })} />
+              <button
+                type="button"
+                disabled={!estilo?.x && !estilo?.y && !estilo?.rotacion}
+                onClick={() => cambiar({ x: undefined, y: undefined, rotacion: undefined })}
+                className="w-full h-9 mt-1 rounded-lg border border-slate-200 text-[11px] font-semibold hover:bg-slate-50 cursor-pointer flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <RotateCcw size={12} /> Volver a su lugar
+              </button>
+            </PanelHerramienta>,
+          ]
+        : []),
       ...controlesTexto({
         estilo,
         alCambiar: (c) => acciones.actualizarEstiloTexto(seleccion.seccionId, seleccion.campo, c),
@@ -574,6 +599,10 @@ export function BarraContextual({ seleccion, secciones, visual, acciones, esMovi
           break
       }
       herramientas.push(...controlesComunesElemento(elemento, sId, acciones, abierta, setAbierta, esMovil))
+      // Eliminar va al principio: en el celular la barra es larga y al final quedaba escondido
+      herramientas.unshift(
+        <BotonAccion key="eliminar" etiqueta="Eliminar" icono={<Trash2 size={TAMANO_ICONO} />} peligro alPulsar={() => acciones.eliminarElemento(sId, elemento.id)} esMovil={esMovil} />
+      )
     }
   } else if (seleccion.tipo === 'seccion') {
     const estilo = seccion.estilo || {}

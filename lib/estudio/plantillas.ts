@@ -464,6 +464,12 @@ export const PLANTILLAS: Plantilla[] = [
     vestimenta: { etiqueta: 'Ropa cómoda para saltar' }, regalos: ['Muñeco de acción', 'Plastilina', 'Carro a control remoto'], extras: ['lista_regalos'],
   },
   {
+    id: 'inf-heroe-telarana', nombre: 'Héroe de telaraña', descripcion: 'Fiesta de superhéroe: ciudad de cómic, telarañas y un héroe que se columpia', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'heroe_telarana',
+    nombresEjemplo: 'Mis 6 años · Mateo', lugarEjemplo: 'Salón de fiestas Ciudad Aventura', hora: '15:00', kicker: '¡Únete a mi equipo de héroes!', destacada: true,
+    momentos: [['15:00', 'Entrenamiento de héroes'], ['16:00', 'Misión: rescatar la piñata'], ['17:00', 'Torta de héroes']],
+    vestimenta: { etiqueta: 'Ven disfrazado de tu héroe favorito', colores: ['#DC2626', '#1D4ED8'] }, regalos: ['Figura de acción', 'Capa y antifaz', 'Rompecabezas de la ciudad'], extras: ['lista_regalos'],
+  },
+  {
     id: 'inf-heroe-aranas', nombre: 'Arañitas héroes', descripcion: 'Telarañas, arañitas con antifaz y Arañín columpiándose en la ciudad', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'heroe_aranas',
     nombresEjemplo: 'Mis 6 años · Mateo', lugarEjemplo: 'Salón de fiestas Ciudad Aventura', hora: '15:00', kicker: '¡Atrapados en la diversión!', destacada: true,
     momentos: [['15:00', 'Entrenamiento arácnido'], ['16:00', 'Juegos y telarañas'], ['17:00', 'Torta y piñata']],

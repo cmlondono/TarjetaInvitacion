@@ -17,6 +17,7 @@ export const CATALOGO_ESCENAS: { id: TipoEscena; nombre: string; descripcion: st
   { id: 'hielo', nombre: 'Reino de hielo', descripcion: 'Aurora y copos de nieve' },
   { id: 'hadas', nombre: 'Jardín de hadas', descripcion: 'Luciérnagas, flores y mariposas' },
   { id: 'aranas', nombre: 'Telarañas y arañitas', descripcion: 'Ciudad de noche con arañitas héroes colgando' },
+  { id: 'heroe_dia', nombre: 'Héroe de telaraña', descripcion: 'Ciudad de cómic de día con un héroe columpiándose' },
   { id: 'calabazas', nombre: 'Calabazas', descripcion: 'Halloween: luna, calabazas encendidas y murciélagos' },
   { id: 'fantasmas', nombre: 'Fantasmitas', descripcion: 'Halloween: fantasmas tiernos y casa embrujada' },
   { id: 'brujas', nombre: 'Caldero de brujas', descripcion: 'Halloween: bruja en escoba y caldero burbujeante' },
@@ -656,7 +657,120 @@ function Brujas({ acento, detalle, id }: Colores & { id: string }) {
   )
 }
 
+// ─────────── Héroe de día (estilo cómic, personaje original) ───────────
+
+/** Héroe chibi original: antifaz que deja ver la cara, capa, estrella en el pecho */
+function HeroeChibi({ traje, capa, detalle }: { traje: string; capa: string; detalle: string }) {
+  return (
+    <g>
+      {/* Capa */}
+      <path d="M-14 4 Q-34 40 -26 64 L26 64 Q34 40 14 4 Z" fill={capa} />
+      {/* Brazo arriba, agarrado del hilo */}
+      <path d="M8 6 Q16 -16 6 -46" stroke={traje} strokeWidth="9" strokeLinecap="round" fill="none" />
+      <circle cx="6" cy="-48" r="6.5" fill={capa} />
+      {/* Brazo extendido */}
+      <path d="M-10 10 Q-24 16 -32 28" stroke={traje} strokeWidth="9" strokeLinecap="round" fill="none" />
+      <circle cx="-33" cy="30" r="6" fill={capa} />
+      {/* Cuerpo y cinturón */}
+      <rect x="-15" y="2" width="30" height="34" rx="12" fill={traje} />
+      <rect x="-15" y="28" width="30" height="5" fill="#FACC15" />
+      <circle cx="0" cy="15" r="7.5" fill="#FACC15" />
+      <polygon points="0,9.5 1.7,13.4 5.9,13.6 2.7,16.2 3.7,20.3 0,18 -3.7,20.3 -2.7,16.2 -5.9,13.6 -1.7,13.4" fill={capa} />
+      {/* Piernas y botas */}
+      <path d="M-7 34 Q-12 48 -20 54" stroke={traje} strokeWidth="10" strokeLinecap="round" fill="none" />
+      <path d="M7 34 Q14 46 22 50" stroke={traje} strokeWidth="10" strokeLinecap="round" fill="none" />
+      <ellipse cx="-23" cy="57" rx="8" ry="6" fill={capa} />
+      <ellipse cx="25" cy="52" rx="8" ry="6" fill={capa} />
+      {/* Cabeza grande con cara visible */}
+      <circle cx="0" cy="-20" r="25" fill="#F5C9A0" />
+      <path d="M-25 -22 Q-26 -50 0 -48 Q26 -50 25 -22 Q18 -36 8 -34 Q2 -42 -6 -34 Q-16 -38 -25 -22 Z" fill="#5B3A1E" />
+      {/* Antifaz rojo (deja ver la cara) */}
+      <path d="M-26 -22 Q-14 -30 0 -24 Q14 -30 26 -22 Q22 -10 10 -12 Q4 -13 0 -16 Q-4 -13 -10 -12 Q-22 -10 -26 -22 Z" fill={capa} />
+      <ellipse cx="-11" cy="-19" rx="6" ry="4" fill="#FFFFFF" />
+      <ellipse cx="11" cy="-19" rx="6" ry="4" fill="#FFFFFF" />
+      <circle cx="-10" cy="-19" r="2" fill="#1F2937" />
+      <circle cx="12" cy="-19" r="2" fill="#1F2937" />
+      <path d="M-8 -5 Q0 2 8 -5" stroke="#9A3412" strokeWidth="2.4" strokeLinecap="round" fill="none" />
+      <circle cx="-16" cy="-8" r="3" fill={detalle} opacity="0.35" />
+      <circle cx="16" cy="-8" r="3" fill={detalle} opacity="0.35" />
+    </g>
+  )
+}
+
+const NUBES_DIA = lista(4, 53, (r, i) => ({ x: 20 + i * 100 + r() * 30, y: 60 + r() * 160, t: 0.7 + r() * 0.6, d: r() * 6 }))
+
+function HeroeDia({ acento, detalle, id }: Colores & { id: string }) {
+  const edificios: [number, number, number, string][] = [
+    [0, 560, 60, '#F87171'],
+    [56, 600, 54, '#FDE68A'],
+    [106, 520, 66, '#93C5FD'],
+    [168, 590, 58, '#FCA5A5'],
+    [222, 500, 70, '#60A5FA'],
+    [288, 570, 56, '#FDE047'],
+    [340, 540, 60, '#F87171'],
+  ]
+  return (
+    <>
+      <defs>
+        <linearGradient id={`${id}-cielo`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#38BDF8" />
+          <stop offset="1" stopColor="#DBEAFE" />
+        </linearGradient>
+        <pattern id={`${id}-puntos`} width="12" height="12" patternUnits="userSpaceOnUse">
+          <circle cx="6" cy="6" r="2.2" fill="#FFFFFF" opacity="0.28" />
+        </pattern>
+      </defs>
+      <rect width="400" height="800" fill={`url(#${id}-cielo)`} />
+      <rect width="400" height="800" fill={`url(#${id}-puntos)`} />
+      {NUBES_DIA.map((n, i) => (
+        <g key={i} transform={`translate(${redondear(n.x)} ${redondear(n.y)}) scale(${redondear(n.t)})`}>
+          <g style={anim('esc-nube', 10 + i * 2, n.d)}>
+            <ellipse cx="0" cy="0" rx="46" ry="18" fill="#FFFFFF" />
+            <ellipse cx="-18" cy="-10" rx="22" ry="16" fill="#FFFFFF" />
+            <ellipse cx="14" cy="-14" rx="26" ry="20" fill="#FFFFFF" />
+          </g>
+        </g>
+      ))}
+      {/* Edificios de colores con ventanas */}
+      {edificios.map(([x, y, a, color], i) => (
+        <g key={i}>
+          <rect x={x} y={y} width={a} height={800 - y} fill={color} stroke="#1E293B" strokeWidth="3" />
+          {Array.from({ length: Math.floor((800 - y - 20) / 34) }).flatMap((_, f) =>
+            [0, 1].map((c) => <rect key={`${f}-${c}`} x={x + 10 + c * (a / 2 - 2)} y={y + 14 + f * 34} width={a / 2 - 18} height="18" rx="2" fill="#FFFFFF" opacity="0.75" />)
+          )}
+        </g>
+      ))}
+      {/* Telarañas tendidas entre los edificios */}
+      <path d={telarana(0, 0, 140, 0, 90)} fill="none" stroke="#FFFFFF" strokeWidth="2" />
+      <path d={telarana(400, 0, 120, 90, 180)} fill="none" stroke="#FFFFFF" strokeWidth="2" />
+      <path d="M0 560 Q110 600 222 500 M106 520 Q240 580 400 540" fill="none" stroke="#FFFFFF" strokeWidth="2.4" opacity="0.9" />
+      {/* Globos de cómic */}
+      {[
+        [64, 300, 38, '¡POW!', acento],
+        [340, 380, 34, '¡ZAS!', '#FACC15'],
+      ].map(([x, y, r, texto, color], i) => (
+        <g key={String(texto)} transform={`translate(${x} ${y})`}>
+          <g style={{ ...anim('esc-latir', 1.8 + i * 0.4, i * 0.6), ...propio }}>
+            <polygon points={estallido(0, 0, Number(r), Number(r) * 0.68, 11)} fill={String(color)} stroke="#111" strokeWidth="3" strokeLinejoin="round" />
+            <text textAnchor="middle" dominantBaseline="central" fontFamily="'Bricolage Grotesque', Impact, sans-serif" fontWeight="900" fontSize={Number(r) * 0.42} fill="#fff" stroke="#111" strokeWidth="2.6" paintOrder="stroke">
+              {texto}
+            </text>
+          </g>
+        </g>
+      ))}
+      {/* El héroe se columpia de su telaraña */}
+      <g style={{ ...anim('esc-pendulo', 3.4), transformOrigin: '200px 0px' }}>
+        <line x1="200" y1="0" x2="206" y2="186" stroke="#FFFFFF" strokeWidth="2.4" />
+        <g transform="translate(200 236) scale(1.35)">
+          <HeroeChibi traje={detalle} capa={acento} detalle={acento} />
+        </g>
+      </g>
+    </>
+  )
+}
+
 const ESCENAS: Record<TipoEscena, (p: Colores & { id: string }) => React.ReactElement> = {
+  heroe_dia: HeroeDia,
   calabazas: Calabazas,
   fantasmas: Fantasmas,
   brujas: Brujas,

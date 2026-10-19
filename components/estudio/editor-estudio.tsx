@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Drawer as Vaul } from 'vaul'
@@ -91,6 +91,9 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
     rehacer: historial.rehacer,
   })
 
+  const agregarElementoEnRef = useRef(estudio.agregarElementoEn)
+  agregarElementoEnRef.current = estudio.agregarElementoEn
+
   const construirEvento = useCallback((): DetalleEvento => {
     const actual = historial.estadoActual.current
     const fecha = new Date(actual.evento.fechaEvento)
@@ -130,6 +133,11 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
       alDato: (sId: string, campo: string, valor: unknown) =>
         mapear(sId, (s) => ({ ...s, datos: asignarRuta((s.datos || {}) as Record<string, unknown>, campo.split('.'), valor) as SeccionModular['datos'] })),
       alEvento: (campo: keyof DetalleEvento, valor: unknown) => setEvento((prev) => ({ ...prev, [campo]: valor })),
+      agregarElemento: (sId: string, tipo: 'texto' | 'mas') => {
+        setBloqueId(sId)
+        setHoja(null)
+        agregarElementoEnRef.current(sId, tipo)
+      },
     }),
     [mapear, setEvento]
   )
@@ -187,6 +195,7 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
       setHoja(null)
       estudio.acciones.abrirAgregar()
     },
+    agregarElemento: (sId, tipo) => edicion.agregarElemento(sId, tipo),
     estilizarTitulo: (sId) => {
       estudio.acciones.seleccionar({ tipo: 'texto', seccionId: sId, campo: 'titulo' })
       setHoja(null)

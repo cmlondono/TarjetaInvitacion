@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import type { SeccionModular } from '@/types/invitation'
-import { ContenedorSeccion } from '@/components/editor/lienzo/contenedor-seccion'
 import { esInvitadoReal, useInvitacion } from './contexto'
 import { Boton, Caja, Etiqueta, MarcoBloque, Texto, icono } from './piezas'
 import type { PropsBloque } from './bloques'
@@ -353,13 +352,11 @@ export function BloqueConfirmacion({ seccion }: PropsBloque) {
 
 // ─────────── Collage libre ───────────
 export function BloqueCollage({ seccion }: PropsBloque) {
-  const { visual } = useInvitacion()
   const alto = seccion.estilo?.alturaLienzo ?? 75
+  // Los elementos libres los dibuja el marco del bloque, como en cualquier otro bloque
   return (
     <MarcoBloque seccion={seccion} relleno="0">
-      <ContenedorSeccion seccion={seccion} colorAcento={visual.colorPrimario} fuenteCuerpo={visual.fuenteCuerpo} className="w-full">
-        <div style={{ width: '100%', paddingTop: `${alto}%` }} />
-      </ContenedorSeccion>
+      <div style={{ width: '100%', paddingTop: `${alto}%` }} />
     </MarcoBloque>
   )
 }

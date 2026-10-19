@@ -6,6 +6,7 @@ import type { ElementoLienzo } from '@/types/invitation'
 import { IconoDinamico } from '@/components/ui/icono-dinamico'
 import { StickerSvg } from '@/lib/editor/stickers'
 import {
+  ANCHO_REFERENCIA_LIENZO,
   atributosFuente,
   estadoInicialAnimacion,
   estiloMascara,
@@ -27,6 +28,46 @@ interface ElementoLienzoVistaProps {
   alPresionar?: (e: React.PointerEvent<HTMLDivElement>) => void
   alDobleClick?: () => void
   alTerminarTexto?: (texto: string) => void
+}
+
+/**
+ * Texto en arco (como en Canva). Se dibuja en SVG sobre el ancho de referencia del lienzo,
+ * así la curva y el tamaño de letra escalan igual en cualquier pantalla.
+ */
+function TextoCurvo({ elemento, fuenteCuerpo }: { elemento: ElementoLienzo; fuenteCuerpo?: string }) {
+  const estilo = elemento.estiloTexto || {}
+  const curva = Math.max(-100, Math.min(100, estilo.curva || 0))
+  const ancho = (ANCHO_REFERENCIA_LIENZO * elemento.ancho) / 100
+  const letra = estilo.tamano ?? 18
+  const flecha = Math.max(1, ((ancho / 2) * Math.abs(curva)) / 100)
+  const radio = (ancho * ancho) / 4 / (2 * flecha) + flecha / 2
+  const margen = letra * 0.35
+  const alto = flecha + letra * 1.3 + margen
+  const haciaArriba = curva > 0
+  const yExtremos = haciaArriba ? flecha + letra + margen / 2 : letra + margen / 2
+  const idCamino = `curva-${elemento.id}`
+  const texto = (elemento.texto || '').replace(/\s*\n\s*/g, ' ')
+  return (
+    <svg viewBox={`0 0 ${ancho} ${alto}`} width="100%" style={{ display: 'block', overflow: 'visible' }} aria-label={texto}>
+      <path id={idCamino} d={`M 0 ${yExtremos} A ${radio} ${radio} 0 0 ${haciaArriba ? 1 : 0} ${ancho} ${yExtremos}`} fill="none" />
+      <text
+        {...atributosFuente(estilo)}
+        fill={estilo.color || 'currentColor'}
+        fontSize={letra}
+        fontWeight={estilo.peso}
+        fontStyle={estilo.cursiva ? 'italic' : undefined}
+        letterSpacing={estilo.interletrado ? estilo.interletrado * letra : undefined}
+        stroke={estilo.contornoColor && estilo.contornoGrosor ? estilo.contornoColor : undefined}
+        strokeWidth={estilo.contornoColor && estilo.contornoGrosor ? estilo.contornoGrosor * 2 : undefined}
+        paintOrder="stroke"
+        style={{ fontFamily: familiaFuente(estilo.fuente) || familiaFuente(fuenteCuerpo as any), textShadow: estiloTextoACss(estilo).textShadow }}
+      >
+        <textPath href={`#${idCamino}`} startOffset="50%" textAnchor="middle">
+          {estilo.mayusculas ? texto.toUpperCase() : texto}
+        </textPath>
+      </text>
+    </svg>
+  )
 }
 
 function ContenidoForma({ elemento }: { elemento: ElementoLienzo }) {
@@ -160,6 +201,9 @@ export function ElementoLienzoVista({
           onPointerDown={(e) => e.stopPropagation()}
         />
       ) : (
+        elemento.estiloTexto?.curva && elemento.texto ? (
+        <TextoCurvo elemento={elemento} fuenteCuerpo={fuenteCuerpo} />
+      ) : (
         <div style={estiloTexto} {...atributosFuente(elemento.estiloTexto)}>
           <span
             style={
@@ -177,6 +221,7 @@ export function ElementoLienzoVista({
             {elemento.texto || (esEdicion ? 'Toca dos veces para escribir' : '')}
           </span>
         </div>
+      )
       )
       break
     }

@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { SeccionModular } from '@/types/invitation'
 import { InlineEditableText } from '@/components/editor/inline-editable-text'
-import { ProveedorSeccionActual } from '@/components/editor/lienzo/contexto-editor'
+import { ProveedorSeccionActual, useEditorLienzo } from '@/components/editor/lienzo/contexto-editor'
+import { CapaElementos } from '@/components/editor/lienzo/contenedor-seccion'
 import { estadoInicialAnimacion, transicionAnimacion } from '@/lib/editor/estilos'
 import { useInvitacion } from './contexto'
 import { OrnamentoArriba, OrnamentoDetras, OrnamentoEsquinas } from './ornamentos'
@@ -26,7 +27,8 @@ export function MarcoBloque({
   relleno?: string
   centrado?: boolean
 }) {
-  const { tema, modo, seleccionId, alSeleccionarBloque } = useInvitacion()
+  const { tema, visual, modo, seleccionId, alSeleccionarBloque, edicion } = useInvitacion()
+  const lienzo = useEditorLienzo()
   const estilo = seccion.estilo || {}
   const fondo = estilo.fondoBloque || 'tarjeta'
   const ornamento = estilo.ornamento ?? { activo: ornamentoPorDefecto, posicion: 'esquinas' as const }
@@ -61,14 +63,48 @@ export function MarcoBloque({
         {conOrnamento && ornamento.posicion === 'arriba' && <OrnamentoArriba tipo={tema.ornamento} color={tema.detalle} />}
         {children}
       </div>
+      {/* Textos, fotos y stickers que el anfitrión ubica libremente encima del bloque */}
+      <CapaElementos seccion={seccion} colorAcento={visual.colorPrimario} fuenteCuerpo={visual.fuenteCuerpo} />
+      {seleccionado && edicion?.agregarElemento && (
+        <div style={{ position: 'absolute', right: 8, bottom: 8, zIndex: 30, display: 'flex', gap: 6 }}>
+          {(
+            [
+              ['texto', '＋ Texto'],
+              ['mas', '＋ Más'],
+            ] as const
+          ).map(([tipo, texto]) => (
+            <button
+              key={tipo}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                edicion.agregarElemento?.(seccion.id, tipo)
+              }}
+              style={{ minHeight: 32, padding: '0 12px', borderRadius: 999, border: 0, backgroundColor: '#F59E0B', color: '#0F172A', fontFamily: 'system-ui, sans-serif', fontSize: 12, fontWeight: 800, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}
+            >
+              {texto}
+            </button>
+          ))}
+        </div>
+      )}
     </ProveedorSeccionActual>
   )
 
   const comunes = {
     id: `bloque-${seccion.id}`,
     'data-seccion-id': seccion.id,
+    // Contenedor: los elementos libres se dimensionan en cqw y se ven igual en cualquier pantalla
+    className: 'seccion-lienzo',
     style: estiloCaja,
     onPointerDownCapture: modo === 'editor' ? () => alSeleccionarBloque?.(seccion.id) : undefined,
+    // Tocar fuera de un elemento libre lo suelta (deja de mostrar sus controles)
+    onClick:
+      modo === 'editor'
+        ? (e: React.MouseEvent) => {
+            const objetivo = e.target as HTMLElement
+            if (lienzo.seleccion?.tipo === 'elemento' && !objetivo.closest('[data-elemento-id], .tarjeton-moveable')) lienzo.seleccionar(null)
+          }
+        : undefined,
   }
 
   if (inicial) {

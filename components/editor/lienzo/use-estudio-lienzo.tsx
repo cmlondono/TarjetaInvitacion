@@ -412,10 +412,31 @@ export function useEstudioLienzo({
     setRecorte(null)
   }
 
+  /**
+   * Agrega un texto libre en el centro de un bloque y lo deja listo para escribir,
+   * o abre el panel de fotos, stickers y formas apuntando a ese bloque.
+   */
+  const agregarElementoEn = useCallback(
+    (sId: string, tipo: 'texto' | 'mas') => {
+      if (tipo === 'mas') {
+        setSeleccion({ tipo: 'seccion', seccionId: sId })
+        setPanelAgregarAbierto(true)
+        return
+      }
+      const seccion = seccionesRef.current.find((s) => s.id === sId)
+      const nuevo = ops.crearElemento({ tipo: 'texto', texto: 'Escribe aquí', estilo: { tamano: 22 }, ancho: 70 }, ops.zMaximo(seccion) + 1, 50)
+      aplicar((prev) => ops.agregarElementos(prev, sId, [{ ...nuevo, animacion: 'aparecer' }]))
+      setSeleccion({ tipo: 'elemento', seccionId: sId, elementoId: nuevo.id })
+      setTextoEnEdicion(nuevo.id)
+    },
+    [aplicar]
+  )
+
   return {
     contexto,
     seleccion,
     acciones,
+    agregarElementoEn,
     propsPanelAgregar,
     propsPanelCapas,
     recorte,

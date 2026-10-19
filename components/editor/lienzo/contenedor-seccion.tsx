@@ -17,8 +17,8 @@ interface CapaElementosProps {
   fuenteCuerpo?: string
 }
 
-/** Capa de elementos libres superpuesta a una sección */
-function CapaElementos({ seccion, colorAcento, fuenteCuerpo }: CapaElementosProps) {
+/** Capa de elementos libres (textos, fotos, stickers, formas) superpuesta a una sección o bloque */
+export function CapaElementos({ seccion, colorAcento, fuenteCuerpo }: CapaElementosProps) {
   const editor = useEditorLienzo()
   // Ref por callback: la capa aparece cuando se agrega el primer elemento
   const [capa, setCapa] = useState<HTMLDivElement | null>(null)

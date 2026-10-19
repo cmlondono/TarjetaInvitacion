@@ -526,6 +526,7 @@ export interface EstiloTexto {
   colorFondo?: string // resaltado detrás del texto
   marcoColor?: string // recuadro alrededor del texto
   marcoGrosor?: number // px
+  curva?: number // -100…100: texto en arco (solo textos libres); positivo ⌒, negativo ∪
 }
 
 export type TipoElementoLienzo = 'texto' | 'imagen' | 'sticker' | 'icono' | 'forma'

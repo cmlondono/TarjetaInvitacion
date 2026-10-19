@@ -446,6 +446,26 @@ export function BarraContextual({ seleccion, secciones, visual, acciones, esMovi
               setAbierta,
               esMovil,
             }),
+            <PanelHerramienta key="curva" id="curva" etiqueta="Curvar" titulo="Texto en arco" icono={<span className="text-[15px] font-black leading-none">⌒</span>} {...comunes}>
+              <Deslizador
+                etiqueta="Curva"
+                valor={elemento.estiloTexto?.curva ?? 0}
+                min={-100}
+                max={100}
+                alCambiar={(v) => acciones.actualizarEstiloTextoElemento(sId, elemento.id, { curva: Math.abs(v) < 3 ? undefined : v })}
+              />
+              <GrupoOpciones
+                columnas={3}
+                valor={!elemento.estiloTexto?.curva ? 'recto' : elemento.estiloTexto.curva > 0 ? 'arriba' : 'abajo'}
+                opciones={[
+                  { id: 'arriba', etiqueta: '⌒ Arco' },
+                  { id: 'recto', etiqueta: 'Recto' },
+                  { id: 'abajo', etiqueta: '∪ Sonrisa' },
+                ]}
+                alCambiar={(id) => acciones.actualizarEstiloTextoElemento(sId, elemento.id, { curva: id === 'recto' ? undefined : id === 'arriba' ? 45 : -45 })}
+              />
+              <p className="text-[11px] text-slate-500 mt-2">Funciona mejor con textos de una línea. Al escribir se ve recto y vuelve a curvarse al terminar.</p>
+            </PanelHerramienta>,
           ]
           break
         case 'imagen':

@@ -35,8 +35,7 @@ function Fila({
   alElegir: () => void
   alAlternar: () => void
 }) {
-  const fija = seccion.tipo === 'cabecera'
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: seccion.id, disabled: fija })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: seccion.id })
   return (
     <li
       ref={setNodeRef}
@@ -48,8 +47,7 @@ function Fila({
         {...attributes}
         {...listeners}
         data-vaul-no-drag
-        disabled={fija}
-        aria-label={fija ? 'La portada va siempre primero' : `Arrastrar ${nombreBloque(seccion)}`}
+        aria-label={`Arrastrar ${nombreBloque(seccion)}`}
         className="w-8 h-11 flex items-center justify-center text-slate-400 touch-none cursor-grab active:cursor-grabbing disabled:opacity-0 disabled:cursor-default shrink-0"
       >
         <GripVertical size={15} />

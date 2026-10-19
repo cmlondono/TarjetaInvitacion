@@ -92,14 +92,15 @@ export function Inspector({ seccion, evento, tema, act, esPrimera, esUltima }: I
           <h2 className="m-0 text-[19px] leading-tight font-extrabold text-slate-900">{esPortada ? 'Portada' : seccion.titulo || meta?.nombre}</h2>
         </div>
         <div className="flex gap-1.5">
+          <button type="button" aria-label="Subir bloque" disabled={esPrimera} onClick={() => act.mover(seccion.id, 'arriba')} className="w-9 h-9 rounded-lg border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-30 cursor-pointer">
+            <ArrowUp size={15} />
+          </button>
+          <button type="button" aria-label="Bajar bloque" disabled={esUltima} onClick={() => act.mover(seccion.id, 'abajo')} className="w-9 h-9 rounded-lg border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-30 cursor-pointer">
+            <ArrowDown size={15} />
+          </button>
+          {/* La portada se mueve como cualquier bloque, pero no se duplica ni se elimina: toda invitación tiene una */}
           {!esPortada && (
             <>
-              <button type="button" aria-label="Subir bloque" disabled={esPrimera} onClick={() => act.mover(seccion.id, 'arriba')} className="w-9 h-9 rounded-lg border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-30 cursor-pointer">
-                <ArrowUp size={15} />
-              </button>
-              <button type="button" aria-label="Bajar bloque" disabled={esUltima} onClick={() => act.mover(seccion.id, 'abajo')} className="w-9 h-9 rounded-lg border border-slate-200 text-slate-700 flex items-center justify-center disabled:opacity-30 cursor-pointer">
-                <ArrowDown size={15} />
-              </button>
               <button type="button" aria-label="Duplicar bloque" onClick={() => act.duplicar(seccion.id)} className="w-9 h-9 rounded-lg border border-slate-200 text-slate-700 flex items-center justify-center cursor-pointer">
                 <Copy size={15} />
               </button>

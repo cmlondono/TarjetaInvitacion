@@ -170,7 +170,7 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
         const ord = [...prev].sort((a, b) => a.orden - b.orden)
         const i = ord.findIndex((s) => s.id === sId)
         const j = direccion === 'arriba' ? i - 1 : i + 1
-        if (i < 0 || j < 1 || j >= ord.length) return prev
+        if (i < 0 || j < 0 || j >= ord.length) return prev
         return reordenarSecciones(prev, sId, ord[j].id)
       })
     },
@@ -235,7 +235,7 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
   }
 
   const inspector = bloque && (
-    <Inspector key={bloque.id} seccion={bloque} evento={evento} tema={tema} act={act} esPrimera={iBloque <= 1} esUltima={iBloque === ordenadas.length - 1} />
+    <Inspector key={bloque.id} seccion={bloque} evento={evento} tema={tema} act={act} esPrimera={iBloque <= 0} esUltima={iBloque === ordenadas.length - 1} />
   )
 
   const panelBloques = (
@@ -251,7 +251,6 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
       alAlternar={act.alternarVisible}
       alReordenar={(a, b) => {
         historial.cortarGrupo()
-        if (secciones.find((s) => s.id === b)?.tipo === 'cabecera') return
         setSecciones((prev) => reordenarSecciones(prev, a, b))
       }}
       alAgregar={agregarBloque}

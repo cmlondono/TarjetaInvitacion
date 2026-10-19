@@ -670,8 +670,8 @@ export function BarraContextual({ seleccion, secciones, visual, acciones, esMovi
             </PanelHerramienta>,
           ]
         : []),
-      <BotonAccion key="subir" etiqueta="Subir" icono={<ArrowUp size={TAMANO_ICONO} />} deshabilitado={esCabecera} alPulsar={() => acciones.moverSeccion(sId, 'arriba')} esMovil={esMovil} />,
-      <BotonAccion key="bajar" etiqueta="Bajar" icono={<ArrowDown size={TAMANO_ICONO} />} deshabilitado={esCabecera} alPulsar={() => acciones.moverSeccion(sId, 'abajo')} esMovil={esMovil} />,
+      <BotonAccion key="subir" etiqueta="Subir" icono={<ArrowUp size={TAMANO_ICONO} />} alPulsar={() => acciones.moverSeccion(sId, 'arriba')} esMovil={esMovil} />,
+      <BotonAccion key="bajar" etiqueta="Bajar" icono={<ArrowDown size={TAMANO_ICONO} />} alPulsar={() => acciones.moverSeccion(sId, 'abajo')} esMovil={esMovil} />,
       <BotonAccion key="duplicar" etiqueta="Duplicar" icono={<Copy size={TAMANO_ICONO} />} deshabilitado={esCabecera} alPulsar={() => acciones.duplicarSeccion(sId)} esMovil={esMovil} />,
       <BotonAccion key="ocultar" etiqueta={seccion.visible ? 'Ocultar' : 'Mostrar'} icono={seccion.visible ? <EyeOff size={TAMANO_ICONO} /> : <Eye size={TAMANO_ICONO} />} alPulsar={() => acciones.ocultarSeccion(sId)} esMovil={esMovil} />,
       <BotonAccion key="eliminar" etiqueta="Eliminar" icono={<Trash2 size={TAMANO_ICONO} />} peligro deshabilitado={esCabecera} alPulsar={() => acciones.eliminarSeccion(sId)} esMovil={esMovil} />,

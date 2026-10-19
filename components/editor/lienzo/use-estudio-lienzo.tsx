@@ -233,7 +233,7 @@ export function useEstudioLienzo({
           const ordenadas = [...prev].sort((a, b) => a.orden - b.orden)
           const i = ordenadas.findIndex((s) => s.id === sId)
           const j = direccion === 'arriba' ? i - 1 : i + 1
-          if (i < 0 || j < 0 || j >= ordenadas.length || ordenadas[j].tipo === 'cabecera') return prev
+          if (i < 0 || j < 0 || j >= ordenadas.length) return prev
           return ops.reordenarSecciones(prev, sId, ordenadas[j].id)
         }),
       duplicarSeccion: (sId) => aplicar((prev) => ops.duplicarSeccion(prev, sId)),
@@ -393,9 +393,6 @@ export function useEstudioLienzo({
     seleccion,
     alSeleccionar: seleccionar,
     alReordenarSecciones: (a, b) => {
-      const destinoEsCabecera = seccionesRef.current.find((s) => s.id === b)?.tipo === 'cabecera'
-      const origenEsCabecera = seccionesRef.current.find((s) => s.id === a)?.tipo === 'cabecera'
-      if (destinoEsCabecera || origenEsCabecera) return
       aplicar((prev) => ops.reordenarSecciones(prev, a, b))
     },
     alReordenarCapas: (sId, ids) => aplicar((prev) => ops.reordenarCapas(prev, sId, ids)),

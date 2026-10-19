@@ -183,3 +183,23 @@ CREATE POLICY "tarjeton_audio_lectura_publica" ON storage.objects
 DROP POLICY IF EXISTS "tarjeton_audio_subida" ON storage.objects;
 CREATE POLICY "tarjeton_audio_subida" ON storage.objects
   FOR INSERT WITH CHECK (bucket_id = 'tarjeton-audio');
+
+-- 9. PLANTILLAS ADMINISTRABLES (panel de administración → Plantillas)
+-- Cada plantilla guarda su contenido completo en `datos` (el mismo formato que lib/estudio/plantillas.ts).
+-- Mientras esta tabla no exista o esté vacía, el sitio usa las plantillas del código.
+CREATE TABLE IF NOT EXISTS public.plantillas (
+  id TEXT PRIMARY KEY,
+  datos JSONB NOT NULL,
+  visible BOOLEAN NOT NULL DEFAULT TRUE,
+  orden INTEGER NOT NULL DEFAULT 0,
+  creado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
+  actualizado_en TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_plantillas_orden ON public.plantillas (orden);
+
+-- Los visitantes solo leen las plantillas visibles. Escribir solo puede el servidor con
+-- SUPABASE_SERVICE_ROLE_KEY (la llave de servicio no está sujeta a estas políticas).
+ALTER TABLE public.plantillas ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "plantillas_lectura_publica" ON public.plantillas;
+CREATE POLICY "plantillas_lectura_publica" ON public.plantillas
+  FOR SELECT USING (visible = true);

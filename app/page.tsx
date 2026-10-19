@@ -20,7 +20,7 @@ import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
 import { ServidorAlmacen } from '@/lib/server-storage'
 import { obtenerClienteSupabase } from '@/lib/supabase'
 import { CONFIGURACION_DEFAULT } from '@/types/admin'
-import { PLANTILLAS } from '@/lib/estudio/plantillas'
+import { obtenerPlantillasPublicadas } from '@/lib/estudio/plantillas-servidor'
 import { MuroPlantillas } from '@/components/plantillas/muro-plantillas'
 
 export const dynamic = 'force-dynamic'
@@ -52,6 +52,7 @@ export const metadata: Metadata = {
 }
 
 export default async function PaginaInicio() {
+  const plantillas = await obtenerPlantillasPublicadas()
   let config = ServidorAlmacen.obtenerConfiguracion()
   try {
     const supabase = obtenerClienteSupabase()
@@ -373,14 +374,14 @@ export default async function PaginaInicio() {
           </p>
         </div>
 
-        <MuroPlantillas />
+        <MuroPlantillas plantillas={plantillas} />
 
         <div className="mt-10 flex justify-center">
           <Link
             href="/plantillas"
             className="min-h-11 px-6 rounded-xl bg-slate-900 text-white text-sm font-bold flex items-center gap-2 hover:bg-slate-800"
           >
-            Ver las {PLANTILLAS.length} plantillas
+            Ver las {plantillas.length} plantillas
             <ArrowRight size={16} />
           </Link>
         </div>

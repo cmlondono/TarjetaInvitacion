@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import type { TipoEvento } from '@/types/invitation'
 import { EVENTOS_INFO, crearEventoInicial, infoEvento } from '@/lib/estudio/eventos'
 import { KITS, aplicarKit, obtenerKit } from '@/lib/estudio/kits'
-import { eventoDesdePlantilla, obtenerPlantilla } from '@/lib/estudio/plantillas'
+import { eventoDesdePlantilla, type Plantilla } from '@/lib/estudio/plantillas'
 import { EventoRepositorio } from '@/lib/storage'
 import { IconoDinamico } from '@/components/ui/icono-dinamico'
 import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
@@ -21,11 +21,42 @@ function fechaEnDias(dias: number): string {
 
 const TIPOS_VALIDOS = EVENTOS_INFO.map((e) => e.id)
 
+/**
+ * Con `?plantilla=`, primero trae la plantilla de la base de datos (es la que el administrador
+ * mantiene al día; las ocultas no se entregan) y luego abre el asistente con ella.
+ */
 export function AsistenteCreacion() {
+  const params = useSearchParams()
+  const id = params?.get('plantilla') || null
+  const [estado, setEstado] = useState<{ cargando: boolean; plantilla: Plantilla | null }>({ cargando: Boolean(id), plantilla: null })
+
+  useEffect(() => {
+    if (!id) return
+    let vigente = true
+    fetch(`/api/plantillas?id=${encodeURIComponent(id)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((r) => vigente && setEstado({ cargando: false, plantilla: r?.plantilla || null }))
+      .catch(() => vigente && setEstado({ cargando: false, plantilla: null }))
+    return () => {
+      vigente = false
+    }
+  }, [id])
+
+  if (estado.cargando) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-sm font-medium text-slate-600 animate-pulse">Abriendo la plantilla…</p>
+      </div>
+    )
+  }
+  return <Asistente plantillaInicial={estado.plantilla} />
+}
+
+function Asistente({ plantillaInicial }: { plantillaInicial: Plantilla | null }) {
   const router = useRouter()
   const params = useSearchParams()
-  const [plantillaId, setPlantillaId] = useState<string | null>(params?.get('plantilla') || null)
-  const plantilla = obtenerPlantilla(plantillaId)
+  const [plantillaId, setPlantillaId] = useState<string | null>(plantillaInicial?.id || null)
+  const plantilla = plantillaId ? plantillaInicial || undefined : undefined
   const tipoParam = params?.get('tipo') as TipoEvento
   const [tipo, setTipo] = useState<TipoEvento>(plantilla?.tipo || (TIPOS_VALIDOS.includes(tipoParam) ? tipoParam : 'boda'))
   const [kitElegido, setKitElegido] = useState<string | null>(plantilla?.kitId || null)

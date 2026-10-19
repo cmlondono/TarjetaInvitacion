@@ -39,8 +39,10 @@ import {
   CalendarRange,
   Clock,
   Edit3,
+  LayoutTemplate,
 } from 'lucide-react'
 import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
+import { GestionPlantillas } from '@/components/admin/gestion-plantillas'
 
 export default function PaginaAdminDashboard() {
   const router = useRouter()
@@ -48,7 +50,7 @@ export default function PaginaAdminDashboard() {
   const [cargandoAuth, setCargandoAuth] = useState(true)
 
   const [pestana, setPestana] = useState<
-    'metricas' | 'promociones' | 'publicaciones' | 'eventos' | 'configuracion' | 'seguridad'
+    'metricas' | 'promociones' | 'publicaciones' | 'eventos' | 'plantillas' | 'configuracion' | 'seguridad'
   >('metricas')
 
   // Estados de datos
@@ -588,6 +590,7 @@ export default function PaginaAdminDashboard() {
             { id: 'promociones', label: 'Promociones & Cupones', icono: <Ticket size={14} /> },
             { id: 'publicaciones', label: 'Banners en Landing', icono: <Megaphone size={14} /> },
             { id: 'eventos', label: 'Gestión de Eventos', icono: <Calendar size={14} /> },
+            { id: 'plantillas', label: 'Plantillas', icono: <LayoutTemplate size={14} /> },
             { id: 'configuracion', label: 'Configuración Global', icono: <Sliders size={14} /> },
             { id: 'seguridad', label: 'Seguridad Master', icono: <ShieldCheck size={14} /> },
           ].map((p) => (
@@ -1490,6 +1493,9 @@ export default function PaginaAdminDashboard() {
             </form>
           </div>
         )}
+
+        {/* ═════════ PLANTILLAS (desde la base de datos) ═════════ */}
+        {pestana === 'plantillas' && <GestionPlantillas />}
 
         {/* ═════════ PESTAÑA 6: SEGURIDAD & AUDITORÍA ═════════ */}
         {pestana === 'seguridad' && (

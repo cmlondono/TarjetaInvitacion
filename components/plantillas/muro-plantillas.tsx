@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { PLANTILLAS, type Plantilla } from '@/lib/estudio/plantillas'
+import type { Plantilla } from '@/lib/estudio/plantillas'
 import { MiniaturaPlantilla } from './miniatura-plantilla'
 
 const CASILLAS = 8
@@ -11,16 +11,17 @@ const CASILLAS_MOVIL = 6
 const RITMO_MS = 1000
 const ESPERA_CASILLA_MS = 950
 
-const DESTACADAS = PLANTILLAS.filter((p) => p.destacada)
-const INICIALES: Plantilla[] = [...DESTACADAS, ...PLANTILLAS.filter((p) => !p.destacada)].slice(0, CASILLAS)
 
 /**
  * Cuadrícula de la landing: cada segundo una casilla al azar se voltea como un naipe
  * y muestra otra plantilla que no esté en pantalla. Se detiene la casilla bajo el mouse,
  * se pausa con la pestaña oculta y con "reducir movimiento" solo hace un fundido.
  */
-export function MuroPlantillas() {
-  const [visibles, setVisibles] = useState<Plantilla[]>(INICIALES)
+export function MuroPlantillas({ plantillas: PLANTILLAS }: { plantillas: Plantilla[] }) {
+  // Primero las destacadas en el panel; luego el resto
+  const [visibles, setVisibles] = useState<Plantilla[]>(() =>
+    [...PLANTILLAS.filter((p) => p.destacada), ...PLANTILLAS.filter((p) => !p.destacada)].slice(0, CASILLAS)
+  )
   const visiblesRef = useRef(visibles)
   visiblesRef.current = visibles
   const casillasRef = useRef<(HTMLDivElement | null)[]>([])

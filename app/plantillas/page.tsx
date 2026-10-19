@@ -3,16 +3,22 @@ import type { Metadata } from 'next'
 import { ArrowLeft, Sparkles } from 'lucide-react'
 import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
 import { MiniaturaPlantilla } from '@/components/plantillas/miniatura-plantilla'
-import { CATEGORIAS_PLANTILLAS, PLANTILLAS, type CategoriaPlantilla } from '@/lib/estudio/plantillas'
+import { CATEGORIAS_PLANTILLAS, type CategoriaPlantilla } from '@/lib/estudio/plantillas'
+import { obtenerPlantillasPublicadas } from '@/lib/estudio/plantillas-servidor'
 
-export const metadata: Metadata = {
-  title: 'Plantillas de invitaciones digitales — Tarjetón',
-  description: `${PLANTILLAS.length} plantillas listas para bodas, XV años, cumpleaños infantiles, baby shower, grados, paseos, novenas y más. Elige una, cambia los datos y compártela por WhatsApp.`,
-  alternates: { canonical: '/plantillas' },
+export async function generateMetadata(): Promise<Metadata> {
+  const PLANTILLAS = await obtenerPlantillasPublicadas()
+  return {
+    title: 'Plantillas de invitaciones digitales — Tarjetón',
+    description: `${PLANTILLAS.length} plantillas listas para bodas, XV años, cumpleaños infantiles, baby shower, grados, paseos, novenas y más. Elige una, cambia los datos y compártela por WhatsApp.`,
+    alternates: { canonical: '/plantillas' },
+  }
 }
 
 export default async function PaginaPlantillas({ searchParams }: { searchParams: Promise<{ categoria?: string }> }) {
   const { categoria } = await searchParams
+  // Las plantillas vienen de la base de datos (administrables en el panel); las ocultas no aparecen
+  const PLANTILLAS = await obtenerPlantillasPublicadas()
   const activa = CATEGORIAS_PLANTILLAS.includes(categoria as CategoriaPlantilla) ? (categoria as CategoriaPlantilla) : null
   const lista = activa ? PLANTILLAS.filter((p) => p.categoria === activa) : PLANTILLAS
 

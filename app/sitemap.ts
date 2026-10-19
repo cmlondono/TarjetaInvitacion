@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next'
-import { PLANTILLAS } from '@/lib/estudio/plantillas'
+import { obtenerPlantillasPublicadas } from '@/lib/estudio/plantillas-servidor'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const PLANTILLAS = await obtenerPlantillasPublicadas()
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.startsWith('http')
     ? process.env.NEXT_PUBLIC_APP_URL
     : 'https://www.tarjeton.online'

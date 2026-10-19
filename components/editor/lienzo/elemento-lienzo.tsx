@@ -177,8 +177,11 @@ export function ElementoLienzoVista({
         textAlign: 'center',
         ...estiloTextoACss({ ...elemento.estiloTexto, colorFondo: undefined }, true),
       }
+      // Claves distintas: al terminar de escribir se monta un nodo nuevo. Si React reutilizara el
+      // nodo editable, sumaría el texto guardado al que el usuario escribió («holahola»).
       contenido = editandoTexto ? (
         <div
+          key="escribiendo"
           ref={refTexto}
           contentEditable="plaintext-only"
           suppressContentEditableWarning
@@ -202,9 +205,9 @@ export function ElementoLienzoVista({
         />
       ) : (
         elemento.estiloTexto?.curva && elemento.texto ? (
-        <TextoCurvo elemento={elemento} fuenteCuerpo={fuenteCuerpo} />
+        <TextoCurvo key="curvo" elemento={elemento} fuenteCuerpo={fuenteCuerpo} />
       ) : (
-        <div style={estiloTexto} {...atributosFuente(elemento.estiloTexto)}>
+        <div key="vista" style={estiloTexto} {...atributosFuente(elemento.estiloTexto)}>
           <span
             style={
               elemento.estiloTexto?.colorFondo

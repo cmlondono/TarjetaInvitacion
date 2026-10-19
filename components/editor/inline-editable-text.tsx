@@ -188,6 +188,8 @@ export function InlineEditableText({
   if (estaEditando) {
     return (
       <Etiqueta
+        // Nodo propio para escribir: al terminar se monta otro y el texto no se duplica
+        key="escribiendo"
         ref={ref as any}
         data-texto-clave={claveTexto || undefined}
         contentEditable="plaintext-only"
@@ -209,6 +211,7 @@ export function InlineEditableText({
 
   return (
     <Etiqueta
+      key="vista"
       data-texto-clave={claveTexto || undefined}
       onClick={manejarClick}
       onPointerDown={iniciarArrastre}

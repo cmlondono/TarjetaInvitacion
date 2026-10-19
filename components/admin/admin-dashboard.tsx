@@ -49,7 +49,9 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
   const [evento, setEvento] = useState<DetalleEvento>(eventoInicial)
   const [invitados, setInvitados] = useState<Invitado[]>([])
   const [nombreNuevo, setNombreNuevo] = useState('')
-  const [pasesNuevo, setPasesNuevo] = useState(1)
+  // Texto del campo de cupos: puede quedar vacío mientras se escribe; el número válido (1–20) se calcula aparte
+  const [pasesTexto, setPasesTexto] = useState('1')
+  const pasesNuevo = Math.min(20, Math.max(1, parseInt(pasesTexto, 10) || 1))
   const [esPlural, setEsPlural] = useState(false)
   const [telefonoNuevo, setTelefonoNuevo] = useState('')
   const [copiadoAdmin, setCopiadoAdmin] = useState(false)
@@ -283,7 +285,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
 
     sincronizarInvitados()
     setNombreNuevo('')
-    setPasesNuevo(1)
+    setPasesTexto('1')
     setEsPlural(false)
     setTelefonoNuevo('')
     setErrorLimite(null)
@@ -649,8 +651,10 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                 type="number"
                 min={1}
                 max={20}
-                value={pasesNuevo}
-                onChange={(e) => setPasesNuevo(Number(e.target.value))}
+                inputMode="numeric"
+                value={pasesTexto}
+                onChange={(e) => setPasesTexto(e.target.value.replace(/\D/g, '').slice(0, 2))}
+                onBlur={() => setPasesTexto(String(pasesNuevo))}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 focus:border-slate-800 focus:outline-none"
               />
             </div>

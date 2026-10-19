@@ -336,7 +336,7 @@ export interface FotoFondo {
 }
 export type TipoRecorrido = 'pagina' | 'historias' | 'menu'
 /** Escena animada de fondo (dibujos originales para fiestas infantiles y temáticas) */
-export type TipoEscena = 'comic' | 'ciudad' | 'tormenta' | 'castillo' | 'hielo' | 'hadas' | 'aranas'
+export type TipoEscena = 'comic' | 'ciudad' | 'tormenta' | 'castillo' | 'hielo' | 'hadas' | 'aranas' | 'calabazas' | 'fantasmas' | 'brujas'
 export type TipoOrnamento =
   | 'ramas'
   | 'filigrana'

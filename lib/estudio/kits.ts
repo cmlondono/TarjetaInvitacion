@@ -130,6 +130,13 @@ const FILAS: FilaKit[] = [
   ['princesa_hielo', 'Reino de hielo', 'Puertas · aurora y copos animados · azul hielo', ['cumpleanos_infantil', 'navidad'], '#DBEAFE', '#FFFFFF', '#0C2D4D', '#2563EB', '#67E8F9', 'pacifico', 'fredoka', 'copos', 'redondas', 'puertas', 'ninguno', 'Una fiesta de cristal', 'Mis 6 años · Valeria'],
   ['princesa_hadas', 'Jardín de hadas', 'Globo · luciérnagas y mariposas animadas', ['cumpleanos_infantil', 'baby_shower'], '#FCE7F3', '#FFFFFF', '#3B2A4A', '#C026D3', '#34D399', 'pacifico', 'fredoka', 'mariposas', 'redondas', 'globo', 'ninguno', 'Un jardín mágico', 'Mis 4 años · Sofía'],
   ['princesa_real', 'Princesa real', 'Sobre · castillo animado · morado y dorado', ['cumpleanos_infantil', 'quince_anos'], '#E9D5FF', '#FFFFFF', '#3B0764', '#7E22CE', '#FBBF24', 'greatvibes', 'fredoka', 'filigrana', 'redondas', 'sobre', 'ninguno', 'Te invito a mi palacio', 'Mis 7 años · Mariana'],
+  // ─── Halloween / Día de brujas (fondos animados originales) ───
+  ['hw_calabazas', 'Dulce o truco', 'Caja de regalo · calabazas y murciélagos animados', ['disfraces', 'cumpleanos_infantil', 'cumpleanos'], '#1A1033', '#FFF7ED', '#2A1306', '#EA580C', '#A855F7', 'bricolage', 'fredoka', 'estrellas', 'suaves', 'caja', 'ninguno', '¡Dulce o truco!', 'Fiesta de Halloween'],
+  ['hw_fantasmitas', 'Fantasmitas', 'Globo · fantasmas tiernos animados · morado y naranja', ['disfraces', 'cumpleanos_infantil'], '#2E1065', '#FFFFFF', '#2E1065', '#F97316', '#F9A8D4', 'pacifico', 'fredoka', 'estrellas', 'redondas', 'globo', 'ninguno', '¡Bu! Estás invitado', 'Halloween de los peques'],
+  ['hw_brujas', 'Noche de brujas', 'Portada que sube · caldero y bruja en escoba animados', ['disfraces', 'cumpleanos'], '#0F0A1F', '#1C1530', '#F5F3FF', '#A855F7', '#84CC16', 'cinzel', 'dmsans', 'estrellas', 'rectas', 'deslizar', 'ninguno', 'Noche de brujas', 'Fiesta de disfraces'],
+  ['hw_terror', 'Terror elegante', 'Puertas · casa embrujada animada · negro y rojo', ['disfraces', 'cumpleanos', 'corporativo'], '#0A0A0A', '#161616', '#F5F5F5', '#B91C1C', '#F59E0B', 'cinzel', 'dmsans', 'lineas', 'rectas', 'puertas', 'ninguno', 'Si te atreves…', 'Noche del terror'],
+  ['hw_neon', 'Halloween neón', 'Boleto · caldero animado · verde y naranja neón', ['disfraces', 'cumpleanos'], '#0B0B14', '#161625', '#F0FDF4', '#22C55E', '#F97316', 'bricolage', 'dmsans', 'lineas', 'rectas', 'boleto', 'ninguno', 'Monster party', 'Halloween neón'],
+  ['hw_bebe', 'Mi primer Halloween', 'Caja de regalo · calabazas animadas · naranja pastel', ['disfraces', 'cumpleanos_infantil', 'baby_shower'], '#FFEDD5', '#FFFFFF', '#431407', '#F97316', '#8B5CF6', 'pacifico', 'fredoka', 'estrellas', 'redondas', 'caja', 'ninguno', 'Mi primer Halloween', 'Calabacita Emma'],
   ['minimal', 'Minimal', 'Directo · sin ornamentos · blanco y negro', ['boda', 'grado', 'corporativo', 'cumpleanos', 'baby_shower', 'quince_anos', 'bautizo', 'otro', 'aniversario', 'paseo', 'revelacion_genero', 'primera_comunion'], '#EFEFEB', '#FFFFFF', '#171717', '#171717', '#B5B5AE', 'dmsans', 'dmsans', 'lineas', 'rectas', 'directo', 'ninguno', 'Celebremos', 'Ana & Luis'],
 ]
 
@@ -142,6 +149,12 @@ const ESCENA_DEL_KIT: Record<string, TipoEscena> = {
   heroe_trueno: 'tormenta',
   heroe_fuerza: 'comic',
   heroe_aranas: 'aranas',
+  hw_calabazas: 'calabazas',
+  hw_fantasmitas: 'fantasmas',
+  hw_brujas: 'brujas',
+  hw_terror: 'fantasmas',
+  hw_neon: 'brujas',
+  hw_bebe: 'calabazas',
   princesa_castillo: 'castillo',
   princesa_hielo: 'hielo',
   princesa_hadas: 'hadas',

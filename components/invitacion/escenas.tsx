@@ -17,6 +17,9 @@ export const CATALOGO_ESCENAS: { id: TipoEscena; nombre: string; descripcion: st
   { id: 'hielo', nombre: 'Reino de hielo', descripcion: 'Aurora y copos de nieve' },
   { id: 'hadas', nombre: 'Jardín de hadas', descripcion: 'Luciérnagas, flores y mariposas' },
   { id: 'aranas', nombre: 'Telarañas y arañitas', descripcion: 'Ciudad de noche con arañitas héroes colgando' },
+  { id: 'calabazas', nombre: 'Calabazas', descripcion: 'Halloween: luna, calabazas encendidas y murciélagos' },
+  { id: 'fantasmas', nombre: 'Fantasmitas', descripcion: 'Halloween: fantasmas tiernos y casa embrujada' },
+  { id: 'brujas', nombre: 'Caldero de brujas', descripcion: 'Halloween: bruja en escoba y caldero burbujeante' },
 ]
 
 interface Colores {
@@ -83,6 +86,13 @@ const ESTILOS = `
 @keyframes esc-flotar { 0%,100% { transform: translate(0, 0) } 25% { transform: translate(14px, -12px) } 50% { transform: translate(-6px, -24px) } 75% { transform: translate(-14px, -6px) } }
 @keyframes esc-aleteo { 0%,100% { transform: scaleX(1) } 50% { transform: scaleX(.2) } }
 @keyframes esc-mariposa { 0% { transform: translate(-60px, 640px) } 50% { transform: translate(210px, 420px) } 100% { transform: translate(470px, 180px) } }
+@keyframes esc-murcielago { 0% { transform: translate(-60px, 0) } 50% { transform: translate(220px, -50px) } 100% { transform: translate(480px, 20px) } }
+@keyframes esc-alas { 0%,100% { transform: scaleY(1) } 50% { transform: scaleY(.35) } }
+@keyframes esc-vela { 0%,100% { opacity: 1 } 30% { opacity: .65 } 55% { opacity: .95 } 75% { opacity: .75 } }
+@keyframes esc-fantasma { 0%,100% { transform: translate(0, 0) } 50% { transform: translate(10px, -26px) } }
+@keyframes esc-escoba { 0% { transform: translate(-120px, 230px) } 100% { transform: translate(520px, 60px) } }
+@keyframes esc-burbuja { 0% { transform: translateY(0) scale(.6); opacity: 0 } 15% { opacity: 1 } 100% { transform: translateY(-150px) scale(1.2); opacity: 0 } }
+@keyframes esc-llama { 0%,100% { transform: scaleY(1) } 50% { transform: scaleY(1.35) } }
 @keyframes esc-colgar { 0%,100% { transform: translateY(-30px) } 50% { transform: translateY(40px) } }
 @keyframes esc-pendulo { 0%,100% { transform: rotate(-28deg) } 50% { transform: rotate(28deg) } }
 @keyframes esc-mecer { 0%,100% { transform: rotate(-5deg) } 50% { transform: rotate(5deg) } }
@@ -466,7 +476,190 @@ function Aranas({ acento, detalle, id }: Colores & { id: string }) {
   )
 }
 
+// ─────────── Halloween (dibujos tiernos y originales) ───────────
+
+const MURCIELAGO = 'M0 0 C-6 -7 -15 -7 -22 -2 C-17 -2 -15 2 -15 6 C-12 2 -8 3 -6 7 C-4 3 -2 2 0 3 C2 2 4 3 6 7 C8 3 12 2 15 6 C15 2 17 -2 22 -2 C15 -7 6 -7 0 0 Z'
+const MURCIELAGOS = lista(6, 41, (r, i) => ({ y: 80 + r() * 380, t: 0.7 + r() * 0.9, d: i * 2.3 + r() * 2, dur: 9 + r() * 7 }))
+
+function Murcielagos({ color }: { color: string }) {
+  return (
+    <>
+      {MURCIELAGOS.map((m, i) => (
+        <g key={i} transform={`translate(0 ${redondear(m.y)})`}>
+          <g style={anim('esc-murcielago', m.dur, m.d, { animationTimingFunction: 'linear' })}>
+            <g transform={`scale(${redondear(m.t)})`}>
+              <g style={{ ...anim('esc-alas', 0.32, i * 0.07), ...propio }}>
+                <path d={MURCIELAGO} fill={color} />
+              </g>
+              <circle cx="0" cy="-1" r="3.2" fill={color} />
+            </g>
+          </g>
+        </g>
+      ))}
+    </>
+  )
+}
+
+/** Calabaza con cara encendida (la luz parpadea como una vela) */
+function Calabaza({ t, color, luz, i }: { t: number; color: string; luz: string; i: number }) {
+  return (
+    <g>
+      <rect x={-t * 0.08} y={-t * 1.05} width={t * 0.16} height={t * 0.3} rx={t * 0.05} fill="#4D7C0F" />
+      <ellipse cx={-t * 0.5} cy="0" rx={t * 0.55} ry={t * 0.8} style={{ fill: `color-mix(in srgb, ${color} 82%, #000)` }} />
+      <ellipse cx={t * 0.5} cy="0" rx={t * 0.55} ry={t * 0.8} style={{ fill: `color-mix(in srgb, ${color} 82%, #000)` }} />
+      <ellipse cx="0" cy="0" rx={t * 0.62} ry={t * 0.84} fill={color} />
+      <g style={anim('esc-vela', 1.4 + (i % 3) * 0.4, i * 0.3)}>
+        <polygon points={`${-t * 0.42},${-t * 0.12} ${-t * 0.18},${-t * 0.12} ${-t * 0.3},${-t * 0.38}`} fill={luz} />
+        <polygon points={`${t * 0.18},${-t * 0.12} ${t * 0.42},${-t * 0.12} ${t * 0.3},${-t * 0.38}`} fill={luz} />
+        <path d={`M${-t * 0.45} ${t * 0.12} L${-t * 0.27} ${t * 0.3} L${-t * 0.12} ${t * 0.16} L0 ${t * 0.32} L${t * 0.12} ${t * 0.16} L${t * 0.27} ${t * 0.3} L${t * 0.45} ${t * 0.12} Q0 ${t * 0.62} ${-t * 0.45} ${t * 0.12} Z`} fill={luz} />
+      </g>
+    </g>
+  )
+}
+
+function Calabazas({ acento, detalle, id }: Colores & { id: string }) {
+  const calabazas: [number, number, number][] = [
+    [70, 720, 38],
+    [190, 745, 30],
+    [310, 712, 44],
+    [130, 770, 22],
+    [372, 768, 24],
+  ]
+  return (
+    <>
+      <defs>
+        <linearGradient id={`${id}-cielo`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style={{ stopColor: '#120A26' }} />
+          <stop offset="1" style={{ stopColor: `color-mix(in srgb, ${detalle} 45%, #1A1033)` }} />
+        </linearGradient>
+        <radialGradient id={`${id}-luna`}>
+          <stop offset="0.55" stopColor="#FDE68A" />
+          <stop offset="1" stopColor="#FDE68A" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="400" height="800" fill={`url(#${id}-cielo)`} />
+      {ESTRELLAS.map((e, i) => (
+        <circle key={i} cx={e.x} cy={e.y} r={e.t * 0.8} fill="#fff" style={anim('esc-titilar', e.dur, e.d)} />
+      ))}
+      <circle cx="270" cy="170" r="110" fill={`url(#${id}-luna)`} opacity="0.45" />
+      <circle cx="270" cy="170" r="66" fill="#FDE68A" />
+      <Murcielagos color="#0B0614" />
+      <ellipse cx="80" cy="830" rx="260" ry="150" fill="#1B1230" />
+      <ellipse cx="340" cy="840" rx="240" ry="160" fill="#140C26" />
+      {calabazas.map(([x, y, t], i) => (
+        <g key={i} transform={`translate(${x} ${y})`}>
+          <Calabaza t={t} color={acento} luz="#FDE047" i={i} />
+        </g>
+      ))}
+    </>
+  )
+}
+
+const FANTASMAS = lista(5, 43, (r, i) => ({ x: 40 + i * 78 + r() * 20, y: 140 + r() * 420, t: 0.8 + r() * 0.7, d: r() * 4, dur: 3.5 + r() * 2.5 }))
+
+function Fantasmas({ acento, detalle, id }: Colores & { id: string }) {
+  return (
+    <>
+      <defs>
+        <linearGradient id={`${id}-cielo`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style={{ stopColor: '#0F0B2A' }} />
+          <stop offset="1" style={{ stopColor: `color-mix(in srgb, ${acento} 30%, #24124A)` }} />
+        </linearGradient>
+      </defs>
+      <rect width="400" height="800" fill={`url(#${id}-cielo)`} />
+      {ESTRELLAS.map((e, i) => (
+        <circle key={i} cx={e.x} cy={e.y} r={e.t * 0.8} fill="#fff" style={anim('esc-titilar', e.dur, e.d)} />
+      ))}
+      <circle cx="80" cy="120" r="40" fill="#F5F3FF" opacity="0.9" />
+      <circle cx="96" cy="110" r="36" fill="#120D30" />
+      {/* Casa embrujada */}
+      <path d="M150 800 V640 L120 640 L200 560 L280 640 L250 640 V800 Z M232 600 V520 L218 520 L245 470 L272 520 L258 520 V620 Z" fill="#090616" />
+      {[
+        [175, 670],
+        [210, 670],
+        [175, 720],
+        [238, 545],
+      ].map(([x, y], i) => (
+        <rect key={i} x={x} y={y} width="16" height="22" rx="2" fill="#FDE047" style={anim('esc-vela', 1.6 + i * 0.4, i * 0.5)} />
+      ))}
+      <path d="M0 800 V760 Q100 730 200 765 T400 750 V800 Z" fill="#090616" />
+      {FANTASMAS.map((f, i) => (
+        <g key={i} transform={`translate(${redondear(f.x)} ${redondear(f.y)}) scale(${redondear(f.t)})`}>
+          <g style={anim('esc-fantasma', f.dur, f.d)}>
+            <path d="M-22 14 V-6 A22 22 0 0 1 22 -6 V14 L15 8 L8 14 L0 8 L-8 14 L-15 8 Z" fill="#FFFFFF" opacity="0.94" />
+            <ellipse cx="-7" cy="-6" rx="3.2" ry="4.4" fill="#1E1B4B" />
+            <ellipse cx="7" cy="-6" rx="3.2" ry="4.4" fill="#1E1B4B" />
+            <circle cx="-12" cy="1" r="3" fill={detalle} opacity="0.6" />
+            <circle cx="12" cy="1" r="3" fill={detalle} opacity="0.6" />
+            <ellipse cx="0" cy="3" rx="2.6" ry="3" fill="#1E1B4B" />
+          </g>
+        </g>
+      ))}
+      <Murcielagos color="#090616" />
+    </>
+  )
+}
+
+const BURBUJAS = lista(12, 47, (r) => ({ x: 160 + r() * 80, t: 4 + r() * 7, d: r() * 3, dur: 2 + r() * 2 }))
+
+function Brujas({ acento, detalle, id }: Colores & { id: string }) {
+  return (
+    <>
+      <defs>
+        <linearGradient id={`${id}-cielo`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style={{ stopColor: '#0B0618' }} />
+          <stop offset="1" style={{ stopColor: `color-mix(in srgb, ${acento} 40%, #1A0F33)` }} />
+        </linearGradient>
+        <radialGradient id={`${id}-luna`}>
+          <stop offset="0.55" stopColor="#FEF3C7" />
+          <stop offset="1" stopColor="#FEF3C7" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id={`${id}-brillo`}>
+          <stop offset="0" stopColor={detalle} stopOpacity="0.7" />
+          <stop offset="1" stopColor={detalle} stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="400" height="800" fill={`url(#${id}-cielo)`} />
+      {ESTRELLAS.map((e, i) => (
+        <circle key={i} cx={e.x} cy={e.y} r={e.t * 0.8} fill="#fff" style={anim('esc-titilar', e.dur, e.d)} />
+      ))}
+      <circle cx="200" cy="230" r="150" fill={`url(#${id}-luna)`} opacity="0.4" />
+      <circle cx="200" cy="230" r="96" fill="#FEF3C7" />
+      <path d={telarana(0, 0, 120, 0, 90)} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.2" />
+      <path d={telarana(400, 0, 110, 90, 180)} fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.2" />
+      {/* Bruja en escoba (silueta) cruzando el cielo */}
+      <g style={anim('esc-escoba', 12, 3, { animationTimingFunction: 'linear' })}>
+        <g style={anim('esc-fantasma', 2.2)}>
+          <line x1="-40" y1="14" x2="34" y2="4" stroke="#0B0614" strokeWidth="4" strokeLinecap="round" />
+          <polygon points="-40,14 -64,2 -66,28" fill="#0B0614" />
+          <polygon points="-6,10 -22,-16 8,-14 14,8" fill="#0B0614" />
+          <circle cx="2" cy="-22" r="8" fill="#0B0614" />
+          <polygon points="-12,-26 18,-26 6,-58" fill="#0B0614" />
+          <path d="M-8 -12 Q-30 -6 -34 10" stroke="#0B0614" strokeWidth="6" fill="none" strokeLinecap="round" />
+        </g>
+      </g>
+      {/* Caldero burbujeante */}
+      <ellipse cx="200" cy="640" rx="120" ry="60" fill={`url(#${id}-brillo)`} />
+      {BURBUJAS.map((b, i) => (
+        <circle key={i} cx={redondear(b.x)} cy="650" r={redondear(b.t)} fill={detalle} opacity="0.85" style={{ ...anim('esc-burbuja', b.dur, b.d, { animationTimingFunction: 'ease-out' }), ...propio }} />
+      ))}
+      {[-38, -12, 14, 40].map((x, i) => (
+        <g key={x} transform={`translate(${200 + x} 770)`}>
+          <polygon points="-12,0 0,-34 12,0" fill={i % 2 ? '#F97316' : '#FACC15'} style={{ ...anim('esc-llama', 0.5 + i * 0.12, i * 0.2), transformBox: 'fill-box', transformOrigin: 'center bottom' }} />
+        </g>
+      ))}
+      <path d="M118 660 Q120 760 200 768 Q280 760 282 660 Z" fill="#0B0614" />
+      <ellipse cx="200" cy="660" rx="86" ry="16" fill="#1F1530" />
+      <ellipse cx="200" cy="662" rx="74" ry="11" fill={detalle} />
+      <path d="M0 800 V780 Q200 760 400 780 V800 Z" fill="#0B0614" />
+    </>
+  )
+}
+
 const ESCENAS: Record<TipoEscena, (p: Colores & { id: string }) => React.ReactElement> = {
+  calabazas: Calabazas,
+  fantasmas: Fantasmas,
+  brujas: Brujas,
   aranas: Aranas,
   comic: Comic,
   ciudad: Ciudad,

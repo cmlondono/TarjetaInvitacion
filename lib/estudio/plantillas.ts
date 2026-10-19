@@ -40,6 +40,7 @@ export type CategoriaPlantilla =
   | 'Bodas'
   | 'XV años'
   | 'Infantiles'
+  | 'Halloween'
   | 'Cumpleaños'
   | 'Bebés'
   | 'Religiosas'
@@ -52,6 +53,7 @@ export const CATEGORIAS_PLANTILLAS: CategoriaPlantilla[] = [
   'Bodas',
   'XV años',
   'Infantiles',
+  'Halloween',
   'Cumpleaños',
   'Bebés',
   'Religiosas',
@@ -169,6 +171,273 @@ export const PLANTILLAS: Plantilla[] = [
     id: 'inf-gamer', nombre: 'Fiesta gamer', descripcion: 'Para preadolescentes de 10 a 14', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'gamer',
     nombresEjemplo: 'Nivel 12 · Matías', lugarEjemplo: 'Sala de videojuegos Arena', hora: '16:00', kicker: 'Nivel desbloqueado',
     momentos: [['16:00', 'Torneo'], ['18:00', 'Pizza y torta']],
+  },
+
+  // ─────────── Más bodas ───────────
+  {
+    id: 'boda-esmeralda', nombre: 'Boda esmeralda', descripcion: 'Verde esmeralda y oro, elegante y sobria', categoria: 'Bodas', tipo: 'boda', kitId: 'esmeralda',
+    nombresEjemplo: 'Daniela & Camilo', lugarEjemplo: 'Club El Rancho, Bogotá', hora: '18:00',
+    momentos: [['18:00', 'Ceremonia'], ['19:30', 'Cena'], ['21:00', 'Fiesta']], vestimenta: { etiqueta: 'Formal', nota: 'Evita el verde esmeralda: es el color de la novia.' }, extras: ['padrinos', 'hospedaje'],
+  },
+  {
+    id: 'boda-champana', nombre: 'Boda champaña', descripcion: 'Luminosa, en tonos champaña y perla', categoria: 'Bodas', tipo: 'boda', kitId: 'champana',
+    nombresEjemplo: 'Mariana & Felipe', lugarEjemplo: 'Hacienda Fagua, Chía', hora: '16:00',
+    momentos: [['16:00', 'Ceremonia'], ['17:30', 'Cóctel'], ['19:00', 'Cena y baile']], vestimenta: { etiqueta: 'Formal de día' }, extras: ['historia'],
+    ejemplo: { historia: 'Nos conocimos en la universidad y desde entonces cada brindis lo hemos hecho juntos.' },
+  },
+  {
+    id: 'boda-civil', nombre: 'Boda civil', descripcion: 'Íntima y minimalista, para la notaría y un almuerzo', categoria: 'Bodas', tipo: 'boda', kitId: 'minimal',
+    nombresEjemplo: 'Ana & Luis', lugarEjemplo: 'Notaría 21 y almuerzo en Usaquén', hora: '11:00', kicker: 'Nos casamos por lo civil',
+    momentos: [['11:00', 'Firma en la notaría'], ['13:00', 'Almuerzo']],
+  },
+  {
+    id: 'boda-tropical', nombre: 'Boda tropical', descripcion: 'Colores vivos y palmeras para tierra caliente', categoria: 'Bodas', tipo: 'boda', kitId: 'tropical',
+    nombresEjemplo: 'Sara & Julián', lugarEjemplo: 'Finca Los Almendros, Santa Fe de Antioquia', hora: '17:00',
+    momentos: [['17:00', 'Ceremonia al aire libre'], ['19:00', 'Fiesta']], vestimenta: { etiqueta: 'Ropa fresca y colorida' }, extras: ['hospedaje'],
+  },
+
+  // ─────────── Más XV años ───────────
+  {
+    id: 'xv-champana', nombre: 'XV champaña', descripcion: 'Delicada y brillante, tonos champaña', categoria: 'XV años', tipo: 'quince_anos', kitId: 'champana',
+    nombresEjemplo: 'Mis XV · Gabriela', lugarEjemplo: 'Salón Real, Hotel Dann', hora: '20:00', kicker: 'Mis quince años',
+    momentos: [['20:00', 'Entrada'], ['20:30', 'Vals'], ['21:30', 'Fiesta']], vestimenta: { etiqueta: 'Elegante' }, extras: ['padrinos', 'galeria_fotos'],
+  },
+  {
+    id: 'xv-gala', nombre: 'XV de gala', descripcion: 'Noche de gala en negro y dorado', categoria: 'XV años', tipo: 'quince_anos', kitId: 'gala',
+    nombresEjemplo: 'Mis XV · Valentina', lugarEjemplo: 'Club Campestre, Medellín', hora: '20:00', kicker: 'Una noche de gala',
+    momentos: [['20:00', 'Recepción'], ['21:00', 'Vals y brindis'], ['22:00', 'Hora loca']], vestimenta: { etiqueta: 'Gala' }, extras: ['playlist'],
+  },
+  {
+    id: 'xv-princesa', nombre: 'XV de princesa', descripcion: 'Palacio animado en morado y dorado', categoria: 'XV años', tipo: 'quince_anos', kitId: 'princesa_real',
+    nombresEjemplo: 'Mis XV · Isabella', lugarEjemplo: 'Hacienda Santa Bárbara', hora: '19:30', kicker: 'Te invito a mi palacio',
+    momentos: [['19:30', 'Llegada'], ['20:30', 'Vals'], ['21:30', 'Fiesta']], vestimenta: { etiqueta: 'Elegante', colores: ['#7E22CE', '#FBBF24'] }, extras: ['padrinos'],
+  },
+
+  // ─────────── Más infantiles ───────────
+  {
+    id: 'inf-safari', nombre: 'Safari', descripcion: 'Aventura entre leones, jirafas y selva', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'safari',
+    nombresEjemplo: 'Mis 3 años · Tomás', lugarEjemplo: 'Parque Jaime Duque', hora: '11:00', kicker: 'Aventura safari',
+    vestimenta: { etiqueta: 'Ropa de explorador' }, regalos: ['Animales de juguete', 'Binoculares', 'Libro de animales'], extras: ['lista_regalos'],
+  },
+  {
+    id: 'inf-osito', nombre: 'Osito tierno', descripcion: 'Azul suave para los más pequeños', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'osito_azul',
+    nombresEjemplo: 'Mis 2 años · Lucas', lugarEjemplo: 'Casa de los abuelos', hora: '15:00',
+    regalos: ['Peluche', 'Bloques de construcción', 'Libro de tela'], extras: ['lista_regalos'],
+  },
+  {
+    id: 'inf-pop', nombre: 'Fiesta pop infantil', descripcion: 'Colores vivos, confeti y mucha energía', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'pop',
+    nombresEjemplo: 'Mis 8 años · Sara', lugarEjemplo: 'Trampolines Jump Park', hora: '14:00', kicker: '¡A saltar!',
+    momentos: [['14:00', 'Trampolines'], ['16:00', 'Torta']], vestimenta: { etiqueta: 'Medias antideslizantes' },
+  },
+  {
+    id: 'inf-mariposas', nombre: 'Mariposas', descripcion: 'Lila y rosa con mariposas, dulce y alegre', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'lila_mariposas',
+    nombresEjemplo: 'Mis 5 años · Abril', lugarEjemplo: 'Jardín Botánico, kiosco 3', hora: '10:00',
+    vestimenta: { etiqueta: 'Toques lila' }, extras: ['galeria_fotos'],
+  },
+
+  // ─────────── Más cumpleaños ───────────
+  {
+    id: 'cumple-30', nombre: 'Mis 30 de gala', descripcion: 'Noche elegante en negro y dorado', categoria: 'Cumpleaños', tipo: 'cumpleanos', kitId: 'gala',
+    nombresEjemplo: 'Los 30 de Natalia', lugarEjemplo: 'Rooftop Hotel B3', hora: '20:00', kicker: 'Treinta y fabulosa',
+    vestimenta: { etiqueta: 'Elegante en negro' }, extras: ['playlist', 'vaca_regalo'],
+  },
+  {
+    id: 'cumple-playa', nombre: 'Cumple en la playa', descripcion: 'Sol, mar y atardecer caribeño', categoria: 'Cumpleaños', tipo: 'cumpleanos', kitId: 'playa',
+    nombresEjemplo: 'Los 40 de Carlos', lugarEjemplo: 'Playa Blanca, Barú', hora: '12:00',
+    momentos: [['12:00', 'Lancha desde el muelle'], ['13:00', 'Almuerzo en la playa'], ['17:30', 'Atardecer']], vestimenta: { etiqueta: 'Blanco y ropa de playa' }, extras: ['hospedaje'],
+  },
+  {
+    id: 'cumple-asado', nombre: 'Cumple con asado', descripcion: 'Parrilla, piscina y amigos en la finca', categoria: 'Cumpleaños', tipo: 'cumpleanos', kitId: 'asado',
+    nombresEjemplo: 'Los 35 de Juan Pablo', lugarEjemplo: 'Finca El Retiro, Girardot', hora: '11:00',
+    momentos: [['11:00', 'Piscina'], ['14:00', 'Asado'], ['18:00', 'Torta']], vestimenta: { etiqueta: 'Trae vestido de baño' }, extras: ['vaca_regalo'],
+  },
+  {
+    id: 'cumple-neon', nombre: 'Cumple neón', descripcion: 'Luces de neón y fiesta toda la noche', categoria: 'Cumpleaños', tipo: 'cumpleanos', kitId: 'neon_xv',
+    nombresEjemplo: 'Los 25 de Laura', lugarEjemplo: 'Discoteca La Octava', hora: '21:00', kicker: 'Que brille la noche',
+    vestimenta: { etiqueta: 'Algo que brille' }, extras: ['playlist'],
+  },
+  {
+    id: 'cumple-tropical', nombre: 'Cumple tropical', descripcion: 'Frutas, flores y colores de verano', categoria: 'Cumpleaños', tipo: 'cumpleanos', kitId: 'tropical',
+    nombresEjemplo: 'Los 28 de Sofía', lugarEjemplo: 'Terraza de la casa', hora: '15:00',
+    vestimenta: { etiqueta: 'Estampados tropicales' }, extras: ['playlist'],
+  },
+  {
+    id: 'cumple-60', nombre: 'Sesenta años de historia', descripcion: 'Brindis clásico para celebrar a los papás o abuelos', categoria: 'Cumpleaños', tipo: 'cumpleanos', kitId: 'champana',
+    nombresEjemplo: 'Los 60 de Martha', lugarEjemplo: 'Restaurante La Fragata', hora: '13:00', kicker: 'Celebremos su vida',
+    extras: ['galeria_fotos', 'mensaje_libre'], ejemplo: { mensaje: ['Gracias por tanto amor y tantos años de alegría.', 'Tus hijos y nietos'] },
+  },
+
+  // ─────────── Más bebés ───────────
+  {
+    id: 'baby-safari', nombre: 'Baby shower safari', descripcion: 'Animalitos de la selva en tonos tierra', categoria: 'Bebés', tipo: 'baby_shower', kitId: 'safari',
+    nombresEjemplo: 'Baby shower de Martín', lugarEjemplo: 'Casa de la tía Ana', hora: '15:00',
+    regalos: ['Pañales etapa 1', 'Body de algodón', 'Cobija'], extras: ['lista_regalos', 'juego_adivinar'],
+  },
+  {
+    id: 'baby-boho', nombre: 'Baby shower boho', descripcion: 'Terracota y pampas, moderno y cálido', categoria: 'Bebés', tipo: 'baby_shower', kitId: 'boho',
+    nombresEjemplo: 'Baby shower de Luna', lugarEjemplo: 'Café Origen, Envigado', hora: '10:00',
+    regalos: ['Portabebé', 'Ropa de 0 a 3 meses', 'Libros de cartón'], extras: ['lista_regalos'],
+  },
+  {
+    id: 'baby-mariposas', nombre: 'Baby shower mariposas', descripcion: 'Lila con mariposas para una niña', categoria: 'Bebés', tipo: 'baby_shower', kitId: 'lila_mariposas',
+    nombresEjemplo: 'Baby shower de Antonia', lugarEjemplo: 'Salón de eventos del conjunto', hora: '15:00',
+    regalos: ['Pañales etapa 2', 'Bañera', 'Monitor de bebé'], extras: ['lista_regalos', 'juego_adivinar'],
+  },
+  {
+    id: 'revelacion-nube', nombre: 'Revelación entre nubes', descripcion: 'Pastel y suave para descubrir si es niño o niña', categoria: 'Bebés', tipo: 'revelacion_genero', kitId: 'nube',
+    nombresEjemplo: '¿Niño o niña? · Familia Rojas', lugarEjemplo: 'Parque de la 93', hora: '16:00', kicker: '¿Lazo o corbatín?',
+    extras: ['juego_adivinar'],
+  },
+
+  // ─────────── Más religiosas ───────────
+  {
+    id: 'bautizo-nube', nombre: 'Bautizo entre nubes', descripcion: 'Tierno y celestial, colores pastel', categoria: 'Religiosas', tipo: 'bautizo', kitId: 'nube',
+    nombresEjemplo: 'Bautizo de Samuel', lugarEjemplo: 'Parroquia Santa Teresita', hora: '10:00',
+    momentos: [['10:00', 'Ceremonia'], ['12:00', 'Almuerzo familiar']], extras: ['padrinos'],
+  },
+  {
+    id: 'comunion-clasica', nombre: 'Primera comunión clásica', descripcion: 'Blanco y oro, solemne y elegante', categoria: 'Religiosas', tipo: 'primera_comunion', kitId: 'iglesia',
+    nombresEjemplo: 'Primera comunión de Valeria', lugarEjemplo: 'Iglesia de Lourdes', hora: '09:00',
+    momentos: [['09:00', 'Misa'], ['11:30', 'Celebración']], extras: ['padrinos', 'mensaje_libre'],
+    ejemplo: { mensaje: ['Dejen que los niños vengan a mí.', 'Mateo 19:14'] },
+  },
+  {
+    id: 'bautizo-rustico', nombre: 'Bautizo campestre', descripcion: 'Rústico y cálido, para celebrar en la finca', categoria: 'Religiosas', tipo: 'bautizo', kitId: 'rustico',
+    nombresEjemplo: 'Bautizo de Emilia', lugarEjemplo: 'Capilla de la finca San José', hora: '11:00',
+    momentos: [['11:00', 'Ceremonia'], ['13:00', 'Almuerzo campestre']], extras: ['padrinos'],
+  },
+
+  // ─────────── Más celebraciones ───────────
+  {
+    id: 'aniversario-oro', nombre: 'Bodas de oro', descripcion: 'Cincuenta años de amor, en dorado', categoria: 'Celebraciones', tipo: 'aniversario', kitId: 'champana',
+    nombresEjemplo: 'Gloria & Hernando · 50 años', lugarEjemplo: 'Club Militar', hora: '13:00', kicker: '50 años juntos',
+    extras: ['historia', 'galeria_fotos'], ejemplo: { historia: 'Se casaron en 1977 en Tunja. Cinco hijos, nueve nietos y medio siglo de amor después, queremos celebrarlos.' },
+  },
+  {
+    id: 'despedida-playa', nombre: 'Despedida en la playa', descripcion: 'Último viaje de soltera con las amigas', categoria: 'Celebraciones', tipo: 'despedida_soltera', kitId: 'playa',
+    nombresEjemplo: 'La despedida de Caro', lugarEjemplo: 'Santa Marta, Rodadero', hora: '10:00', kicker: 'Último viaje de soltera',
+    vestimenta: { etiqueta: 'Blanco para la novia, rosa para las amigas' }, extras: ['hospedaje', 'vaca_regalo'],
+  },
+  {
+    id: 'grado-gala', nombre: 'Grado de gala', descripcion: 'Celebración de grado en negro y dorado', categoria: 'Celebraciones', tipo: 'grado', kitId: 'gala',
+    nombresEjemplo: 'Grado de Juliana · Medicina', lugarEjemplo: 'Restaurante Andrés DC', hora: '19:00', kicker: '¡Lo logré!',
+    vestimenta: { etiqueta: 'Elegante' }, extras: ['galeria_fotos'],
+  },
+  {
+    id: 'amor-amistad', nombre: 'Amor y amistad', descripcion: 'Celebración de septiembre con amigos', categoria: 'Celebraciones', tipo: 'amor_amistad', kitId: 'amor_amistad',
+    nombresEjemplo: 'Amor y amistad · Los de siempre', lugarEjemplo: 'Casa de Pipe', hora: '19:00', kicker: 'Celebremos la amistad',
+    extras: ['juego_adivinar', 'playlist'],
+  },
+
+  // ─────────── Más salidas ───────────
+  {
+    id: 'paseo-playa', nombre: 'Paseo a la playa', descripcion: 'Plan de amigos o familia al mar', categoria: 'Salidas', tipo: 'paseo', kitId: 'playa',
+    nombresEjemplo: 'Paseo a Coveñas', lugarEjemplo: 'Coveñas, Sucre', hora: '06:00', kicker: '¡Nos vamos al mar!',
+    momentos: [['06:00', 'Salida en bus'], ['13:00', 'Llegada al hotel']], extras: ['hospedaje', 'vaca_regalo'],
+  },
+  {
+    id: 'camping', nombre: 'Fin de semana de camping', descripcion: 'Carpa, fogata y estrellas', categoria: 'Salidas', tipo: 'paseo', kitId: 'rustico',
+    nombresEjemplo: 'Camping en Guatavita', lugarEjemplo: 'Camping Las Águilas, Guatavita', hora: '08:00',
+    momentos: [['08:00', 'Salida'], ['10:30', 'Armar carpas'], ['19:00', 'Fogata']], vestimenta: { etiqueta: 'Ropa abrigada y botas' }, extras: ['vaca_regalo'],
+  },
+  {
+    id: 'viaje-tropical', nombre: 'Viaje de amigos', descripcion: 'Itinerario de viaje, hotel y vaca para los gastos', categoria: 'Salidas', tipo: 'paseo', kitId: 'tropical',
+    nombresEjemplo: 'San Andrés 2027', lugarEjemplo: 'San Andrés Isla', hora: '05:00', kicker: 'Rumbo a la isla',
+    momentos: [['05:00', 'Vuelo'], ['10:00', 'Check-in'], ['15:00', 'Tour en lancha']], extras: ['hospedaje', 'vaca_regalo'],
+  },
+
+  // ─────────── Más diciembre ───────────
+  {
+    id: 'velitas', nombre: 'Noche de velitas', descripcion: 'Alumbrado del 7 de diciembre en familia', categoria: 'Diciembre', tipo: 'navidad', kitId: 'fin_de_ano',
+    nombresEjemplo: 'Noche de velitas · Familia Gómez', lugarEjemplo: 'Frente a la casa de los abuelos', hora: '18:30', kicker: '7 de diciembre',
+    momentos: [['18:30', 'Encendido de velas'], ['19:30', 'Natilla y buñuelos']],
+  },
+  {
+    id: 'cena-navidad', nombre: 'Cena de Navidad', descripcion: 'Elegante, en negro y dorado, para el 24', categoria: 'Diciembre', tipo: 'navidad', kitId: 'gala',
+    nombresEjemplo: 'Navidad en familia', lugarEjemplo: 'Casa de los tíos', hora: '20:00', kicker: 'Nochebuena',
+    momentos: [['20:00', 'Novena'], ['21:00', 'Cena'], ['00:00', 'Regalos']], extras: ['juego_adivinar'],
+  },
+  {
+    id: 'navidad-nieve', nombre: 'Navidad de cristal', descripcion: 'Copos de nieve y aurora animados', categoria: 'Diciembre', tipo: 'navidad', kitId: 'princesa_hielo',
+    nombresEjemplo: 'Navidad de los niños', lugarEjemplo: 'Salón comunal del conjunto', hora: '16:00', kicker: 'Una Navidad mágica',
+    momentos: [['16:00', 'Llegada de Papá Noel'], ['17:00', 'Entrega de regalos']],
+  },
+
+  // ─────────── Más empresa ───────────
+  {
+    id: 'empresa-fin-de-ano', nombre: 'Fiesta de fin de año', descripcion: 'Celebración de cierre de año del equipo', categoria: 'Empresa', tipo: 'corporativo', kitId: 'fin_de_ano',
+    nombresEjemplo: 'Fiesta de fin de año · Grupo Andes', lugarEjemplo: 'Hotel Tequendama, salón Rojo', hora: '19:00', kicker: 'Gracias por este año',
+    momentos: [['19:00', 'Bienvenida'], ['20:00', 'Reconocimientos'], ['21:00', 'Cena y baile']], vestimenta: { etiqueta: 'Elegante' },
+  },
+  {
+    id: 'empresa-lanzamiento', nombre: 'Lanzamiento de producto', descripcion: 'Moderna y limpia, para presentar algo nuevo', categoria: 'Empresa', tipo: 'corporativo', kitId: 'minimal',
+    nombresEjemplo: 'Lanzamiento App Mercado 2.0', lugarEjemplo: 'Ágora Bogotá', hora: '09:00', kicker: 'Te presentamos lo nuevo',
+    momentos: [['09:00', 'Registro'], ['09:30', 'Presentación'], ['11:00', 'Networking']],
+  },
+  {
+    id: 'empresa-integracion', nombre: 'Integración del equipo', descripcion: 'Asado y juegos para integrar al equipo', categoria: 'Empresa', tipo: 'corporativo', kitId: 'asado',
+    nombresEjemplo: 'Integración Equipo Ventas', lugarEjemplo: 'Finca La Esperanza, La Calera', hora: '09:00',
+    momentos: [['09:00', 'Salida en bus'], ['11:00', 'Juegos por equipos'], ['13:00', 'Asado']], vestimenta: { etiqueta: 'Ropa deportiva' },
+  },
+  {
+    id: 'empresa-gala', nombre: 'Gala de premiación', descripcion: 'Noche de reconocimientos en negro y dorado', categoria: 'Empresa', tipo: 'corporativo', kitId: 'gala',
+    nombresEjemplo: 'Premios Excelencia 2027', lugarEjemplo: 'Teatro Colsubsidio', hora: '19:00', kicker: 'Noche de premiación',
+    vestimenta: { etiqueta: 'Etiqueta' },
+  },
+
+  // ─────────── Halloween / Día de brujas ───────────
+  {
+    id: 'hw-dulce-truco', nombre: 'Dulce o truco', descripcion: 'Halloween infantil con calabazas y murciélagos animados', categoria: 'Halloween', tipo: 'disfraces', kitId: 'hw_calabazas',
+    nombresEjemplo: 'Halloween de los primos', lugarEjemplo: 'Casa de la abuela Marta', hora: '16:00', kicker: '¡Dulce o truco!', destacada: true,
+    momentos: [['16:00', 'Llegada disfrazados'], ['16:30', 'Recorrido de dulces'], ['17:30', 'Concurso de disfraces']],
+    vestimenta: { etiqueta: 'Disfraz obligatorio', nota: 'Trae tu calabaza o bolsa para los dulces.' }, extras: ['juego_adivinar'],
+  },
+  {
+    id: 'hw-fantasmitas', nombre: 'Fantasmitas', descripcion: 'Tierno, para los más pequeños, sin sustos', categoria: 'Halloween', tipo: 'disfraces', kitId: 'hw_fantasmitas',
+    nombresEjemplo: 'Halloween de los peques', lugarEjemplo: 'Jardín infantil Pasitos', hora: '10:00', kicker: '¡Bu! Estás invitado',
+    momentos: [['10:00', 'Desfile de disfraces'], ['11:00', 'Manualidades de calabaza'], ['12:00', 'Merienda']],
+    vestimenta: { etiqueta: 'Disfraz tierno y cómodo' },
+  },
+  {
+    id: 'hw-conjunto', nombre: 'Halloween en el conjunto', descripcion: 'Recorrido de dulces por las torres del conjunto', categoria: 'Halloween', tipo: 'disfraces', kitId: 'hw_fantasmitas',
+    nombresEjemplo: 'Halloween Conjunto Los Robles', lugarEjemplo: 'Salón comunal, Conjunto Los Robles', hora: '17:00', kicker: '¡Niños del conjunto, a disfrazarse!', destacada: true,
+    momentos: [['17:00', 'Encuentro en el salón comunal'], ['17:30', 'Recorrido por las torres'], ['19:00', 'Premiación del mejor disfraz']],
+    vestimenta: { etiqueta: 'Disfraz y linterna', nota: 'Los niños siempre acompañados de un adulto.' }, extras: ['juego_adivinar'],
+  },
+  {
+    id: 'hw-noche-brujas', nombre: 'Noche de brujas', descripcion: 'Fiesta de disfraces para adultos con caldero animado', categoria: 'Halloween', tipo: 'disfraces', kitId: 'hw_brujas',
+    nombresEjemplo: 'Noche de brujas 2027', lugarEjemplo: 'Casa de Laura, Chapinero', hora: '20:00', kicker: 'El caldero ya está hirviendo',
+    momentos: [['20:00', 'Pócimas de bienvenida'], ['21:30', 'Concurso de disfraces'], ['22:00', 'Fiesta hasta el amanecer']],
+    vestimenta: { etiqueta: 'Disfraz obligatorio · sin disfraz no entras' }, extras: ['playlist', 'juego_adivinar'],
+  },
+  {
+    id: 'hw-terror', nombre: 'Noche del terror', descripcion: 'Elegante y oscura, con casa embrujada animada', categoria: 'Halloween', tipo: 'disfraces', kitId: 'hw_terror',
+    nombresEjemplo: 'Noche del terror', lugarEjemplo: 'Casona La Candelaria', hora: '21:00', kicker: 'Si te atreves…',
+    momentos: [['21:00', 'Entrada a la casona'], ['22:00', 'Cena de las ánimas'], ['23:00', 'Fiesta']],
+    vestimenta: { etiqueta: 'Disfraz de terror', colores: ['#0A0A0A', '#B91C1C'], nota: 'Solo mayores de 18.' }, extras: ['playlist'],
+  },
+  {
+    id: 'hw-neon', nombre: 'Halloween neón', descripcion: 'Monster party con DJ y luces de neón', categoria: 'Halloween', tipo: 'disfraces', kitId: 'hw_neon',
+    nombresEjemplo: 'Monster Party', lugarEjemplo: 'Terraza Zona T, Bogotá', hora: '21:00', kicker: 'Monster party',
+    momentos: [['21:00', 'Puertas abiertas'], ['22:00', 'DJ set'], ['00:00', 'Premio al mejor disfraz']],
+    vestimenta: { etiqueta: 'Disfraz con algo que brille en la oscuridad' }, extras: ['playlist', 'vaca_regalo'],
+  },
+  {
+    id: 'hw-bebe', nombre: 'Mi primer Halloween', descripcion: 'Para el primer Halloween del bebé, tierno y naranja', categoria: 'Halloween', tipo: 'disfraces', kitId: 'hw_bebe',
+    nombresEjemplo: 'Calabacita Emma', lugarEjemplo: 'Casa de los papás', hora: '15:00', kicker: 'Mi primer Halloween',
+    momentos: [['15:00', 'Sesión de fotos disfrazados'], ['16:00', 'Onces y torta de calabaza']],
+    vestimenta: { etiqueta: 'Toques naranja o morado' }, extras: ['galeria_fotos'],
+  },
+  {
+    id: 'hw-oficina', nombre: 'Halloween en la oficina', descripcion: 'Concurso de disfraces y dulces para el equipo', categoria: 'Halloween', tipo: 'corporativo', kitId: 'hw_calabazas',
+    nombresEjemplo: 'Halloween Equipo Andes', lugarEjemplo: 'Piso 8, sala de eventos', hora: '15:00', kicker: 'Hoy se viene disfrazado',
+    momentos: [['15:00', 'Desfile por áreas'], ['16:00', 'Premiación'], ['16:30', 'Dulces para los hijos del equipo']],
+    vestimenta: { etiqueta: 'Disfraz por áreas o individual' }, extras: ['juego_adivinar'],
+  },
+  {
+    id: 'hw-cumple', nombre: 'Cumpleaños de terror', descripcion: 'Cumpleaños con temática de Halloween para grandes', categoria: 'Halloween', tipo: 'cumpleanos', kitId: 'hw_brujas',
+    nombresEjemplo: 'Los 30 de Andrés', lugarEjemplo: 'Bar El Hechizo', hora: '20:00', kicker: 'Un cumpleaños de miedo',
+    vestimenta: { etiqueta: 'Disfraz de miedo' }, extras: ['playlist'],
   },
   // Superhéroes y princesas con fondo animado (dibujos originales, sin personajes con derechos de autor)
   {

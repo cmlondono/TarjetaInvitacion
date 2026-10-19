@@ -15,6 +15,10 @@ interface InlineEditableTextProps {
   style?: React.CSSProperties
   /** Clave del campo: permite guardar un estilo individual (fuente, tamaño, color...) para este texto */
   campo?: string
+  /** Texto calculado (fecha, contador): se mueve y se le da estilo, pero no se escribe encima */
+  soloEstilo?: boolean
+  /** Contenido propio en lugar del texto (p. ej. las cajas de la cuenta regresiva) */
+  children?: React.ReactNode
 }
 
 /** Coloca el texto plano del portapapeles sin formato externo */
@@ -50,6 +54,8 @@ export function InlineEditableText({
   className = '',
   style,
   campo,
+  soloEstilo = false,
+  children,
 }: InlineEditableTextProps) {
   const editor = useEditorLienzo()
   const seccion = useSeccionActual()
@@ -71,7 +77,7 @@ export function InlineEditableText({
 
   const claveTexto = seccion && campo ? `${seccion.id}:${campo}` : null
   const usaSeleccion = Boolean(claveTexto && editor.esEdicion)
-  const estaEditando = usaSeleccion ? editor.textoEnEdicion === claveTexto : edicionLocal
+  const estaEditando = !soloEstilo && (usaSeleccion ? editor.textoEnEdicion === claveTexto : edicionLocal)
   const estaSeleccionado =
     usaSeleccion &&
     editor.seleccion?.tipo === 'texto' &&
@@ -93,7 +99,7 @@ export function InlineEditableText({
     if (estiloPropio?.oculto) return null
     return (
       <Etiqueta className={className} style={estiloFinal} {...atributos}>
-        {valor || ''}
+        {children ?? (valor || '')}
       </Etiqueta>
     )
   }
@@ -160,7 +166,7 @@ export function InlineEditableText({
     }
     if (estaEditando) return
     if (!usaSeleccion || estaSeleccionado) {
-      iniciarEdicion()
+      if (!soloEstilo) iniciarEdicion()
     } else {
       editor.seleccionar({ tipo: 'texto', seccionId: seccion!.id, campo: campo! })
     }
@@ -212,11 +218,12 @@ export function InlineEditableText({
         arrastre.current = null
         setDesplazamiento(null)
       }}
+      data-solo-estilo={soloEstilo ? '' : undefined}
       onDoubleClick={(e: React.MouseEvent) => {
         e.stopPropagation()
-        iniciarEdicion()
+        if (!soloEstilo) iniciarEdicion()
       }}
-      title={estiloPropio?.oculto ? 'Texto quitado: el invitado no lo ve. Selecciónalo y toca «Mostrar»' : estaSeleccionado ? 'Arrastra para moverlo · toca de nuevo para escribir' : 'Toca para seleccionar, moverlo y darle estilo'}
+      title={estiloPropio?.oculto ? 'Texto quitado: el invitado no lo ve. Selecciónalo y toca «Mostrar»' : soloEstilo ? 'Arrastra para moverlo y dale estilo (se cambia desde el panel)' : estaSeleccionado ? 'Arrastra para moverlo · toca de nuevo para escribir' : 'Toca para seleccionar, moverlo y darle estilo'}
       className={`relative group/editable cursor-pointer transition-all rounded-lg px-1.5 py-0.5 inline-block max-w-full ${className} ${
         estaSeleccionado
           ? 'ring-2 ring-amber-500 ring-offset-2 ring-offset-transparent'
@@ -231,7 +238,7 @@ export function InlineEditableText({
       }}
       {...atributos}
     >
-      {valor || placeholder}
+      {children ?? (valor || placeholder)}
     </Etiqueta>
   )
 }

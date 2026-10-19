@@ -413,9 +413,11 @@ export function BarraContextual({ seleccion, secciones, visual, acciones, esMovi
     const estilo = seccion.estilosTexto?.[seleccion.campo]
     const cambiar = (c: Partial<EstiloTexto>) => acciones.actualizarEstiloTexto(seleccion.seccionId, seleccion.campo, c)
     const movible = !seleccion.campo.includes('.')
-    titulo = 'Texto'
+    // Fecha y contador se calculan solos: se mueven y se estilizan, pero no se escriben encima
+    const soloEstilo = typeof document !== 'undefined' && Boolean(document.querySelector(`[data-texto-clave="${CSS.escape(clave)}"][data-solo-estilo]`))
+    titulo = soloEstilo ? 'Fecha' : 'Texto'
     herramientas = [
-      <BotonAccion key="escribir" etiqueta="Escribir" icono={<PencilLine size={TAMANO_ICONO} />} alPulsar={() => acciones.editarTexto(clave)} esMovil={esMovil} />,
+      ...(soloEstilo ? [] : [<BotonAccion key="escribir" etiqueta="Escribir" icono={<PencilLine size={TAMANO_ICONO} />} alPulsar={() => acciones.editarTexto(clave)} esMovil={esMovil} />]),
       <BotonAccion
         key="quitar"
         etiqueta={estilo?.oculto ? 'Mostrar' : 'Quitar'}

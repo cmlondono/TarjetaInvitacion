@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import type { SeccionModular } from '@/types/invitation'
 import { esInvitadoReal, useInvitacion } from './contexto'
-import { Boton, Caja, Etiqueta, MarcoBloque, Texto, icono } from './piezas'
+import { Boton, Caja, Etiqueta, MarcoBloque, Texto, TextoFijo, icono } from './piezas'
 import type { PropsBloque } from './bloques'
 
 const inputEstilo: React.CSSProperties = {
@@ -345,7 +345,11 @@ export function BloqueConfirmacion({ seccion }: PropsBloque) {
       ) : (
         <Boton onClick={abrirConfirmacion}>{datos.textoBoton || 'Confirmar asistencia'}</Boton>
       )}
-      {datos.fechaLimiteRsvp && <span style={{ fontSize: 12, color: 'var(--inv-tinta-suave)' }}>Por favor responde antes del {datos.fechaLimiteRsvp}</span>}
+      {datos.fechaLimiteRsvp && (
+        <TextoFijo seccion={seccion} clave="fechaLimite" etiqueta="span" estilo={{ fontSize: 12, color: 'var(--inv-tinta-suave)' }}>
+          Por favor responde antes del {datos.fechaLimiteRsvp}
+        </TextoFijo>
+      )}
     </MarcoBloque>
   )
 }

@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import type { SeccionModular } from '@/types/invitation'
 import { useInvitacion, fechaLarga, enlaceGoogleCalendar, enlacesMapa } from './contexto'
-import { Boton, Caja, Etiqueta, FotoQuitable, MarcoBloque, Texto, icono, useCuentaRegresiva } from './piezas'
+import { Boton, Caja, Etiqueta, FotoQuitable, MarcoBloque, Texto, TextoFijo, icono, useCuentaRegresiva } from './piezas'
 import { OrnamentoArriba } from './ornamentos'
 
 export interface PropsBloque {
@@ -87,7 +87,11 @@ export function BloquePortada({ seccion }: PropsBloque) {
         estilo={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--inv-acento)', marginTop: 6 }}
       />
       <Texto seccion={seccion} campo="titulo" valor={nombres} placeholder="Nombres" etiqueta="h1" estilo={estiloTitulo(tema.tituloCaligrafico)} />
-      {fechaLarga(evento.fechaEvento) && <p style={{ margin: 0, fontSize: 17 }}>{fechaLarga(evento.fechaEvento)}</p>}
+      {fechaLarga(evento.fechaEvento) && (
+        <TextoFijo seccion={seccion} clave="fecha" estilo={{ fontSize: 17 }}>
+          {fechaLarga(evento.fechaEvento)}
+        </TextoFijo>
+      )}
       <Texto seccion={seccion} campoEvento="direccion" valor={evento.direccion || ''} placeholder="Lugar" estilo={textoSuave} />
     </MarcoBloque>
   )
@@ -108,22 +112,25 @@ export function BloqueCuentaRegresiva({ seccion }: PropsBloque) {
   return (
     <MarcoBloque seccion={seccion} relleno="18px">
       <Etiqueta seccion={seccion} />
-      {t.terminado ? (
-        <p style={{ margin: 0, fontSize: 18, fontWeight: 600 }}>¡Hoy es el gran día!</p>
-      ) : variante === 'linea' ? (
-        <p style={{ margin: 0, fontSize: 20, fontWeight: 600 }}>
-          {t.dias} días · {t.horas} h · {t.minutos} min
-        </p>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, width: '100%' }}>
-          {partes.map((p) => (
-            <div key={p.etiqueta} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0', borderRadius: 'calc(var(--inv-radio) * 0.6)', backgroundColor: 'var(--inv-suave)' }}>
-              <span style={{ fontSize: 26, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{cargando ? '--' : String(p.valor).padStart(2, '0')}</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--inv-tinta-suave)' }}>{p.etiqueta}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Tamaños en em: el control «Tamaño» del texto agranda o achica todo el contador */}
+      <TextoFijo seccion={seccion} clave="contador" etiqueta="div" estilo={{ width: '100%', boxSizing: 'border-box', fontSize: 16 }}>
+        {t.terminado ? (
+          <p style={{ margin: 0, fontSize: '1.125em', fontWeight: 600 }}>¡Hoy es el gran día!</p>
+        ) : variante === 'linea' ? (
+          <p style={{ margin: 0, fontSize: '1.25em', fontWeight: 600 }}>
+            {t.dias} días · {t.horas} h · {t.minutos} min
+          </p>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, width: '100%' }}>
+            {partes.map((p) => (
+              <div key={p.etiqueta} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0', borderRadius: 'calc(var(--inv-radio) * 0.6)', backgroundColor: 'var(--inv-suave)' }}>
+                <span style={{ fontSize: '1.625em', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>{cargando ? '--' : String(p.valor).padStart(2, '0')}</span>
+                <span style={{ fontSize: '0.7em', fontWeight: 600, color: 'var(--inv-tinta-suave)' }}>{p.etiqueta}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </TextoFijo>
     </MarcoBloque>
   )
 }
@@ -134,7 +141,9 @@ export function BloqueFechaHora({ seccion }: PropsBloque) {
   return (
     <MarcoBloque seccion={seccion}>
       <Etiqueta seccion={seccion} />
-      <p style={{ margin: 0, fontFamily: 'var(--inv-fuente-titulo)', fontSize: 24, fontWeight: 600 }}>{fechaLarga(evento.fechaEvento)}</p>
+      <TextoFijo seccion={seccion} clave="fecha" estilo={{ fontFamily: 'var(--inv-fuente-titulo)', fontSize: 24, fontWeight: 600 }}>
+        {fechaLarga(evento.fechaEvento)}
+      </TextoFijo>
       <Texto seccion={seccion} campoEvento="horaEvento" valor={evento.horaEvento || ''} placeholder="Hora" estilo={{ fontSize: 16 }} />
       {experiencia.botonCalendario && (
         <Boton href={enlaceGoogleCalendar(evento)} variante="suave" icono={icono.calendario}>

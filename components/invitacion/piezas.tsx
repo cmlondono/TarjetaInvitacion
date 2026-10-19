@@ -234,6 +234,33 @@ export function FotoQuitable({
   )
 }
 
+/**
+ * Texto calculado (fecha larga, cuenta regresiva, fecha límite): en el editor se selecciona,
+ * se arrastra y se le da estilo como a cualquier texto, pero su contenido se cambia en el panel.
+ */
+export function TextoFijo({
+  seccion,
+  clave,
+  children,
+  etiqueta = 'p',
+  estilo,
+}: {
+  seccion: SeccionModular
+  clave: string
+  children: React.ReactNode
+  etiqueta?: 'p' | 'span' | 'div'
+  estilo?: React.CSSProperties
+}) {
+  const { editable } = useInvitacion()
+  return (
+    <ProveedorSeccionActual value={seccion}>
+      <InlineEditableText valor="" alGuardar={() => {}} activo={editable} soloEstilo campo={clave} etiqueta={etiqueta} style={{ margin: 0, ...estilo }}>
+        {children}
+      </InlineEditableText>
+    </ProveedorSeccionActual>
+  )
+}
+
 type VarianteBoton = 'solido' | 'borde' | 'suave'
 
 export function Boton({

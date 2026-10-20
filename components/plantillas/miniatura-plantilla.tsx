@@ -6,6 +6,7 @@ import { familiaFuente } from '@/lib/editor/estilos'
 import { MuestraOrnamento } from '@/components/invitacion/ornamentos'
 import { textoSobre } from '@/components/invitacion/tema'
 import { CapaEscena } from '@/components/invitacion/escenas'
+import { CapaFondoAnimado, CapaParticulas } from '@/components/invitacion/particulas'
 
 const CALIGRAFICAS = ['greatvibes', 'alexbrush', 'parisienne', 'dancing', 'pacifico']
 
@@ -23,7 +24,11 @@ export function MiniaturaPlantilla({ plantilla }: { plantilla: Plantilla }) {
   return (
     <article className="@container group h-full flex flex-col rounded-2xl overflow-hidden bg-white border border-slate-200 hover:shadow-lg transition-shadow">
       <Link href={`/plantillas/${plantilla.id}`} aria-label={`Ver la plantilla ${plantilla.nombre}`} className="relative block p-2.5 @[15rem]:p-4 overflow-hidden" style={{ backgroundColor: kit.colores.fondo }}>
-        <CapaEscena escena={kit.escena} colores={{ fondo: kit.colores.fondo, acento: kit.colores.acento, detalle: kit.colores.detalle }} />
+        <CapaFondoAnimado tipo={plantilla.efectos?.fondoAnimado} colores={{ fondo: kit.colores.fondo, acento: kit.colores.acento, detalle: kit.colores.detalle }} />
+        <CapaEscena escena={plantilla.efectos?.escena || kit.escena} colores={{ fondo: kit.colores.fondo, acento: kit.colores.acento, detalle: kit.colores.detalle }} />
+        {plantilla.premium && (
+          <span className="absolute top-3.5 right-3.5 z-10 px-2 py-0.5 rounded-md bg-amber-400 text-slate-950 text-[10px] font-extrabold uppercase tracking-wider shadow">★ Premium</span>
+        )}
         <div
           className="relative flex flex-col items-center justify-center gap-1.5 text-center px-3 py-6 h-[200px] @[15rem]:h-[230px] overflow-hidden"
           style={{ backgroundColor: kit.colores.tarjeta, borderRadius: radio, color: kit.colores.texto }}
@@ -58,6 +63,9 @@ export function MiniaturaPlantilla({ plantilla }: { plantilla: Plantilla }) {
             {info.rsvp.cta}
           </span>
         </div>
+        {plantilla.efectos?.particulas?.tipo && (
+          <CapaParticulas config={{ ...plantilla.efectos.particulas, cantidad: 'pocas' }} colores={{ fondo: kit.colores.fondo, acento: kit.colores.acento, detalle: kit.colores.detalle }} />
+        )}
       </Link>
       <div className="flex flex-col gap-3 p-3 @[15rem]:p-4 flex-1">
         <div className="flex flex-col gap-0.5">

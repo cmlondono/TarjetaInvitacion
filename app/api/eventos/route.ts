@@ -150,6 +150,12 @@ export async function POST(req: NextRequest) {
       // El enlace público solo cambia desde «Cambiar enlace» del panel (/api/eventos/enlace): una pestaña
       // abierta con el enlace anterior no debe devolverlo al guardar
       evento.slugPublico = eventoExistente.slugPublico || evento.slugPublico
+      // Si el evento se creó con una plantilla Premium, guardar desde el navegador no puede quitar esa marca
+      const plantillaPremium = (eventoExistente.configuracionVisual as any)?.plantillaPremium
+      if (plantillaPremium && evento.configuracionVisual) (evento.configuracionVisual as any).plantillaPremium = plantillaPremium
+      // El nombre del enlace también se cambia solo desde «Cambiar enlace»
+      const nombreEnlace = (eventoExistente.configuracionVisual as any)?.nombreEnlace
+      if (nombreEnlace && evento.configuracionVisual) (evento.configuracionVisual as any).nombreEnlace = nombreEnlace
       evento.secciones = fusionarInteracciones(evento.secciones, eventoExistente.secciones)
     } else {
       // Evento nuevo: snapshot del cupo vigente; Premium solo se activa tras un pago verificado

@@ -1,9 +1,14 @@
 'use client'
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Copy, Database, ExternalLink, Eye, EyeOff, Loader2, Pencil, Search, Star, Trash2, X } from 'lucide-react'
-import { CATEGORIAS_PLANTILLAS, type Plantilla } from '@/lib/estudio/plantillas'
+import { ChevronLeft, ChevronRight, Copy, Crown, Database, ExternalLink, Eye, EyeOff, Loader2, Pencil, Search, Star, Trash2, X } from 'lucide-react'
+import { CATEGORIAS_PLANTILLAS, type EfectosPlantilla, type Plantilla } from '@/lib/estudio/plantillas'
 import { KITS, obtenerKit } from '@/lib/estudio/kits'
+import { CATALOGO_FONDOS_ANIMADOS, CATALOGO_PARTICULAS } from '@/components/invitacion/particulas'
+import { CATALOGO_ESCENAS } from '@/components/invitacion/escenas'
+import type { TipoEscena, TipoFondoAnimado, TipoParticulas } from '@/types/invitation'
+
+const POR_PAGINA = 15
 
 type PlantillaAdmin = Plantilla & { visible: boolean; orden: number }
 
@@ -27,6 +32,8 @@ export function GestionPlantillas() {
   const [busqueda, setBusqueda] = useState('')
   const [categoria, setCategoria] = useState<string>('todas')
   const [filtroVisible, setFiltroVisible] = useState<'todas' | 'visibles' | 'ocultas'>('todas')
+  const [filtroPlan, setFiltroPlan] = useState<'todas' | 'gratis' | 'premium'>('todas')
+  const [pagina, setPagina] = useState(1)
   const [editando, setEditando] = useState<PlantillaAdmin | null>(null)
 
   const cargar = useCallback(async () => {
@@ -74,9 +81,16 @@ export function GestionPlantillas() {
       (p) =>
         (categoria === 'todas' || p.categoria === categoria) &&
         (filtroVisible === 'todas' || (filtroVisible === 'visibles' ? p.visible : !p.visible)) &&
+        (filtroPlan === 'todas' || (filtroPlan === 'premium' ? p.premium : !p.premium)) &&
         (!q || `${p.nombre} ${p.descripcion} ${p.id}`.toLowerCase().includes(q))
     )
-  }, [datos, busqueda, categoria, filtroVisible])
+  }, [datos, busqueda, categoria, filtroVisible, filtroPlan])
+
+  // Paginación: al cambiar los filtros se vuelve a la primera página; si se borran plantillas no queda en una página vacía
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / POR_PAGINA))
+  useEffect(() => setPagina(1), [busqueda, categoria, filtroVisible, filtroPlan])
+  const paginaActual = Math.min(pagina, totalPaginas)
+  const listaPagina = lista.slice((paginaActual - 1) * POR_PAGINA, paginaActual * POR_PAGINA)
 
   // Subir o bajar intercambia el orden con la plantilla vecina en la lista completa
   const mover = async (p: PlantillaAdmin, paso: -1 | 1) => {
@@ -98,6 +112,7 @@ export function GestionPlantillas() {
 
   const total = datos?.plantillas.length || 0
   const visibles = datos?.plantillas.filter((p) => p.visible).length || 0
+  const premium = datos?.plantillas.filter((p) => p.premium).length || 0
 
   return (
     <div className="space-y-5">
@@ -106,7 +121,7 @@ export function GestionPlantillas() {
           <div>
             <h3 className="text-lg font-bold text-slate-950">Plantillas</h3>
             <p className="text-sm text-slate-600">
-              {total} plantillas · {visibles} visibles · {total - visibles} ocultas. Ocultar es reversible y no afecta las invitaciones ya creadas.
+              {total} plantillas · {visibles} visibles · {total - visibles} ocultas · {premium} Premium. Ocultar es reversible y no afecta las invitaciones ya creadas.
             </p>
           </div>
         </div>
@@ -167,12 +182,17 @@ export function GestionPlantillas() {
             <option value="visibles">Solo visibles</option>
             <option value="ocultas">Solo ocultas</option>
           </select>
+          <select value={filtroPlan} onChange={(e) => setFiltroPlan(e.target.value as typeof filtroPlan)} className={`${claseCampo} w-auto`} aria-label="Plan">
+            <option value="todas">Gratis y Premium</option>
+            <option value="gratis">Solo gratis</option>
+            <option value="premium">Solo Premium</option>
+          </select>
         </div>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-3xl shadow-2xs divide-y divide-slate-100 overflow-hidden">
         {lista.length === 0 && <p className="m-0 p-6 text-sm text-slate-500">No hay plantillas con esos filtros.</p>}
-        {lista.map((p) => {
+        {listaPagina.map((p) => {
           const kit = obtenerKit(p.kitId)
           const soloLectura = !datos?.tablaLista
           const cargando = ocupado === p.id
@@ -187,7 +207,8 @@ export function GestionPlantillas() {
               </span>
               <div className="flex-1 min-w-[180px]">
                 <p className={`m-0 text-sm font-bold ${p.visible ? 'text-slate-900' : 'text-slate-500 line-through'}`}>
-                  {p.nombre} {p.destacada && <Star size={12} className="inline text-amber-500 fill-amber-400 -mt-0.5" />}
+                  {p.nombre} {p.destacada && <Star size={12} className="inline text-amber-500 fill-amber-400 -mt-0.5" />}{' '}
+                  {p.premium && <span className="ml-1 px-1.5 py-px rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-extrabold uppercase align-middle">★ Premium</span>}
                 </p>
                 <p className="m-0 text-xs text-slate-500">
                   {p.categoria} · {kit?.nombre || p.kitId} · <code className="text-[11px]">{p.id}</code>
@@ -211,6 +232,15 @@ export function GestionPlantillas() {
                   className={`h-8 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 border cursor-pointer disabled:opacity-40 ${p.destacada ? 'border-amber-300 text-amber-800 bg-amber-50' : 'border-slate-300 text-slate-600 bg-white'}`}
                 >
                   <Star size={13} /> Destacada
+                </button>
+                <button
+                  type="button"
+                  disabled={soloLectura || cargando}
+                  onClick={() => actualizar(p.id, { datos: { premium: !p.premium } }, p.premium ? `«${p.nombre}» ahora es gratis.` : `«${p.nombre}» ahora es Premium.`)}
+                  title="Premium: se puede usar gratis, pero los invitados ven «Vista previa» hasta que el anfitrión pague"
+                  className={`h-8 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 border cursor-pointer disabled:opacity-40 ${p.premium ? 'border-amber-400 text-amber-900 bg-amber-100' : 'border-slate-300 text-slate-600 bg-white'}`}
+                >
+                  <Crown size={13} /> {p.premium ? 'Premium' : 'Gratis'}
                 </button>
                 <a href={`/plantillas/${p.id}`} target="_blank" rel="noopener noreferrer" title="Ver (las ocultas no abren para el público)" className="h-8 w-8 rounded-lg border border-slate-300 text-slate-600 flex items-center justify-center hover:bg-slate-50">
                   <ExternalLink size={13} />
@@ -245,6 +275,37 @@ export function GestionPlantillas() {
           )
         })}
       </div>
+
+      {lista.length > POR_PAGINA && (
+        <nav aria-label="Páginas de plantillas" className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+          <span>
+            {(paginaActual - 1) * POR_PAGINA + 1}–{Math.min(paginaActual * POR_PAGINA, lista.length)} de {lista.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <button type="button" aria-label="Página anterior" disabled={paginaActual <= 1} onClick={() => setPagina(paginaActual - 1)} className="h-9 w-9 rounded-lg border border-slate-300 bg-white flex items-center justify-center disabled:opacity-40 cursor-pointer">
+              <ChevronLeft size={16} />
+            </button>
+            {Array.from({ length: totalPaginas }, (_, i) => i + 1)
+              .filter((n) => n === 1 || n === totalPaginas || Math.abs(n - paginaActual) <= 1)
+              .map((n, i, arr) => (
+                <React.Fragment key={n}>
+                  {i > 0 && n - arr[i - 1] > 1 && <span className="px-1 text-slate-400">…</span>}
+                  <button
+                    type="button"
+                    aria-current={n === paginaActual ? 'page' : undefined}
+                    onClick={() => setPagina(n)}
+                    className={`h-9 min-w-9 px-2 rounded-lg border text-sm font-bold cursor-pointer ${n === paginaActual ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}
+                  >
+                    {n}
+                  </button>
+                </React.Fragment>
+              ))}
+            <button type="button" aria-label="Página siguiente" disabled={paginaActual >= totalPaginas} onClick={() => setPagina(paginaActual + 1)} className="h-9 w-9 rounded-lg border border-slate-300 bg-white flex items-center justify-center disabled:opacity-40 cursor-pointer">
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </nav>
+      )}
 
       {editando && (
         <EditorPlantilla
@@ -281,6 +342,8 @@ function EditorPlantilla({
     lugarEjemplo: plantilla.lugarEjemplo,
     hora: plantilla.hora,
   })
+  const [premium, setPremium] = useState(Boolean(plantilla.premium))
+  const [efectos, setEfectos] = useState<EfectosPlantilla>(plantilla.efectos || {})
   const campo = (clave: keyof typeof f, etiqueta: string, extra?: React.InputHTMLAttributes<HTMLInputElement>) => (
     <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
       {etiqueta}
@@ -326,12 +389,80 @@ function EditorPlantilla({
           {campo('lugarEjemplo', 'Lugar de ejemplo', { maxLength: 120 })}
           {campo('hora', 'Hora', { type: 'time' })}
         </div>
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" checked={premium} onChange={(e) => setPremium(e.target.checked)} className="mt-0.5 w-4 h-4 accent-amber-500" />
+            <span className="text-sm">
+              <b className="text-slate-900">Plantilla Premium</b>
+              <span className="block text-xs text-slate-600">Cualquiera puede usarla y editarla; sus invitados verán «Vista previa» hasta que el anfitrión active Premium.</span>
+            </span>
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
+              Fondo animado (dibujos)
+              <select value={efectos.escena || ''} onChange={(e) => setEfectos({ ...efectos, escena: (e.target.value || undefined) as TipoEscena | undefined })} className={claseCampo}>
+                <option value="">El del estilo</option>
+                {CATALOGO_ESCENAS.map((x) => (
+                  <option key={x.id} value={x.id}>
+                    {x.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
+              Fondo en movimiento ★
+              <select value={efectos.fondoAnimado || ''} onChange={(e) => setEfectos({ ...efectos, fondoAnimado: (e.target.value || undefined) as TipoFondoAnimado | undefined })} className={claseCampo}>
+                <option value="">Ninguno</option>
+                {CATALOGO_FONDOS_ANIMADOS.map((x) => (
+                  <option key={x.id} value={x.id}>
+                    {x.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
+              Partículas ★
+              <select
+                value={efectos.particulas?.tipo || ''}
+                onChange={(e) => setEfectos({ ...efectos, particulas: e.target.value ? { ...efectos.particulas, tipo: e.target.value as TipoParticulas } : undefined })}
+                className={claseCampo}
+              >
+                <option value="">Ninguna</option>
+                {CATALOGO_PARTICULAS.map((x) => (
+                  <option key={x.id} value={x.id}>
+                    {x.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-xs font-bold text-slate-700">
+              Cantidad
+              <select
+                disabled={!efectos.particulas}
+                value={efectos.particulas?.cantidad || 'normal'}
+                onChange={(e) => efectos.particulas && setEfectos({ ...efectos, particulas: { ...efectos.particulas, cantidad: e.target.value as 'pocas' | 'normal' | 'muchas' } })}
+                className={`${claseCampo} disabled:opacity-50`}
+              >
+                <option value="pocas">Pocas</option>
+                <option value="normal">Normal</option>
+                <option value="muchas">Muchas</option>
+              </select>
+            </label>
+          </div>
+          <p className="m-0 text-[11px] text-slate-500">
+            ★ Efectos Premium: si la plantilla los trae, los invitados ven «Vista previa» hasta que el anfitrión pague, aunque la plantilla esté marcada como gratis.
+            {plantilla.efectos?.stickers?.length ? ` Trae ${plantilla.efectos.stickers.length} stickers animados (se conservan).` : ''}
+          </p>
+        </div>
         <p className="m-0 text-xs text-slate-500">Los momentos, bloques extra y el contenido de ejemplo de la plantilla se conservan.</p>
         <div className="flex justify-end gap-2 pt-2">
           <button type="button" onClick={alCerrar} className="h-10 px-4 rounded-xl border border-slate-300 text-sm font-bold text-slate-700 cursor-pointer">
             Cancelar
           </button>
-          <button type="button" disabled={guardando || !f.nombre.trim()} onClick={() => alGuardar(f)} className="h-10 px-4 rounded-xl bg-slate-900 text-white text-sm font-bold flex items-center gap-2 disabled:opacity-60 cursor-pointer">
+          <button type="button" disabled={guardando || !f.nombre.trim()} onClick={() =>
+              // null (no undefined) para que «Ninguno» viaje en el JSON y el servidor quite el efecto
+              alGuardar({ ...f, premium, efectos: { escena: efectos.escena ?? null, fondoAnimado: efectos.fondoAnimado ?? null, particulas: efectos.particulas ?? null } as unknown as EfectosPlantilla })
+            } className="h-10 px-4 rounded-xl bg-slate-900 text-white text-sm font-bold flex items-center gap-2 disabled:opacity-60 cursor-pointer">
             {guardando && <Loader2 size={14} className="animate-spin" />} Guardar
           </button>
         </div>

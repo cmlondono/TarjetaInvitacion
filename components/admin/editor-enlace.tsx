@@ -6,8 +6,10 @@ import { AlertCircle, AlertTriangle, Check, Copy, Link2, Loader2, Share2 } from 
 interface Props {
   tokenAdmin: string
   slug: string
+  /** Nombre que el anfitrión eligió la última vez (sin el código aleatorio) */
+  nombre?: string
   baseUrl: string
-  alCambiar: (nuevoSlug: string) => void
+  alCambiar: (nuevoSlug: string, nombre: string) => void
 }
 
 /** Mismo formato que aplica el servidor (para la vista previa) */
@@ -21,8 +23,10 @@ const normalizar = (texto: string) =>
     .slice(0, 50)
     .replace(/-+$/g, '')
 
-/** 'cumple-emilio-k7x2p' → 'cumple-emilio' (sin el código aleatorio del final) */
-// Solo si el final parece un código (tiene algún número), para no cortar nombres como «fiesta-sofia»
+/**
+ * Respaldo para enlaces sin nombre guardado: 'cumple-emilio-k7x2p' → 'cumple-emilio'.
+ * Solo si el final parece un código (tiene algún número), para no cortar nombres como «fiesta-sofia».
+ */
 const sinCodigo = (slug: string) => slug.replace(/-(?=[a-z0-9]{0,4}[0-9])[a-z0-9]{4,5}$/, '')
 
 /**
@@ -30,9 +34,10 @@ const sinCodigo = (slug: string) => slug.replace(/-(?=[a-z0-9]{0,4}[0-9])[a-z0-9
  * El anfitrión elige el nombre y el servidor agrega un código aleatorio para que nunca coincida
  * con el de otra persona. Al cambiarlo se muestra un aviso para guardar y reenviar el enlace nuevo.
  */
-export function EditorEnlace({ tokenAdmin, slug, baseUrl, alCambiar }: Props) {
+export function EditorEnlace({ tokenAdmin, slug, nombre, baseUrl, alCambiar }: Props) {
+  const nombreActual = nombre || sinCodigo(slug)
   const [editando, setEditando] = useState(false)
-  const [texto, setTexto] = useState(sinCodigo(slug))
+  const [texto, setTexto] = useState(nombreActual)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [enlaceNuevo, setEnlaceNuevo] = useState<string | null>(null)
@@ -55,7 +60,7 @@ export function EditorEnlace({ tokenAdmin, slug, baseUrl, alCambiar }: Props) {
         setError(d.error || 'No se pudo guardar el enlace.')
         return
       }
-      alCambiar(d.slug)
+      alCambiar(d.slug, d.nombre)
       setEditando(false)
       setEnlaceNuevo(`${baseUrl}/i/${d.slug}`)
     } catch {
@@ -176,7 +181,7 @@ export function EditorEnlace({ tokenAdmin, slug, baseUrl, alCambiar }: Props) {
           <button
             type="button"
             onClick={() => {
-              setTexto(sinCodigo(slug))
+              setTexto(nombreActual)
               setEnlaceNuevo(null)
               setEditando(true)
             }}

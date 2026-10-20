@@ -16,6 +16,7 @@ import { IndicadorGuardado } from '@/components/editor/lienzo/indicadores'
 import { Invitacion } from '@/components/invitacion/invitacion'
 import { temaDe } from '@/components/invitacion/tema'
 import { ModalPago } from '@/components/checkout/modal-pago'
+import { funcionesPremiumUsadas, NOMBRE_FUNCION_PREMIUM } from '@/lib/estudio/premium'
 import { crearSeccionPorTipo } from '@/lib/modular-defaults'
 import { generarSeccionesParaEvento, infoEvento } from '@/lib/estudio/eventos'
 import { obtenerKit, visualDesdeKit, KIT_POR_DEFECTO } from '@/lib/estudio/kits'
@@ -78,6 +79,8 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
   const [hoja, setHoja] = useState<HojaMovil>(null)
   const [pagoAbierto, setPagoAbierto] = useState(searchParams?.get('plan') === 'premium')
   const tema = useMemo(() => temaDe(visual), [visual])
+  // Funciones Premium que usa el diseño: si el evento no ha pagado, se avisa (los invitados verán «Vista previa»)
+  const funcionesPremium = useMemo(() => (evento.esPremium ? [] : funcionesPremiumUsadas({ configuracionVisual: visual, secciones })), [evento.esPremium, visual, secciones])
 
   const estudio = useEstudioLienzo({
     esEdicion: !vistaInvitado,
@@ -404,6 +407,17 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
     <ProveedorEditorLienzo value={estudio.contexto}>
       <div className="min-h-screen bg-slate-100 text-slate-900 flex flex-col font-sans">
         {barraSuperior}
+        {funcionesPremium.length > 0 && (
+          <div role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3 sm:px-5 py-2 bg-amber-50 border-b border-amber-200 text-[12.5px] text-amber-950">
+            <span className="font-extrabold">★ Diseño Premium</span>
+            <span className="flex-1 min-w-[200px]">
+              Usas {funcionesPremium.map((f) => NOMBRE_FUNCION_PREMIUM[f].toLowerCase()).join(', ')}. Tus invitados verán la invitación con la marca «Vista previa» hasta que actives Premium.
+            </span>
+            <button type="button" onClick={() => setPagoAbierto(true)} className="min-h-8 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[12px] font-bold cursor-pointer shrink-0">
+              Activar Premium
+            </button>
+          </div>
+        )}
 
         {esMovil ? (
           <>

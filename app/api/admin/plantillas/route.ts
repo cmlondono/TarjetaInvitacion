@@ -116,7 +116,7 @@ export async function PATCH(req: NextRequest) {
   const cambios: Record<string, unknown> = { actualizado_en: new Date().toISOString() }
   if (typeof visible === 'boolean') cambios.visible = visible
   if (Number.isInteger(orden)) cambios.orden = orden
-  if (datos && typeof datos === 'object') cambios.datos = { ...fila.datos, ...limpiarCambiosPlantilla(datos) }
+  if (datos && typeof datos === 'object') cambios.datos = { ...fila.datos, ...limpiarCambiosPlantilla(datos, fila.datos) }
 
   const { error } = await supabase.from('plantillas').update(cambios).eq('id', id)
   if (error) return errorEscritura(error.message)

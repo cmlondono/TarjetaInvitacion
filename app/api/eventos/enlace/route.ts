@@ -50,11 +50,12 @@ export async function PATCH(req: NextRequest) {
     const nuevo = `${nombre}-${codigoAleatorio()}`
     const { data: ocupado } = await supabase.from('eventos').select('id').eq('slug_publico', nuevo).maybeSingle()
     if (ocupado) continue
-    const { error } = await supabase.from('eventos').update({ slug_publico: nuevo }).eq('id', evento.id)
+    const configuracion_visual = { ...(evento.configuracion_visual || {}), nombreEnlace: nombre }
+    const { error } = await supabase.from('eventos').update({ slug_publico: nuevo, configuracion_visual }).eq('id', evento.id)
     if (error?.code === '23505') continue
     if (error) return NextResponse.json({ ok: false, error: 'No se pudo guardar el enlace.' }, { status: 502 })
-    ServidorAlmacen.guardarEvento(mapearEventoDesdeDb({ ...evento, slug_publico: nuevo }))
-    return NextResponse.json({ ok: true, slug: nuevo })
+    ServidorAlmacen.guardarEvento(mapearEventoDesdeDb({ ...evento, slug_publico: nuevo, configuracion_visual }))
+    return NextResponse.json({ ok: true, slug: nuevo, nombre })
   }
   return NextResponse.json({ ok: false, error: 'No se pudo generar un enlace único. Intenta de nuevo.' }, { status: 409 })
 }

@@ -426,7 +426,9 @@ function Contenido({ seccion, evento, act }: { seccion: SeccionModular; evento: 
             render={(r, actualizar) => (
               <>
                 <Campo etiqueta="Regalo" valor={r.nombre} alCambiar={(v) => actualizar({ nombre: v })} />
-                <Campo etiqueta="Enlace (opcional)" tipo="url" valor={r.enlace} alCambiar={(v) => actualizar({ enlace: v })} />
+                <Campo etiqueta="Precio de referencia (opcional)" valor={r.precio} alCambiar={(v) => actualizar({ precio: v || undefined })} placeholder="$120.000" />
+                <Campo etiqueta="Enlace a la tienda (opcional)" tipo="url" valor={r.enlace} alCambiar={(v) => actualizar({ enlace: v })} />
+                <SubirFoto url={r.imagen} alCambiar={(url) => actualizar({ imagen: url })} carpeta={carpeta} etiqueta="Foto (opcional)" />
                 {r.reservadoPor && (
                   <span className="text-[12px] font-semibold text-emerald-700">
                     Reservado por {r.reservadoPor}{' '}

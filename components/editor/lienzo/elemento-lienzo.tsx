@@ -8,6 +8,7 @@ import { StickerSvg } from '@/lib/editor/stickers'
 import {
   ANCHO_REFERENCIA_LIENZO,
   atributosFuente,
+  claseMovimiento,
   estadoInicialAnimacion,
   estiloMascara,
   estiloTextoACss,
@@ -278,7 +279,13 @@ export function ElementoLienzoVista({
   }
 
   const inicial = !esEdicion ? estadoInicialAnimacion(elemento.animacion) : null
-  const cuerpo = <div style={{ width: '100%', height: '100%', transform: volteo }}>{contenido}</div>
+  // El movimiento continuo va en una capa interna: no choca con el volteo ni con los controles del editor
+  const movimiento = claseMovimiento(elemento.movimiento)
+  const cuerpo = (
+    <div style={{ width: '100%', height: '100%', transform: volteo }}>
+      {movimiento ? <div className={movimiento} style={{ width: '100%', height: '100%' }}>{contenido}</div> : contenido}
+    </div>
+  )
 
   return (
     <div

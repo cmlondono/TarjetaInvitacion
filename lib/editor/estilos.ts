@@ -5,6 +5,7 @@ import type {
   FiltroImagen,
   FuenteTipografica,
   MascaraImagen,
+  MovimientoContinuo,
 } from '@/types/invitation'
 
 /** Ancho de referencia del lienzo: los tamaños de los elementos libres se expresan sobre 400px */
@@ -159,6 +160,19 @@ export const CATALOGO_ANIMACIONES: { id: AnimacionEntrada; nombre: string }[] = 
   { id: 'rebote', nombre: 'Rebote' },
   { id: 'girar', nombre: 'Girar' },
 ]
+
+/** Movimiento continuo (Premium): se repite sin parar; clase CSS tj-mov-<id> en app/globals.css */
+export const CATALOGO_MOVIMIENTOS: { id: MovimientoContinuo; nombre: string }[] = [
+  { id: 'ninguno', nombre: 'Ninguno' },
+  { id: 'latido', nombre: 'Latido' },
+  { id: 'flotar', nombre: 'Flotar' },
+  { id: 'balanceo', nombre: 'Balanceo' },
+  { id: 'saltar', nombre: 'Saltar' },
+  { id: 'brillo', nombre: 'Brillo' },
+  { id: 'girar', nombre: 'Girar' },
+]
+
+export const claseMovimiento = (m?: MovimientoContinuo) => (m && m !== 'ninguno' ? `tj-mov-${m}` : undefined)
 
 /** Estado inicial (oculto) de cada animación de entrada; el final siempre es opacidad 1 sin desplazamiento */
 export function estadoInicialAnimacion(animacion?: AnimacionEntrada): Record<string, number> | null {

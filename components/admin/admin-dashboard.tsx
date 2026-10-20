@@ -13,6 +13,7 @@ import { ConfiguracionGlobal, CONFIGURACION_DEFAULT } from '@/types/admin'
 import { ModalPago } from '@/components/checkout/modal-pago'
 import { ModalDespachoWhatsApp } from './modal-despacho-whatsapp'
 import { EditorEnlace } from './editor-enlace'
+import { funcionesPremiumUsadas, NOMBRE_FUNCION_PREMIUM } from '@/lib/estudio/premium'
 import { construirMensajeCompartir } from '@/lib/event-utils'
 import { exportarInvitadosExcel, imprimirListaAdmision } from '@/lib/export-utils'
 import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
@@ -550,12 +551,26 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
           </div>
         </div>
 
+        {!evento.esPremium && funcionesPremiumUsadas(evento).length > 0 && (
+          <div role="status" className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex-1 text-xs text-amber-950 leading-relaxed">
+              <p className="font-bold text-sm mb-1">★ Tu diseño usa funciones Premium</p>
+              {funcionesPremiumUsadas(evento).map((f) => NOMBRE_FUNCION_PREMIUM[f]).join(' · ')}. Tus invitados ven la invitación con la marca
+              «Vista previa» hasta que actives Premium.
+            </div>
+            <button type="button" onClick={() => setMostrarModalUpgrade(true)} className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer shrink-0">
+              Activar Premium
+            </button>
+          </div>
+        )}
+
         <EditorEnlace
           tokenAdmin={evento.tokenAdmin}
           slug={evento.slugPublico}
+          nombre={evento.configuracionVisual?.nombreEnlace}
           baseUrl={baseUrl}
-          alCambiar={(slugPublico) => {
-            const evActualizado = { ...evento, slugPublico }
+          alCambiar={(slugPublico, nombreEnlace) => {
+            const evActualizado = { ...evento, slugPublico, configuracionVisual: evento.configuracionVisual ? { ...evento.configuracionVisual, nombreEnlace } : evento.configuracionVisual }
             setEvento(evActualizado)
             EventoRepositorio.guardar(evActualizado)
           }}

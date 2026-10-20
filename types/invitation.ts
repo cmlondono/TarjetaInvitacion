@@ -292,6 +292,8 @@ export interface RegaloReservable {
   id: string
   nombre: string
   enlace?: string
+  imagen?: string // Foto del regalo
+  precio?: string // Precio de referencia tal cual lo escribe el anfitrión (p. ej. «$120.000»)
   reservadoPor?: string
 }
 
@@ -336,6 +338,21 @@ export interface FotoFondo {
 }
 export type TipoRecorrido = 'pagina' | 'historias' | 'menu'
 /** Escena animada de fondo (dibujos originales para fiestas infantiles y temáticas) */
+/** Premium: partículas que caen o flotan sobre toda la invitación */
+export type TipoParticulas = 'confeti' | 'petalos' | 'corazones' | 'nieve' | 'estrellas' | 'burbujas' | 'destellos' | 'luces'
+
+export interface ParticulasConfig {
+  tipo: TipoParticulas
+  color?: string // Sin color: usa los colores del estilo (o los naturales del efecto)
+  cantidad?: 'pocas' | 'normal' | 'muchas'
+}
+
+/** Premium: fondo de color en movimiento detrás de la invitación (toma los colores del estilo) */
+export type TipoFondoAnimado = 'aurora' | 'degradado' | 'ondas'
+
+/** Premium: movimiento que se repite sin parar en un elemento (además de su animación de entrada) */
+export type MovimientoContinuo = 'ninguno' | 'latido' | 'flotar' | 'balanceo' | 'girar' | 'brillo' | 'saltar'
+
 export type TipoEscena = 'comic' | 'ciudad' | 'tormenta' | 'castillo' | 'hielo' | 'hadas' | 'aranas' | 'calabazas' | 'fantasmas' | 'brujas' | 'heroe_dia'
 export type TipoOrnamento =
   | 'ramas'
@@ -427,6 +444,10 @@ export interface ConfiguracionVisual {
   experiencia?: ExperienciaInvitado
   fotoFondo?: FotoFondo // Foto detrás de toda la invitación
   escena?: TipoEscena // Fondo animado
+  particulas?: ParticulasConfig // Premium
+  fondoAnimado?: TipoFondoAnimado // Premium
+  plantillaPremium?: string // Id de la plantilla Premium con la que se creó (requiere Premium)
+  nombreEnlace?: string // Nombre que eligió el anfitrión para su enlace (sin el código aleatorio)
   mostrarCuentaRegresiva: boolean
   mostrarUbicacion: boolean
   mostrarDressCode: boolean
@@ -572,6 +593,7 @@ export interface ElementoLienzo {
   bloqueado?: boolean
   oculto?: boolean
   animacion?: AnimacionEntrada
+  movimiento?: MovimientoContinuo // Premium
   volteoH?: boolean
   volteoV?: boolean
   // Texto

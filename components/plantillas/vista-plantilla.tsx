@@ -11,10 +11,11 @@ interface VistaPlantillaProps {
   plantillaId: string
   nombre: string
   descripcion: string
+  premium?: boolean
 }
 
 /** Ejemplo completo de una plantilla, como lo vería un invitado, con la barra para usarla. */
-export function VistaPlantilla({ evento, plantillaId, nombre, descripcion }: VistaPlantillaProps) {
+export function VistaPlantilla({ evento, plantillaId, nombre, descripcion, premium }: VistaPlantillaProps) {
   const [clave, setClave] = useState(0)
 
   return (
@@ -27,7 +28,10 @@ export function VistaPlantilla({ evento, plantillaId, nombre, descripcion }: Vis
             <ArrowLeft size={18} />
           </Link>
           <div className="flex-1 min-w-0">
-            <p className="m-0 text-[14px] font-bold truncate">{nombre}</p>
+            <p className="m-0 text-[14px] font-bold truncate">
+              {premium && <span className="mr-1.5 px-1.5 py-px rounded bg-amber-400 text-slate-950 text-[10px] font-extrabold uppercase align-middle">★ Premium</span>}
+              {nombre}
+            </p>
             <p className="m-0 text-[12px] text-slate-300 truncate">{descripcion}</p>
           </div>
           <button

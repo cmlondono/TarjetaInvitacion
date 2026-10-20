@@ -31,6 +31,8 @@ import { AperturaInvitacion } from './apertura'
 import { useMusicaFondo } from './musica'
 import { CapaFotoFondo } from './foto-fondo'
 import { CapaEscena } from './escenas'
+import { CapaFondoAnimado, CapaParticulas } from './particulas'
+import { requiereActivarPremium } from '@/lib/estudio/premium'
 
 const BLOQUES: Partial<Record<TipoSeccion, (p: PropsBloque) => React.ReactElement | null>> = {
   cabecera: BloquePortada,
@@ -200,13 +202,21 @@ export function Invitacion({
           ...(contenida && mostrarApertura && !abierta ? { height: '100%', overflow: 'hidden' } : {}),
         }}
       >
-        {(visual.fotoFondo?.url || visual.escena) && (
+        {(visual.fotoFondo?.url || visual.escena || visual.fondoAnimado) && (
           // Fondo animado y foto de fondo: quedan quietos mientras se recorre la invitación (alto de la pantalla o del marco del editor)
           <div aria-hidden="true" style={{ position: 'sticky', top: 0, height: 'var(--inv-alto-visor, 100dvh)', marginBottom: 'calc(-1 * var(--inv-alto-visor, 100dvh))', zIndex: 0, pointerEvents: 'none' }}>
+            <CapaFondoAnimado tipo={visual.fondoAnimado} colores={{ fondo: tema.fondo, acento: tema.acento, detalle: tema.detalle }} />
             <CapaEscena escena={visual.escena} colores={{ fondo: tema.fondo, acento: tema.acento, detalle: tema.detalle }} />
             <CapaFotoFondo foto={visual.fotoFondo} />
           </div>
         )}
+        {visual.particulas?.tipo && (
+          // Partículas (Premium): por encima del contenido, sin tapar los toques
+          <div aria-hidden="true" style={{ position: 'sticky', top: 0, height: 'var(--inv-alto-visor, 100dvh)', marginBottom: 'calc(-1 * var(--inv-alto-visor, 100dvh))', zIndex: 3, pointerEvents: 'none' }}>
+            <CapaParticulas config={visual.particulas} colores={{ fondo: tema.fondo, acento: tema.acento, detalle: tema.detalle }} />
+          </div>
+        )}
+        {modo === 'publico' && requiereActivarPremium(evento) && <MarcaVistaPrevia />}
         {recorrido === 'historias' ? (
           <div style={{ position: 'relative', zIndex: 1, height: contenida ? '100%' : '100dvh', minHeight: contenida ? 640 : undefined }}>
             <div style={{ position: 'absolute', top: 10, left: 12, right: 12, zIndex: 5, display: 'flex', gap: 4 }}>
@@ -287,5 +297,26 @@ export function Invitacion({
         />
       </div>
     </ProveedorInvitacion>
+  )
+}
+
+/**
+ * Marca de agua para invitaciones que usan funciones Premium sin haberlas activado.
+ * No bloquea nada (el invitado puede leer y confirmar): solo deja claro que es una vista previa.
+ */
+function MarcaVistaPrevia() {
+  return (
+    <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 95, pointerEvents: 'none', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', inset: '-50%', display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', gap: '64px 80px', transform: 'rotate(-30deg)', opacity: 0.09 }}>
+        {Array.from({ length: 60 }, (_, i) => (
+          <span key={i} style={{ fontFamily: 'system-ui, sans-serif', fontSize: 28, fontWeight: 900, letterSpacing: 4, color: '#0f172a', whiteSpace: 'nowrap' }}>
+            VISTA PREVIA
+          </span>
+        ))}
+      </div>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '8px 12px', textAlign: 'center', backgroundColor: 'rgba(15,23,42,0.88)', color: '#fff', fontFamily: 'system-ui, sans-serif', fontSize: 12, fontWeight: 600 }}>
+        Vista previa · El anfitrión aún no ha activado esta invitación Premium
+      </div>
+    </div>
   )
 }

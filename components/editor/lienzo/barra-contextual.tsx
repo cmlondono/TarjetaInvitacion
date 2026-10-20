@@ -9,6 +9,7 @@ import type {
   EstiloTexto,
   FiltroImagen,
   MascaraImagen,
+  MovimientoContinuo,
   NombreIcono,
   SeccionModular,
 } from '@/types/invitation'
@@ -17,6 +18,7 @@ import type { MovimientoCapa } from '@/lib/editor/operaciones'
 import {
   CATALOGO_ANIMACIONES,
   CATALOGO_FILTROS,
+  CATALOGO_MOVIMIENTOS,
   CATALOGO_FUENTES,
   CATALOGO_MASCARAS,
   estiloMascara,
@@ -371,6 +373,18 @@ function controlesComunesElemento(
         valor={elemento.animacion ?? 'ninguna'}
         opciones={CATALOGO_ANIMACIONES.map((a) => ({ id: a.id, etiqueta: a.nombre }))}
         alCambiar={(id) => actualizar({ animacion: id })}
+      />
+      <Separador />
+      <p className="text-[11px] font-bold text-slate-700 mt-2 mb-1 flex items-center gap-1.5">
+        Movimiento continuo
+        <span className="px-1.5 py-px rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-extrabold uppercase tracking-wider">★ Premium</span>
+      </p>
+      <p className="text-[11px] text-slate-500 mb-2">Se repite sin parar mientras el invitado ve la tarjeta.</p>
+      <GrupoOpciones<MovimientoContinuo>
+        columnas={2}
+        valor={elemento.movimiento ?? 'ninguno'}
+        opciones={CATALOGO_MOVIMIENTOS.map((m) => ({ id: m.id, etiqueta: m.nombre }))}
+        alCambiar={(id) => actualizar({ movimiento: id === 'ninguno' ? undefined : id })}
       />
     </PanelHerramienta>,
 

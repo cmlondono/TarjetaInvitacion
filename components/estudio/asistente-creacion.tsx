@@ -149,6 +149,11 @@ function Asistente({ plantillaInicial }: { plantillaInicial: Plantilla | null })
               <LayoutTemplate size={18} className="text-amber-700 shrink-0" />
               <span className="flex-1 text-[14px] text-amber-900">
                 Usando la plantilla <b>{plantilla.nombre}</b>. Escribe tus datos y queda lista.
+                {plantilla.premium && (
+                  <span className="block text-[12.5px] mt-0.5">
+                    ★ Es Premium: puedes usarla y editarla gratis; tus invitados la verán con la marca «Vista previa» hasta que actives Premium.
+                  </span>
+                )}
               </span>
               <button
                 type="button"

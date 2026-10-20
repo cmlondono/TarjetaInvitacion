@@ -1,4 +1,5 @@
-import type { DetalleEvento, SeccionModular, TipoApertura, TipoEvento, TipoRecorrido, TipoSeccion } from '@/types/invitation'
+import type { DetalleEvento, ElementoLienzo, MovimientoContinuo, ParticulasConfig, SeccionModular, TipoApertura, TipoEscena, TipoEvento, TipoFondoAnimado, TipoRecorrido, TipoSeccion } from '@/types/invitation'
+import { obtenerSticker } from '@/lib/editor/stickers'
 import { crearSeccionPorTipo } from '@/lib/modular-defaults'
 import { crearEventoInicial, formatearHora } from './eventos'
 import { experienciaDe } from './kits'
@@ -27,6 +28,10 @@ export interface Plantilla {
   extras?: TipoSeccion[]
   regalos?: string[]
   destacada?: boolean
+  /** Plantilla Premium: se puede usar gratis; los invitados ven «Vista previa» hasta activar Premium. Se marca desde el panel. */
+  premium?: boolean
+  /** Efectos de movimiento que trae la plantilla (también editables desde el panel) */
+  efectos?: EfectosPlantilla
   ejemplo?: {
     historia?: string
     padrinos?: [string, string][]
@@ -609,6 +614,129 @@ export const PLANTILLAS: Plantilla[] = [
     nombresEjemplo: 'Lanzamiento 2027', lugarEjemplo: 'Centro de Convenciones Ágora', hora: '18:00',
     ejemplo: { padrinos: [['María Fernanda Ruiz', 'Gerente general'], ['Carlos Mejía', 'Director de innovación']] },
   },
+
+  // ─────────── Premium: con efectos de movimiento y stickers animados ───────────
+  {
+    id: 'premium-boda-gala-dorada', nombre: 'Boda de gala dorada', descripcion: 'Destellos dorados, aurora de color y anillos animados', categoria: 'Bodas', tipo: 'boda', kitId: 'champana',
+    nombresEjemplo: 'Isabella & Mateo', lugarEjemplo: 'Club El Nogal, Bogotá', hora: '18:00', kicker: 'Nuestra boda', apertura: 'sobre', premium: true, destacada: true,
+    momentos: [['18:00', 'Ceremonia'], ['19:30', 'Cóctel'], ['21:00', 'Cena y baile']], vestimenta: { etiqueta: 'Etiqueta rigurosa', colores: ['#C9A227', '#F5EBDD', '#1F2937'] },
+    extras: ['padrinos', 'lista_regalos'], regalos: ['Juego de copas de cristal', 'Viaje de luna de miel', 'Vajilla para 12'],
+    efectos: {
+      particulas: { tipo: 'destellos', cantidad: 'normal' },
+      fondoAnimado: 'aurora',
+      stickers: [{ stickerId: 'anim_anillos', x: 79, y: 3, ancho: 17 }],
+    },
+    ejemplo: { historia: 'Un viaje, una canción y una pregunta bajo las estrellas. Ahora queremos celebrarlo con quienes más queremos.', padrinos: [['Daniela Restrepo', 'Madrina'], ['Juan Pablo Gómez', 'Padrino']] },
+  },
+  {
+    id: 'premium-boda-lluvia-petalos', nombre: 'Boda lluvia de pétalos', descripcion: 'Pétalos que caen y corazones que suben', categoria: 'Bodas', tipo: 'boda', kitId: 'jardin',
+    nombresEjemplo: 'Sofía & Nicolás', lugarEjemplo: 'Jardín Botánico, Medellín', hora: '16:00', kicker: 'Nos casamos', apertura: 'libro', premium: true,
+    momentos: [['16:00', 'Ceremonia en el jardín'], ['18:00', 'Recepción']], vestimenta: { etiqueta: 'Formal de jardín', colores: ['#F9A8D4', '#8BA888', '#FFFFFF'] },
+    extras: ['padrinos'],
+    efectos: {
+      particulas: { tipo: 'petalos', cantidad: 'normal' },
+      fondoAnimado: 'degradado',
+      stickers: [
+        { stickerId: 'anim_corazones', x: 2, y: 2, ancho: 20 },
+        { stickerId: 'anim_corazones', x: 78, y: 2, ancho: 20 },
+      ],
+    },
+  },
+  {
+    id: 'premium-xv-noche-estrellas', nombre: 'XV noche de estrellas', descripcion: 'Estrellas que titilan sobre una aurora de color', categoria: 'XV años', tipo: 'quince_anos', kitId: 'azul_royal',
+    nombresEjemplo: 'Mis XV · Valeria', lugarEjemplo: 'Salón Imperial, Cali', hora: '20:00', kicker: 'Mis quince años', apertura: 'telon', premium: true, destacada: true,
+    momentos: [['20:00', 'Recepción'], ['21:00', 'Vals'], ['22:00', 'Fiesta']], vestimenta: { etiqueta: 'Gala', colores: ['#1E3A8A', '#C0C0C0', '#FFFFFF'] },
+    extras: ['playlist'],
+    efectos: {
+      particulas: { tipo: 'estrellas', cantidad: 'muchas' },
+      fondoAnimado: 'aurora',
+      stickers: [{ stickerId: 'anim_estrellas', x: 78, y: 2, ancho: 19 }],
+    },
+  },
+  {
+    id: 'premium-xv-mariposas-magicas', nombre: 'XV mariposas mágicas', descripcion: 'Mariposas que vuelan entre destellos', categoria: 'XV años', tipo: 'quince_anos', kitId: 'lila_mariposas',
+    nombresEjemplo: 'Mis XV · Mariana', lugarEjemplo: 'Hacienda Los Lagos, Pereira', hora: '19:00', kicker: 'Mis quince años', premium: true,
+    momentos: [['19:00', 'Misa de acción de gracias'], ['20:30', 'Vals y fiesta']], vestimenta: { etiqueta: 'Formal', colores: ['#C4B5FD', '#F5D0FE', '#FFFFFF'] },
+    efectos: {
+      particulas: { tipo: 'destellos', cantidad: 'normal' },
+      fondoAnimado: 'degradado',
+      stickers: [
+        { stickerId: 'anim_mariposa', x: 3, y: 4, ancho: 20, rotacion: -12 },
+        { stickerId: 'anim_mariposa', x: 80, y: 78, ancho: 16, rotacion: 14 },
+      ],
+    },
+  },
+  {
+    id: 'premium-cumple-fiesta-total', nombre: 'Cumpleaños fiesta total', descripcion: 'Confeti, globos que flotan y pastel con velas', categoria: 'Cumpleaños', tipo: 'cumpleanos', kitId: 'pop',
+    nombresEjemplo: 'Los 30 de Camilo', lugarEjemplo: 'Terraza 93, Bogotá', hora: '20:00', kicker: '¡Vamos de fiesta!', apertura: 'globo', premium: true, destacada: true,
+    momentos: [['20:00', 'Llegada'], ['21:00', 'Torta'], ['22:00', 'Rumba']], extras: ['playlist'],
+    efectos: {
+      particulas: { tipo: 'confeti', cantidad: 'normal' },
+      fondoAnimado: 'ondas',
+      stickers: [
+        { stickerId: 'anim_globos', x: 2, y: 2, ancho: 22 },
+        { stickerId: 'anim_pastel', x: 80, y: 78, ancho: 16 },
+      ],
+    },
+    ejemplo: { canciones: [['Vivir mi vida', 'Marc Anthony'], ['La bicicleta', 'Carlos Vives & Shakira']] },
+  },
+  {
+    id: 'premium-infantil-burbujas', nombre: 'Fiesta de burbujas', descripcion: 'Burbujas, globos y un regalo que salta', categoria: 'Infantiles', tipo: 'cumpleanos_infantil', kitId: 'nube',
+    nombresEjemplo: 'Sofi cumple 5', lugarEjemplo: 'Parque de diversiones Mundo Aventura', hora: '15:00', kicker: '¡Ven a mi fiesta!', apertura: 'caja', premium: true,
+    momentos: [['15:00', 'Juegos'], ['16:30', 'Piñata y torta']], extras: ['lista_regalos'], regalos: ['Set de pintura', 'Libro de cuentos', 'Muñeca'],
+    efectos: {
+      particulas: { tipo: 'burbujas', cantidad: 'normal' },
+      stickers: [
+        { stickerId: 'anim_globos', x: 2, y: 2, ancho: 22 },
+        { stickerId: 'anim_regalo', x: 81, y: 79, ancho: 15 },
+      ],
+    },
+  },
+  {
+    id: 'premium-baby-luna', nombre: 'Baby shower bajo la luna', descripcion: 'Luna dormida, estrellas y aurora suave', categoria: 'Bebés', tipo: 'baby_shower', kitId: 'osito_azul',
+    nombresEjemplo: 'Baby shower de Emiliano', lugarEjemplo: 'Casa de la abuela, Chía', hora: '15:00', kicker: 'Te esperamos con amor', premium: true,
+    momentos: [['15:00', 'Bienvenida'], ['16:00', 'Juegos'], ['17:00', 'Apertura de regalos']], extras: ['lista_regalos'], regalos: ['Pañales etapa 1', 'Cobija suave', 'Coche'],
+    efectos: {
+      particulas: { tipo: 'estrellas', cantidad: 'pocas' },
+      fondoAnimado: 'aurora',
+      stickers: [{ stickerId: 'anim_luna', x: 74, y: 2, ancho: 24 }],
+    },
+  },
+  {
+    id: 'premium-grado-honor', nombre: 'Grado con honores', descripcion: 'Birrete al aire, confeti y fuegos artificiales', categoria: 'Celebraciones', tipo: 'grado', kitId: 'toga',
+    nombresEjemplo: 'Grado de Laura Martínez', lugarEjemplo: 'Auditorio Universidad Nacional', hora: '10:00', kicker: '¡Lo logré!', premium: true,
+    momentos: [['10:00', 'Ceremonia de grado'], ['13:00', 'Almuerzo de celebración']],
+    efectos: {
+      particulas: { tipo: 'confeti', cantidad: 'pocas' },
+      stickers: [
+        { stickerId: 'anim_birrete', x: 3, y: 2, ancho: 20 },
+        { stickerId: 'anim_fuegos', x: 80, y: 77, ancho: 17 },
+      ],
+    },
+  },
+  {
+    id: 'premium-aniversario-corazones', nombre: 'Aniversario de corazones', descripcion: 'Corazones que suben y un corazón que late', categoria: 'Celebraciones', tipo: 'aniversario', kitId: 'rosa_dorado',
+    nombresEjemplo: 'Ana & Jorge · 25 años', lugarEjemplo: 'Restaurante Andrés, Chía', hora: '19:00', kicker: 'Bodas de plata', premium: true,
+    momentos: [['19:00', 'Renovación de votos'], ['20:00', 'Cena']],
+    efectos: {
+      particulas: { tipo: 'corazones', cantidad: 'normal' },
+      fondoAnimado: 'degradado',
+      stickers: [{ stickerId: 'anim_corazon', x: 80, y: 3, ancho: 15, movimiento: 'flotar' }],
+    },
+    ejemplo: { historia: 'Veinticinco años, tres hijos y una casa llena de risas. Queremos brindar por todo lo vivido.' },
+  },
+  {
+    id: 'premium-fin-de-ano-brindis', nombre: 'Fin de año con brindis', descripcion: 'Fuegos artificiales, brindis y destellos dorados', categoria: 'Diciembre', tipo: 'navidad', kitId: 'fin_de_ano',
+    nombresEjemplo: 'Cena de fin de año', lugarEjemplo: 'Casa de los Rodríguez', hora: '21:00', kicker: '¡Feliz año nuevo!', premium: true,
+    momentos: [['21:00', 'Cena'], ['23:55', 'Uvas y cuenta regresiva'], ['00:00', 'Brindis']],
+    efectos: {
+      particulas: { tipo: 'destellos', cantidad: 'muchas' },
+      stickers: [
+        { stickerId: 'anim_fuegos', x: 2, y: 2, ancho: 24 },
+        { stickerId: 'anim_brindis', x: 81, y: 78, ancho: 16 },
+      ],
+    },
+  },
 ]
 
 export function obtenerPlantilla(id?: string | null): Plantilla | undefined {
@@ -686,14 +814,42 @@ export function eventoDesdePlantilla(
     return { ...s2, datos: d }
   })
 
+  // Stickers que trae la plantilla, encima del bloque indicado (por defecto, la portada)
+  for (const [i, st] of (plantilla.efectos?.stickers || []).entries()) {
+    const def = obtenerSticker(st.stickerId)
+    const destino = secciones.find((s) => s.tipo === (st.bloque || 'cabecera'))
+    if (!def || !destino) continue
+    const elemento: ElementoLienzo = {
+      id: `el-pl-${i}-${Math.random().toString(36).slice(2, 7)}`,
+      tipo: 'sticker',
+      stickerId: st.stickerId,
+      x: st.x,
+      y: st.y,
+      ancho: st.ancho,
+      alto: Math.round(st.ancho * def.proporcion * 100) / 100,
+      rotacion: st.rotacion || 0,
+      opacidad: 1,
+      z: 10 + i,
+      animacion: 'zoom',
+      movimiento: st.movimiento,
+      color: st.color,
+    }
+    secciones = secciones.map((s) => (s.id === destino.id ? { ...s, elementos: [...(s.elementos || []), elemento] } : s))
+  }
+
   const visual = evento.configuracionVisual!
   const experiencia = experienciaDe(visual)
+  const efectos = plantilla.efectos
   return {
     ...evento,
     subtitulo: plantilla.kicker || evento.subtitulo,
     secciones,
     configuracionVisual: {
       ...visual,
+      ...(efectos?.escena ? { escena: efectos.escena } : {}),
+      ...(efectos?.particulas?.tipo ? { particulas: efectos.particulas } : {}),
+      ...(efectos?.fondoAnimado ? { fondoAnimado: efectos.fondoAnimado } : {}),
+      ...(plantilla.premium ? { plantillaPremium: plantilla.id } : {}),
       experiencia: {
         ...experiencia,
         apertura: plantilla.apertura || experiencia.apertura,
@@ -701,4 +857,22 @@ export function eventoDesdePlantilla(
       },
     },
   }
+}
+
+export interface StickerPlantilla {
+  stickerId: string
+  x: number // % del ancho del bloque
+  y: number // % del alto del bloque
+  ancho: number // % del ancho del bloque
+  bloque?: TipoSeccion // Bloque donde va (por defecto la portada)
+  rotacion?: number
+  color?: string
+  movimiento?: MovimientoContinuo
+}
+
+export interface EfectosPlantilla {
+  escena?: TipoEscena
+  particulas?: ParticulasConfig
+  fondoAnimado?: TipoFondoAnimado
+  stickers?: StickerPlantilla[]
 }

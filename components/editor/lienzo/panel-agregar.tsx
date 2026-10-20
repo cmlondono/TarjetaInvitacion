@@ -167,7 +167,12 @@ function ContenidoPanel(props: PanelAgregarProps) {
           <div className="space-y-4">
             {CATEGORIAS_STICKERS.map((cat) => (
               <div key={cat}>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">{cat}</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+                  {cat === 'Animados' ? 'Animados (GIF)' : cat}
+                  {cat === 'Animados' && (
+                    <span className="px-1.5 py-px rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-extrabold normal-case tracking-normal">★ Premium</span>
+                  )}
+                </p>
                 <div className="grid grid-cols-4 gap-2">
                   {CATALOGO_STICKERS.filter((s) => s.categoria === cat).map((s) => (
                     <button

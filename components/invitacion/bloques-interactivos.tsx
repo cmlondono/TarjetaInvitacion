@@ -223,11 +223,17 @@ export function BloqueListaRegalos({ seccion }: PropsBloque) {
         return (
           <div key={r.id} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <Caja estilo={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <span style={{ width: 24, height: 24, borderRadius: 8, flexShrink: 0, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', ...(reservado ? { backgroundColor: 'var(--inv-acento)', color: 'var(--inv-texto-acento)' } : { border: '2px solid var(--inv-linea)' }) }}>
-                {reservado && icono.check}
-              </span>
+              {r.imagen ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={r.imagen} alt="" style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'cover', flexShrink: 0, opacity: reservado ? 0.55 : 1 }} />
+              ) : (
+                <span style={{ width: 24, height: 24, borderRadius: 8, flexShrink: 0, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', ...(reservado ? { backgroundColor: 'var(--inv-acento)', color: 'var(--inv-texto-acento)' } : { border: '2px solid var(--inv-linea)' }) }}>
+                  {reservado && icono.check}
+                </span>
+              )}
               <span style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 <span style={{ fontSize: 15, fontWeight: 600, textDecoration: reservado ? 'line-through' : undefined, opacity: reservado ? 0.7 : 1 }}>{r.nombre}</span>
+                {r.precio && !reservado && <span style={{ fontSize: 12, color: 'var(--inv-tinta-suave)' }}>{r.precio}</span>}
                 {reservado && <span style={{ fontSize: 12, color: 'var(--inv-tinta-suave)' }}>{esMio ? 'Lo llevas tú' : 'Ya está reservado'}</span>}
               </span>
               {r.enlace && !reservado && (

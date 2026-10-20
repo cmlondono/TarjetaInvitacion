@@ -1,6 +1,8 @@
 import { unstable_cache } from 'next/cache'
 import { obtenerClienteSupabase } from '@/lib/supabase'
 import { KITS } from './kits'
+import type { TipoEscena } from '@/types/invitation'
+import { CATALOGO_FONDOS_ANIMADOS, CATALOGO_PARTICULAS } from '@/components/invitacion/particulas'
 import { CATEGORIAS_PLANTILLAS, PLANTILLAS, type CategoriaPlantilla, type Plantilla } from './plantillas'
 
 /**
@@ -18,6 +20,9 @@ export interface FilaPlantilla {
 }
 
 export const ETIQUETA_PLANTILLAS = 'plantillas'
+
+// Escenas válidas (el catálogo con nombres vive en un componente de cliente)
+const ESCENAS_VALIDAS: TipoEscena[] = ['comic', 'ciudad', 'tormenta', 'castillo', 'hielo', 'hadas', 'aranas', 'calabazas', 'fantasmas', 'brujas', 'heroe_dia']
 
 /** Filas de la tabla, o null si la tabla no existe o no hay base de datos */
 export async function leerTablaPlantillas(): Promise<FilaPlantilla[] | null> {
@@ -56,11 +61,31 @@ export async function obtenerPlantillaPublicada(id?: string | null): Promise<Pla
 const texto = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : undefined)
 
 /**
- * Cambios permitidos desde el panel: textos, categoría, estilo, hora y destacada.
- * Lo demás (momentos, bloques extra, contenido de ejemplo) se conserva tal cual.
+ * Cambios permitidos desde el panel: textos, categoría, estilo, hora, destacada, Premium y efectos
+ * (escena, partículas y fondo en movimiento). Lo demás (momentos, bloques extra, contenido de ejemplo
+ * y los stickers que trae la plantilla) se conserva tal cual.
  */
-export function limpiarCambiosPlantilla(cambios: Record<string, unknown>): Partial<Plantilla> {
+export function limpiarCambiosPlantilla(cambios: Record<string, unknown>, actual?: Plantilla): Partial<Plantilla> {
   const limpio: Partial<Plantilla> = {}
+  if (typeof cambios.premium === 'boolean') limpio.premium = cambios.premium
+  if (cambios.efectos && typeof cambios.efectos === 'object') {
+    const e = cambios.efectos as Record<string, any>
+    const efectos = { ...(actual?.efectos || {}) }
+    if ('escena' in e) efectos.escena = ESCENAS_VALIDAS.includes(e.escena) ? e.escena : undefined
+    if ('fondoAnimado' in e) efectos.fondoAnimado = CATALOGO_FONDOS_ANIMADOS.some((x) => x.id === e.fondoAnimado) ? e.fondoAnimado : undefined
+    if ('particulas' in e) {
+      const p = e.particulas
+      efectos.particulas =
+        p && CATALOGO_PARTICULAS.some((x) => x.id === p.tipo)
+          ? {
+              tipo: p.tipo,
+              cantidad: ['pocas', 'normal', 'muchas'].includes(p.cantidad) ? p.cantidad : undefined,
+              color: typeof p.color === 'string' && /^#[0-9a-f]{6}$/i.test(p.color) ? p.color : undefined,
+            }
+          : undefined
+    }
+    limpio.efectos = efectos
+  }
   const nombre = texto(cambios.nombre, 80)
   if (nombre) limpio.nombre = nombre
   const descripcion = texto(cambios.descripcion, 160)

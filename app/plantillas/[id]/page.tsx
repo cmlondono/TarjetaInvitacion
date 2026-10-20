@@ -31,5 +31,5 @@ export default async function PaginaPlantilla({ params }: { params: Promise<{ id
   // Se arma en el servidor para que la vista sea idéntica al hidratar (usa fechas e ids aleatorios)
   const evento = eventoDesdePlantilla(plantilla, {}, true)
 
-  return <VistaPlantilla evento={evento} plantillaId={plantilla.id} nombre={plantilla.nombre} descripcion={plantilla.descripcion} />
+  return <VistaPlantilla evento={evento} plantillaId={plantilla.id} nombre={plantilla.nombre} descripcion={plantilla.descripcion} premium={plantilla.premium} />
 }

@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import { STICKERS_ANIMADOS } from './stickers-animados'
 
 /**
  * Biblioteca de stickers y ornamentos vectoriales.
@@ -12,6 +13,7 @@ export interface DefinicionSticker {
   viewBox: string
   proporcion: number
   contenido: ReactNode
+  animado?: boolean // Sticker animado («GIF»): función Premium
 }
 
 export type CategoriaSticker =
@@ -21,6 +23,7 @@ export type CategoriaSticker =
   | 'Celebración'
   | 'Bebé & Niños'
   | 'Grados & Logros'
+  | 'Animados'
 
 const trazo = {
   fill: 'none',
@@ -41,7 +44,7 @@ const HOJAS_OLIVO = [
   [86, 24, 35],
 ]
 
-export const CATALOGO_STICKERS: DefinicionSticker[] = [
+const STICKERS_FIJOS: DefinicionSticker[] = [
   // ─────────── Florales ───────────
   {
     id: 'rama_olivo',
@@ -624,7 +627,10 @@ export const CATALOGO_STICKERS: DefinicionSticker[] = [
   },
 ]
 
+export const CATALOGO_STICKERS: DefinicionSticker[] = [...STICKERS_ANIMADOS, ...STICKERS_FIJOS]
+
 export const CATEGORIAS_STICKERS: CategoriaSticker[] = [
+  'Animados',
   'Florales',
   'Ornamentos',
   'Boda & Amor',

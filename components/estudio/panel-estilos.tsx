@@ -7,9 +7,10 @@ import { infoEvento } from '@/lib/estudio/eventos'
 import { CATALOGO_FUENTES, familiaFuente } from '@/lib/editor/estilos'
 import { MuestraOrnamento } from '@/components/invitacion/ornamentos'
 import { CapaEscena, CATALOGO_ESCENAS } from '@/components/invitacion/escenas'
+import { CapaFondoAnimado, CapaParticulas, CATALOGO_FONDOS_ANIMADOS, CATALOGO_PARTICULAS } from '@/components/invitacion/particulas'
 import { textoSobre } from '@/components/invitacion/tema'
 import { Check } from 'lucide-react'
-import { EditorFotoFondo, Segmentos, TituloGrupo } from './ui'
+import { EditorFotoFondo, InsigniaPremium, Segmentos, TituloGrupo } from './ui'
 
 function TarjetaKit({ kit, activo, alElegir }: { kit: KitEstilo; activo: boolean; alElegir: () => void }) {
   const caligrafica = ['greatvibes', 'alexbrush', 'parisienne', 'dancing', 'pacifico'].includes(kit.fuenteTitulo)
@@ -142,6 +143,79 @@ export function PanelEstilos({ visual, tipoEvento, eventoId, alCambiar }: PanelE
             )
           })}
         </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <TituloGrupo>Fondo en movimiento</TituloGrupo>
+          <InsigniaPremium />
+        </div>
+        <p className="m-0 text-[13px] text-slate-600">Colores de tu estilo que se mueven suavemente detrás de todo.</p>
+        <div className="grid grid-cols-2 gap-2">
+          {[{ id: undefined, nombre: 'Ninguno' }, ...CATALOGO_FONDOS_ANIMADOS].map((f) => {
+            const activa = visual.fondoAnimado === f.id
+            return (
+              <button key={f.id || 'ninguno'} type="button" aria-pressed={activa} onClick={() => alCambiar({ ...visual, fondoAnimado: f.id })} className={`flex flex-col rounded-xl overflow-hidden text-left cursor-pointer ${activa ? 'ring-2 ring-amber-500' : 'border border-slate-200 hover:border-slate-300'}`}>
+                <span className="relative block h-16" style={{ backgroundColor: visual.colorFondo }}>
+                  <CapaFondoAnimado tipo={f.id} colores={{ fondo: visual.colorFondo, acento: visual.colorPrimario, detalle: visual.colorSecundario }} />
+                </span>
+                <span className="px-2 py-1.5 text-[12px] font-semibold text-slate-800 leading-tight">{f.nombre}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <TituloGrupo>Partículas</TituloGrupo>
+          <InsigniaPremium />
+        </div>
+        <p className="m-0 text-[13px] text-slate-600">Confeti, pétalos, nieve o brillos que se mueven sobre la invitación.</p>
+        <div className="grid grid-cols-3 gap-2">
+          {[{ id: undefined, nombre: 'Ninguna' }, ...CATALOGO_PARTICULAS].map((p) => {
+            const activa = (visual.particulas?.tipo || undefined) === p.id
+            return (
+              <button
+                key={p.id || 'ninguna'}
+                type="button"
+                aria-pressed={activa}
+                onClick={() => alCambiar({ ...visual, particulas: p.id ? { ...visual.particulas, tipo: p.id } : undefined })}
+                className={`flex flex-col rounded-xl overflow-hidden text-left cursor-pointer ${activa ? 'ring-2 ring-amber-500' : 'border border-slate-200 hover:border-slate-300'}`}
+              >
+                <span className="relative block h-16" style={{ backgroundColor: p.id === 'nieve' ? '#334155' : visual.colorFondo }}>
+                  {p.id && <CapaParticulas config={{ tipo: p.id, cantidad: 'pocas', color: visual.particulas?.tipo === p.id ? visual.particulas?.color : undefined }} colores={{ fondo: visual.colorFondo, acento: visual.colorPrimario, detalle: visual.colorSecundario }} />}
+                </span>
+                <span className="px-2 py-1.5 text-[12px] font-semibold text-slate-800 leading-tight">{p.nombre}</span>
+              </button>
+            )
+          })}
+        </div>
+        {visual.particulas?.tipo && (
+          <div className="flex flex-col gap-3">
+            <Segmentos
+              etiqueta="Cantidad"
+              opciones={[
+                { id: 'pocas', nombre: 'Pocas' },
+                { id: 'normal', nombre: 'Normal' },
+                { id: 'muchas', nombre: 'Muchas' },
+              ]}
+              valor={visual.particulas.cantidad || 'normal'}
+              alCambiar={(cantidad) => alCambiar({ ...visual, particulas: { ...visual.particulas!, cantidad } })}
+            />
+            <label className="flex items-center gap-3 cursor-pointer">
+              <span className="relative w-10 h-10 rounded-xl border border-slate-300 shrink-0 overflow-hidden" style={{ backgroundColor: visual.particulas.color || visual.colorPrimario }}>
+                <input type="color" aria-label="Color de las partículas" value={visual.particulas.color || visual.colorPrimario || '#000000'} onChange={(e) => alCambiar({ ...visual, particulas: { ...visual.particulas!, color: e.target.value } }, true)} className="absolute inset-0 opacity-0 cursor-pointer" />
+              </span>
+              <span className="flex-1 text-[14px] font-semibold text-slate-800">Color</span>
+              {visual.particulas.color && (
+                <button type="button" onClick={() => alCambiar({ ...visual, particulas: { ...visual.particulas!, color: undefined } })} className="text-[12px] font-bold text-slate-700 underline cursor-pointer">
+                  Colores del efecto
+                </button>
+              )}
+            </label>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-3">

@@ -420,7 +420,13 @@ export const InvitadoRepositorio = {
     evento: DetalleEvento,
     invitadoData: Omit<Invitado, 'id' | 'codigoAcceso'>,
     limiteMaximoPersonalizado?: number
-  ): { exito: boolean; invitado?: Invitado; error?: string } {
+  ): {
+    exito: boolean
+    invitado?: Invitado
+    error?: string
+    /** Guardado en la base de datos: null si quedó guardado, o el mensaje de error */
+    guardado?: Promise<string | null>
+  } {
     const invitadosActuales = this.obtenerPorEvento(evento.id)
 
     // Regla de negocio inmutable:
@@ -465,15 +471,17 @@ export const InvitadoRepositorio = {
         console.warn('Advertencia guardando invitados en localStorage:', err)
       }
 
-      // Sincronizar en segundo plano con la API del servidor
-      fetch('/api/invitados', {
+      // La base de datos es la fuente de verdad: sin ella el enlace del invitado no funciona en otros teléfonos
+      const guardado = fetch('/api/invitados', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventoId: evento.id, tokenAdmin: evento.tokenAdmin, invitado: nuevoInvitado }),
-      }).catch((e) => console.warn('Aviso sincronizando con /api/invitados:', e))
+      })
+        .then(async (res) => (res.ok ? null : (await res.json().catch(() => null))?.error || 'No se pudo guardar el invitado en la base de datos.'))
+        .catch(() => 'Sin conexión: el invitado no se guardó en la base de datos.')
+      return { exito: true, invitado: nuevoInvitado, guardado }
     }
 
-    // La persistencia en la base de datos la hace /api/invitados (servidor)
     return { exito: true, invitado: nuevoInvitado }
   },
 
@@ -669,6 +677,20 @@ export const InvitadoRepositorio = {
     } catch {}
 
     return { exito: true, invitado: actualizado }
+  },
+
+  /** Cambia el teléfono de un invitado en este navegador y en la base de datos (solo ese campo) */
+  actualizarTelefono(invitadoId: string, telefono: string | undefined): void {
+    if (typeof window !== 'undefined') {
+      const todos = this.obtenerTodos().map((i) => (i.id === invitadoId ? { ...i, telefono } : i))
+      localStorage.setItem(LOCAL_STORAGE_KEY_INVITADOS, JSON.stringify(todos))
+    }
+    try {
+      const supabase = obtenerClienteSupabase()
+      if (supabase) {
+        supabase.from('invitados').update({ telefono: telefono || null }).eq('id', invitadoId).then()
+      }
+    } catch {}
   },
 
   eliminar(id: string): void {

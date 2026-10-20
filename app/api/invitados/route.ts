@@ -15,17 +15,20 @@ interface EventoResuelto {
 async function resolverEvento(eventoId: string | null, slug: string | null): Promise<EventoResuelto | null> {
   const supabase = obtenerClienteSupabase()
   if (supabase) {
-    let consulta = supabase.from('eventos').select('id, token_admin, es_premium, limite_gratis_invitados, configuracion_visual')
+    // El cupo gratis de cada evento vive en configuracion_visual.limiteGratisInvitados
+    // (la tabla eventos no tiene columna limite_gratis_invitados: pedirla hace fallar la consulta)
+    let consulta = supabase.from('eventos').select('id, token_admin, es_premium, configuracion_visual')
     if (eventoId && eventoId !== 'demo') consulta = consulta.eq('id', eventoId)
     else if (slug) consulta = consulta.eq('slug_publico', slug)
     else return null
-    const { data } = await consulta.maybeSingle()
+    const { data, error } = await consulta.maybeSingle()
+    if (error) console.error('[api/invitados] No se pudo consultar el evento:', error.message)
     if (data) {
       return {
         id: data.id,
         tokenAdmin: data.token_admin,
         esPremium: Boolean(data.es_premium),
-        limite: Number(data.limite_gratis_invitados ?? data.configuracion_visual?.limiteGratisInvitados ?? 50) || 50,
+        limite: Number(data.configuracion_visual?.limiteGratisInvitados ?? 50) || 50,
       }
     }
   }
@@ -136,25 +139,26 @@ export async function POST(req: NextRequest) {
 
     if (supabase && lista.length > 0) {
       for (const inv of lista) {
-        try {
-          await supabase.from('invitados').upsert({
-            id: inv.id,
-            evento_id: evento.id,
-            nombre: inv.nombre,
-            pases: inv.pases || 1,
-            es_plural: Boolean(inv.esPlural),
-            telefono: inv.telefono || null,
-            codigo_acceso: inv.codigoAcceso,
-            confirmado: Boolean(inv.confirmado),
-            estado_confirmacion: inv.estadoConfirmacion || 'pendiente',
-            cupos_confirmados: inv.cuposConfirmados || 0,
-            mensaje_confirmacion: inv.mensajeConfirmacion || null,
-            fecha_confirmacion: inv.fechaConfirmacion || null,
-            enviado_por_whatsapp: Boolean(inv.enviadoPorWhatsApp),
-            fecha_envio_whatsapp: inv.fechaEnvioWhatsApp || null,
-          })
-        } catch (dbErr) {
-          console.warn('Aviso sincronizando invitado con Supabase:', dbErr)
+        const { error } = await supabase.from('invitados').upsert({
+          id: inv.id,
+          evento_id: evento.id,
+          nombre: inv.nombre,
+          pases: inv.pases || 1,
+          es_plural: Boolean(inv.esPlural),
+          telefono: inv.telefono || null,
+          codigo_acceso: inv.codigoAcceso,
+          confirmado: Boolean(inv.confirmado),
+          estado_confirmacion: inv.estadoConfirmacion || 'pendiente',
+          cupos_confirmados: inv.cuposConfirmados || 0,
+          mensaje_confirmacion: inv.mensajeConfirmacion || null,
+          fecha_confirmacion: inv.fechaConfirmacion || null,
+          enviado_por_whatsapp: Boolean(inv.enviadoPorWhatsApp),
+          fecha_envio_whatsapp: inv.fechaEnvioWhatsApp || null,
+        })
+        // Supabase no lanza excepciones: devuelve el error. Si no se guarda, el panel debe saberlo
+        if (error) {
+          console.error('[api/invitados] No se pudo guardar el invitado:', error.message)
+          return NextResponse.json({ exito: false, error: 'No se pudo guardar el invitado en la base de datos. Intenta de nuevo.' }, { status: 502 })
         }
       }
     }

@@ -59,6 +59,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
   const [mostrarModalUpgrade, setMostrarModalUpgrade] = useState(false)
   const [mostrarModalDespacho, setMostrarModalDespacho] = useState(false)
   const [errorLimite, setErrorLimite] = useState<string | null>(null)
+  const [errorGuardado, setErrorGuardado] = useState<string | null>(null)
   const [alertaPago, setAlertaPago] = useState<{
     tipo: 'exito' | 'error' | 'info'
     mensaje: string
@@ -289,6 +290,11 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
     setEsPlural(false)
     setTelefonoNuevo('')
     setErrorLimite(null)
+    setErrorGuardado(null)
+    // Avisar si no llegó a la base de datos: su enlace personal no funcionaría en otros teléfonos
+    resultado.guardado?.then((error) => {
+      if (error) setErrorGuardado(`«${resultado.invitado?.nombre}» no se guardó en la nube: ${error} Bórralo y agrégalo otra vez antes de enviarle su enlace.`)
+    })
   }
 
   const handlePagoCompletado = () => {
@@ -628,6 +634,11 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
             Cada invitado dispondrá de una tarjeta nominal con sus cupos autorizados y enlace individual.
           </p>
 
+          {errorGuardado && (
+            <p role="alert" className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs font-semibold text-rose-700">
+              {errorGuardado}
+            </p>
+          )}
           <form onSubmit={handleAgregarInvitado} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 text-xs">
             <div className="sm:col-span-2 lg:col-span-5">
               <label className="font-semibold text-slate-700 block mb-1.5">

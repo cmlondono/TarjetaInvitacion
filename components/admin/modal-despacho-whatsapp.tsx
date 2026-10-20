@@ -132,16 +132,9 @@ export function ModalDespachoWhatsApp({
   // Guardar teléfono modificado en el acto
   const handleGuardarTelefono = () => {
     if (!invitadoActual) return
-    const telLimpio = telefonoNuevo.trim()
-    const todos = InvitadoRepositorio.obtenerTodos()
-    const idx = todos.findIndex((i) => i.id === invitadoActual.id)
-    if (idx !== -1) {
-      todos[idx] = { ...todos[idx], telefono: telLimpio || undefined }
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('tarjeton_invitados', JSON.stringify(todos))
-      }
-      onSincronizar()
-    }
+    // Antes se guardaba solo en el navegador (y con otra clave): ahora llega a la base de datos
+    InvitadoRepositorio.actualizarTelefono(invitadoActual.id, telefonoNuevo.trim() || undefined)
+    onSincronizar()
     setEditandoTelefono(false)
   }
 

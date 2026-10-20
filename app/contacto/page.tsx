@@ -14,6 +14,9 @@ export const revalidate = 300
 
 export default async function PaginaContacto() {
   const { whatsappSoporte } = await obtenerConfiguracionGlobal()
+  // Sin un número real configurado en el panel no se muestra el canal (un número de ejemplo sería un dato falso)
+  const numeroWhatsapp = (whatsappSoporte || '').replace(/[^\d]/g, '')
+  const hayWhatsapp = numeroWhatsapp.length >= 10 && numeroWhatsapp !== '573001234567'
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-serif" style={{ fontFamily: 'var(--font-roboto-slab), serif' }}>
       <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-8 text-slate-700 dark:text-slate-300">
@@ -29,7 +32,7 @@ export default async function PaginaContacto() {
             Contacto & Atención al Cliente
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 font-sans">
-            Canales de comunicación oficiales de la plataforma <strong>Tarjetón</strong> (<span className="text-slate-700 dark:text-slate-300 font-mono">https://www.tarjeton.online</span>).
+            Canales de atención de la plataforma <strong>Tarjetón</strong> (<span className="text-slate-700 dark:text-slate-300 font-mono">https://www.tarjeton.online</span>).
           </p>
         </div>
 
@@ -39,27 +42,21 @@ export default async function PaginaContacto() {
             <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">
               <Mail size={18} />
             </div>
-            <h3 className="font-semibold text-slate-900 dark:text-white text-base">Correo Electrónico Oficial</h3>
+            <h3 className="font-semibold text-slate-900 dark:text-white text-base">Correo Electrónico</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
               Atención directa para consultas de servicio, activación de pases, dudas de facturación o privacidad:
             </p>
             <div className="space-y-1">
               <a
-                href="mailto:contacto@tarjeton.online"
-                className="block text-sm font-bold text-slate-900 dark:text-white underline underline-offset-4 hover:text-slate-700"
-              >
-                contacto@tarjeton.online
-              </a>
-              <a
                 href="mailto:carlosmariolondono8@gmail.com"
-                className="block text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+                className="block text-sm font-bold text-slate-900 dark:text-white underline underline-offset-4 hover:text-slate-700 break-all"
               >
                 carlosmariolondono8@gmail.com
               </a>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-3">
+          {hayWhatsapp && <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
               <MessageCircle size={18} />
             </div>
@@ -68,14 +65,14 @@ export default async function PaginaContacto() {
               Asistencia personalizada para anfitriones y organizadores de eventos protocolares:
             </p>
             <a
-              href={`https://wa.me/${(whatsappSoporte || '').replace(/[^\d]/g, '')}`}
+              href={`https://wa.me/${numeroWhatsapp}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block text-sm font-bold text-emerald-600 hover:text-emerald-700"
             >
               Contactar por WhatsApp →
             </a>
-          </div>
+          </div>}
         </div>
 
         {/* Horarios y compromisos */}

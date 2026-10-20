@@ -32,7 +32,7 @@ export default function PoliticaPrivacidad() {
             El presente sitio web <strong>Tarjetón</strong> (accesible desde el dominio oficial <span className="font-mono text-xs">https://www.tarjeton.online</span>) es operado para la confección, personalización y distribución de papelería digital interactiva para eventos y celebraciones formales.
           </p>
           <p>
-            Para cualquier consulta sobre privacidad, protección de datos personales o ejercicio de derechos ARCO, puede contactar al responsable a través del correo electrónico oficial: <a href="mailto:contacto@tarjeton.online" className="font-semibold underline">contacto@tarjeton.online</a> (o a <a href="mailto:carlosmariolondono8@gmail.com" className="font-semibold underline">carlosmariolondono8@gmail.com</a>).
+            Para cualquier consulta sobre privacidad, protección de datos personales o ejercicio de derechos ARCO, puede contactar al responsable a través del correo electrónico de soporte: <a href="mailto:carlosmariolondono8@gmail.com" className="font-semibold underline">carlosmariolondono8@gmail.com</a>.
           </p>
         </section>
 
@@ -121,14 +121,14 @@ export default function PoliticaPrivacidad() {
         <section className="space-y-3 font-sans">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white font-serif">5. Ciclo de Vida y Expiración</h2>
           <p>
-            Los eventos y enlaces del plan de cortesía cuentan con un ciclo de vida automático que expira 7 días después de cumplida la fecha del evento configurada por el organizador, eliminándose los datos correspondientes.
+            Los enlaces de las invitaciones dejan de estar disponibles para los invitados 7 días después de la fecha del evento configurada por el organizador. Los datos del evento y de sus invitados se conservan solo para que el organizador pueda consultarlos y se eliminan definitivamente cuando el organizador lo solicita por correo (ver sección 6).
           </p>
         </section>
 
         <section className="space-y-3 font-sans">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white font-serif">6. Ejercicio de Derechos (ARCO)</h2>
           <p>
-            Usted tiene derecho en cualquier momento a solicitar el acceso, rectificación o eliminación anticipada de cualquier evento o pase registrado. Para ejercer estos derechos, remita su solicitud a <a href="mailto:contacto@tarjeton.online" className="font-semibold underline">contacto@tarjeton.online</a> indicando el token o enlace del evento, y responderemos en un plazo máximo de 48 horas hábiles.
+            Usted tiene derecho en cualquier momento a solicitar el acceso, rectificación o eliminación anticipada de cualquier evento o pase registrado. Para ejercer estos derechos, remita su solicitud a <a href="mailto:carlosmariolondono8@gmail.com" className="font-semibold underline">carlosmariolondono8@gmail.com</a> indicando el token o enlace del evento, y responderemos en un plazo máximo de 48 horas hábiles.
           </p>
         </section>
       </div>

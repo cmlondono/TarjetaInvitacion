@@ -170,7 +170,7 @@ export default async function PaginaInicio() {
             <Lock size={15} className="text-slate-800" /> Cero contraseñas
           </div>
           <div className="flex items-center justify-center gap-2 font-medium">
-            <Smartphone size={15} className="text-slate-800" /> WhatsApp oficial
+            <Smartphone size={15} className="text-slate-800" /> Confirmación por WhatsApp
           </div>
           <div className="flex items-center justify-center gap-2 font-medium">
             <Building2 size={15} className="text-slate-800" /> Formato corporativo
@@ -257,11 +257,7 @@ export default async function PaginaInicio() {
                   </li>
                   <li className="flex items-center gap-2.5">
                     <Check size={16} className="text-slate-900 shrink-0 font-bold" />
-                    <span>Códigos QR individuales de alta resolución</span>
-                  </li>
-                  <li className="flex items-center gap-2.5">
-                    <Check size={16} className="text-slate-900 shrink-0 font-bold" />
-                    <span>Mayor periodo de archivo y soporte prioritario</span>
+                    <span>Soporte prioritario por correo</span>
                   </li>
                 </ul>
               </div>

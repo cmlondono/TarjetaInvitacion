@@ -18,7 +18,7 @@ export const CONFIGURACION_DEFAULT: ConfiguracionGlobal = {
   anunciosAdsHabilitados: true,
   modoMantenimiento: false,
   mensajeMantenimiento: 'Estamos realizando labores de mantenimiento protocolario.',
-  whatsappSoporte: '573001234567',
+  whatsappSoporte: '',
   ultimaActualizacion: new Date().toISOString(),
 }
 

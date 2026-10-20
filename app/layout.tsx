@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
-import { obtenerConfiguracionCacheada } from '@/lib/configuracion-servidor'
+import { ADSENSE_CLIENT_ID, obtenerConfiguracionCacheada } from '@/lib/configuracion-servidor'
+import { ScriptAdsense } from '@/components/ads/script-adsense'
 import { RegistrarServiceWorker } from '@/components/registrar-sw'
 import { Roboto_Slab, Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
@@ -27,7 +28,7 @@ export const metadata: Metadata = {
     template: '%s | Tarjetón',
   },
   description:
-    'Plataforma oficial para confeccionar tarjetones e invitaciones interactivas para actos solemnes, eventos corporativos, galas y celebraciones.',
+    'Plataforma para crear tarjetones e invitaciones interactivas para actos solemnes, eventos corporativos, galas y celebraciones.',
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },
@@ -40,9 +41,6 @@ export const metadata: Metadata = {
     capable: true,
     title: 'Tarjetón',
     statusBarStyle: 'default',
-  },
-  other: {
-    'google-adsense-account': 'ca-pub-4454797114720338',
   },
 }
 
@@ -61,8 +59,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const adsenseId =
-    process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID || 'ca-pub-4454797114720338'
+  const adsenseId = ADSENSE_CLIENT_ID
   // «Anuncios habilitados» del panel de administración: sin él, no se carga el script de AdSense
   const { anunciosAdsHabilitados } = await obtenerConfiguracionCacheada()
 
@@ -76,13 +73,7 @@ export default async function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@400;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Dancing+Script:wght@600;700&family=Great+Vibes&family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600;700&family=Parisienne&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Poppins:wght@400;500;600;700&family=Prata&family=Pacifico&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Fredoka:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap"
           rel="stylesheet"
         />
-        {anunciosAdsHabilitados && (
-          <script
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`}
-            crossOrigin="anonymous"
-          />
-        )}
+        {anunciosAdsHabilitados && <ScriptAdsense clientId={adsenseId} />}
       </head>
       <body className={`${robotoSlab.variable} ${inter.variable} ${playfair.variable} antialiased font-sans`}>
         {children}

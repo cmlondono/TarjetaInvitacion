@@ -40,3 +40,6 @@ export const obtenerConfiguracionCacheada = unstable_cache(obtenerConfiguracionG
 
 /** '$15.900' a partir de un valor en pesos */
 export const formatearCOP = (valor: number) => `$${Math.round(valor).toLocaleString('es-CO')}`
+
+/** Cuenta de Google AdSense del sitio (la misma de public/ads.txt) */
+export const ADSENSE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID || 'ca-pub-4454797114720338'

@@ -45,7 +45,7 @@ export default async function TerminosCondiciones() {
               <strong>Plan de Cortesía (Acceso Libre):</strong> Permite confeccionar tarjetones interactivos con cupos de cortesía por evento, financiado mediante anuncios contextuales provistos por redes publicitarias autorizadas como Google AdSense.
             </p>
             <p>
-              <strong>Pase Ilimitado Protocolario (Pago Único):</strong> Para cumbres, galas o celebraciones que requieran pases nominales ilimitados, supresión total de anuncios publicitarios y soporte prioritario, se ofrece el pase premium mediante pasarelas de pago certificadas (Mercado Pago / Wompi) a una tarifa fija y transparente de ${config.precioPremiumUSD} USD (~{formatearCOP(config.precioPremiumCOP)} COP / pago único).
+              <strong>Pase Ilimitado Protocolario (Pago Único):</strong> Para cumbres, galas o celebraciones que requieran pases nominales ilimitados, supresión total de anuncios publicitarios y soporte prioritario, se ofrece el pase premium mediante las pasarelas de pago Mercado Pago o Wompi a una tarifa fija y transparente de ${config.precioPremiumUSD} USD (~{formatearCOP(config.precioPremiumCOP)} COP / pago único).
             </p>
           </div>
         </section>
@@ -70,7 +70,7 @@ export default async function TerminosCondiciones() {
               El anfitrión puede solicitar la devolución del pago dentro de los primeros 7 días calendario siguientes a la compra, siempre que el evento no se haya realizado aún.
             </li>
             <li>
-              Para gestionar un reembolso, remita su comprobante de pago a <a href="mailto:contacto@tarjeton.online" className="font-semibold underline">contacto@tarjeton.online</a>.
+              Para gestionar un reembolso, remita su comprobante de pago a <a href="mailto:carlosmariolondono8@gmail.com" className="font-semibold underline">carlosmariolondono8@gmail.com</a>.
             </li>
           </ul>
         </section>
@@ -85,7 +85,7 @@ export default async function TerminosCondiciones() {
         <section className="space-y-3 font-sans">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white font-serif">6. Atención al Cliente</h2>
           <p>
-            Para cualquier consulta sobre estos términos, puede comunicarse a través de <a href="mailto:contacto@tarjeton.online" className="font-semibold underline">contacto@tarjeton.online</a> o mediante nuestra página de <Link href="/contacto" className="font-semibold underline">Contacto y Soporte</Link>.
+            Para cualquier consulta sobre estos términos, puede comunicarse a través de <a href="mailto:carlosmariolondono8@gmail.com" className="font-semibold underline">carlosmariolondono8@gmail.com</a> o mediante nuestra página de <Link href="/contacto" className="font-semibold underline">Contacto y Soporte</Link>.
           </p>
         </section>
       </div>

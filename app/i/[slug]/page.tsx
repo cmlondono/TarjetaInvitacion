@@ -1,6 +1,8 @@
 import { Metadata } from 'next'
 import { EventoRepositorio, limpiarEventoPublico } from '@/lib/storage'
 import { PaginaInvitacionCliente } from '@/components/invitation/pagina-invitacion-cliente'
+import { ScriptAdsense } from '@/components/ads/script-adsense'
+import { ADSENSE_CLIENT_ID, obtenerConfiguracionCacheada } from '@/lib/configuracion-servidor'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -59,6 +61,9 @@ export default async function PaginaInvitacion({ params, searchParams }: Props) 
   // Recuperar desde la base de datos (fuente de verdad) y nunca exponer el token de administración
   const eventoDb = await EventoRepositorio.obtenerPorSlugAsync(slug)
   const evento = eventoDb ? limpiarEventoPublico(eventoDb) : null
+  // Las invitaciones Premium no muestran anuncios (es lo que se vende en el plan)
+  const { anunciosAdsHabilitados } = await obtenerConfiguracionCacheada()
+  const conAnuncios = anunciosAdsHabilitados && !!evento && !evento.esPremium
 
   // Marcado estructurado JSON-LD Schema.org para SEO
   const jsonLd = evento
@@ -83,6 +88,7 @@ export default async function PaginaInvitacion({ params, searchParams }: Props) 
 
   return (
     <>
+      {conAnuncios && <ScriptAdsense clientId={ADSENSE_CLIENT_ID} siempre />}
       {jsonLd && (
         <script
           type="application/ld+json"

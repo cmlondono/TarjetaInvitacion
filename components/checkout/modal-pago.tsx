@@ -223,7 +223,7 @@ export function ModalPago({
               {/* Insignia Mercado Pago */}
               <div className="text-right">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
-                  Pasarela Oficial
+                  Pago procesado por
                 </span>
                 <span className="text-xs font-black text-[#009EE3] flex items-center justify-end gap-1">
                   <Wallet size={14} />
@@ -237,7 +237,7 @@ export function ModalPago({
               <div>
                 <p className="text-xs font-bold text-slate-900">Licencia Premium de Evento</p>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Invitados ilimitados + Sin publicidad + QR
+                  Invitados ilimitados + Sin publicidad
                 </p>
                 {cuponAplicado && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md mt-1">
@@ -445,10 +445,10 @@ export function ModalPago({
             {/* Sellos de Seguridad */}
             <div className="flex items-center justify-center gap-3 text-[10px] text-slate-500 pt-2 border-t border-slate-100 font-medium">
               <span className="flex items-center gap-1">
-                <ShieldCheck size={14} className="text-emerald-600" /> Cifrado Seguro de 256 bits
+                <ShieldCheck size={14} className="text-emerald-600" /> Conexión segura (HTTPS)
               </span>
               <span>·</span>
-              <span>Protección al Comprador Mercado Pago</span>
+              <span>El pago lo procesa Mercado Pago</span>
             </div>
           </div>
         )}

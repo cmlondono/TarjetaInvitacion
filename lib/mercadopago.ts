@@ -13,6 +13,7 @@ export interface PagoMercadoPagoResponse {
   transaction_amount: number
   payment_method_id: string
   payment_type_id: string
+  metadata?: { cupon_codigo?: string }
   payer?: {
     email?: string
   }
@@ -27,12 +28,14 @@ export async function crearPreferenciaMercadoPago({
   tituloEvento,
   emailCliente,
   precioCOP,
+  codigoCupon,
 }: {
   tokenAdmin?: string
   eventoId?: string
   tituloEvento?: string
   emailCliente?: string
   precioCOP?: number
+  codigoCupon?: string
 }): Promise<PreferenciaRespuesta | null> {
   try {
     const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN || ''
@@ -105,6 +108,8 @@ export async function crearPreferenciaMercadoPago({
       auto_return: 'approved',
       external_reference: externalReference,
       statement_descriptor: 'TARJETON',
+      // El uso del cupón se cuenta cuando el pago se aprueba (ver lib/pagos-servidor.ts)
+      metadata: codigoCupon ? { cupon_codigo: codigoCupon } : undefined,
       payment_methods: {
         excluded_payment_types: [],
         installments: 1,

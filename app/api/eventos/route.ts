@@ -147,6 +147,9 @@ export async function POST(req: NextRequest) {
         50
       evento.esPremium = Boolean(eventoExistente.esPremium)
       evento.creadoEn = eventoExistente.creadoEn || evento.creadoEn
+      // El enlace público solo cambia desde «Cambiar enlace» del panel (/api/eventos/enlace): una pestaña
+      // abierta con el enlace anterior no debe devolverlo al guardar
+      evento.slugPublico = eventoExistente.slugPublico || evento.slugPublico
       evento.secciones = fusionarInteracciones(evento.secciones, eventoExistente.secciones)
     } else {
       // Evento nuevo: snapshot del cupo vigente; Premium solo se activa tras un pago verificado

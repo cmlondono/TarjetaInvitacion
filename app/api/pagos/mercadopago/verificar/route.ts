@@ -1,98 +1,36 @@
 import { NextResponse } from 'next/server'
-import { consultarPagoMercadoPago } from '@/lib/mercadopago'
+import { activarPremiumPorPago } from '@/lib/pagos-servidor'
 import { obtenerClienteSupabase } from '@/lib/supabase'
-import { ServidorAlmacen } from '@/lib/server-storage'
-import { mapearEventoDesdeDb } from '@/lib/storage'
 
 /**
- * POST /api/pagos/mercadopago/verificar
- * Verifica y valida el estado de un pago al retornar desde Mercado Pago
- * y actualiza inmediatamente el evento a PREMIUM en Supabase y caché de servidor.
+ * POST /api/pagos/mercadopago/verificar { tokenAdmin, paymentId }
+ * Al volver de Mercado Pago, el panel del anfitrión pide activar Premium. Solo se activa si
+ * Mercado Pago confirma que ese pago está aprobado y es de este evento: el estado que trae
+ * la dirección del navegador no cuenta (cualquiera podría escribir status=approved).
  */
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { tokenAdmin, eventoId, paymentId, status } = body
-
-    if (!tokenAdmin && !eventoId) {
-      return NextResponse.json(
-        { exito: false, error: 'Identificador de evento requerido' },
-        { status: 400 }
-      )
+    const { tokenAdmin, paymentId, demo } = await request.json().catch(() => ({}))
+    if (!tokenAdmin) {
+      return NextResponse.json({ exito: false, error: 'Identificador de evento requerido' }, { status: 400 })
     }
 
-    let pagoAprobado = false
-
-    // 1. Si tenemos paymentId, verificar directamente con la API de Mercado Pago
-    if (paymentId) {
-      try {
-        const detallePago = await consultarPagoMercadoPago(paymentId)
-        if (detallePago && detallePago.status === 'approved') {
-          pagoAprobado = true
-        }
-      } catch (e) {
-        console.warn('Error consultando pago en Mercado Pago:', e)
-      }
-    }
-
-    // 2. Si status reportado por Mercado Pago en la redirección es approved
-    if (status === 'approved') {
-      pagoAprobado = true
-    }
-
-    if (!pagoAprobado) {
-      return NextResponse.json({
-        exito: false,
-        esPremium: false,
-        mensaje: 'El pago aún no ha sido confirmado por la pasarela.',
-      })
-    }
-
-    const identificador = tokenAdmin || eventoId
-
-    // 3. Activar en Supabase PostgreSQL
-    try {
+    // Solo en desarrollo local y sin credenciales de Mercado Pago: el pago simulado activa Premium
+    const sinCredenciales = !process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN.includes('00000000')
+    if (demo && process.env.NODE_ENV === 'development' && sinCredenciales) {
       const supabase = obtenerClienteSupabase()
-      if (supabase) {
-        const { data: eventoDb } = await supabase
-          .from('eventos')
-          .select('*')
-          .or(`token_admin.eq.${identificador},id.eq.${identificador}`)
-          .maybeSingle()
-
-        if (eventoDb) {
-          await supabase
-            .from('eventos')
-            .update({ es_premium: true })
-            .eq('id', eventoDb.id)
-
-          const evMapeado = mapearEventoDesdeDb({ ...eventoDb, es_premium: true })
-          ServidorAlmacen.guardarEvento(evMapeado)
-        }
-      }
-    } catch (dbErr) {
-      console.warn('Aviso actualizando Supabase en verificación de pago:', dbErr)
+      await supabase?.from('eventos').update({ es_premium: true }).eq('token_admin', String(tokenAdmin))
+      return NextResponse.json({ exito: true, esPremium: true, mensaje: 'Pago simulado (desarrollo).' })
     }
 
-    // 4. Activar en caché de memoria del servidor
-    const evMemoria =
-      ServidorAlmacen.obtenerEventoPorToken(identificador) ||
-      ServidorAlmacen.obtenerEventoPorId(identificador)
-
-    if (evMemoria) {
-      ServidorAlmacen.guardarEvento({ ...evMemoria, esPremium: true })
+    if (!paymentId) {
+      return NextResponse.json({ exito: false, esPremium: false, mensaje: 'El pago aún no ha sido confirmado por Mercado Pago.' })
     }
 
-    return NextResponse.json({
-      exito: true,
-      esPremium: true,
-      mensaje: '¡Pase Ilimitado activado con éxito!',
-    })
+    const resultado = await activarPremiumPorPago(String(paymentId), String(tokenAdmin))
+    return NextResponse.json({ exito: resultado.activado, esPremium: resultado.activado, mensaje: resultado.mensaje })
   } catch (error: any) {
     console.error('Error en /api/pagos/mercadopago/verificar:', error)
-    return NextResponse.json(
-      { exito: false, error: error.message || 'Error interno al verificar pago' },
-      { status: 500 }
-    )
+    return NextResponse.json({ exito: false, error: 'Error interno al verificar pago' }, { status: 500 })
   }
 }

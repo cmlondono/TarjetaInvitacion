@@ -79,7 +79,8 @@ export function BloquePlaylist({ seccion }: PropsBloque) {
               <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                 <span style={{ fontSize: 14, fontWeight: 700 }}>{c.titulo}</span>
                 <span style={{ fontSize: 12, color: 'var(--inv-tinta-suave)' }}>
-                  {[c.artista, c.propuestaPor ? `la propuso ${c.propuestaPor}` : ''].filter(Boolean).join(' · ')}
+                  {/* Los invitados ven «un invitado»; el nombre real solo lo ve el anfitrión en el editor */}
+                  {[c.artista, c.propuestaPor ? 'la propuso un invitado' : ''].filter(Boolean).join(' · ')}
                 </span>
               </span>
             </Caja>

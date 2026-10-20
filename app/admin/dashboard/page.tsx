@@ -43,6 +43,7 @@ import {
 } from 'lucide-react'
 import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
 import { GestionPlantillas } from '@/components/admin/gestion-plantillas'
+import { CampoNumero } from '@/components/ui/campo-numero'
 
 export default function PaginaAdminDashboard() {
   const router = useRouter()
@@ -749,11 +750,11 @@ export default function PaginaAdminDashboard() {
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
                     {nuevoTipoDescuento === 'porcentaje' ? 'Valor (% Descuento)' : 'Precio Final en COP'}
                   </label>
-                  <input
-                    type="number"
+                  <CampoNumero
                     required
+                    min={0}
                     value={nuevoValorDescuento}
-                    onChange={(e) => setNuevoValorDescuento(Number(e.target.value))}
+                    onChange={setNuevoValorDescuento}
                     placeholder={nuevoTipoDescuento === 'porcentaje' ? '20' : '9900'}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-slate-900 focus:border-slate-900 focus:outline-hidden"
                   />
@@ -764,11 +765,11 @@ export default function PaginaAdminDashboard() {
                     Límite de Usos
                   </label>
                   <div className="flex gap-2">
-                    <input
-                      type="number"
+                    <CampoNumero
                       required
+                      min={0}
                       value={nuevosUsosMaximos}
-                      onChange={(e) => setNuevosUsosMaximos(Number(e.target.value))}
+                      onChange={setNuevosUsosMaximos}
                       placeholder="100"
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-slate-900 focus:border-slate-900 focus:outline-hidden"
                     />
@@ -1403,12 +1404,10 @@ export default function PaginaAdminDashboard() {
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
                     Tarifa Base Premium en COP ($)
                   </label>
-                  <input
-                    type="number"
+                  <CampoNumero
+                    min={0}
                     value={configuracion.precioPremiumCOP}
-                    onChange={(e) =>
-                      setConfiguracion({ ...configuracion, precioPremiumCOP: Number(e.target.value) })
-                    }
+                    onChange={(v) => setConfiguracion((c) => ({ ...c, precioPremiumCOP: v }))}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-slate-900 text-sm focus:border-slate-900 focus:outline-hidden"
                   />
                   <span className="text-[10px] text-slate-500">Monto cobrado en Mercado Pago</span>
@@ -1418,13 +1417,11 @@ export default function PaginaAdminDashboard() {
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
                     Tarifa Base Premium en USD ($)
                   </label>
-                  <input
-                    type="number"
+                  <CampoNumero
                     step="0.01"
+                    min={0}
                     value={configuracion.precioPremiumUSD}
-                    onChange={(e) =>
-                      setConfiguracion({ ...configuracion, precioPremiumUSD: Number(e.target.value) })
-                    }
+                    onChange={(v) => setConfiguracion((c) => ({ ...c, precioPremiumUSD: v }))}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-slate-900 text-sm focus:border-slate-900 focus:outline-hidden"
                   />
                   <span className="text-[10px] text-slate-500">Valor de referencia visual</span>
@@ -1436,15 +1433,11 @@ export default function PaginaAdminDashboard() {
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
                     Límite Gratuito de Invitados
                   </label>
-                  <input
-                    type="number"
+                  <CampoNumero
+                    min={0}
+                    step={1}
                     value={configuracion.limiteGratisInvitados}
-                    onChange={(e) =>
-                      setConfiguracion({
-                        ...configuracion,
-                        limiteGratisInvitados: Number(e.target.value),
-                      })
-                    }
+                    onChange={(v) => setConfiguracion((c) => ({ ...c, limiteGratisInvitados: Math.round(v) }))}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-slate-900 text-sm focus:border-slate-900 focus:outline-hidden"
                   />
                   <span className="text-[10px] text-slate-500">

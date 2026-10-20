@@ -38,6 +38,7 @@ export async function POST(request: Request) {
       tituloEvento,
       emailCliente,
       precioCOP,
+      codigoCupon: promocion?.codigo,
     })
 
     if (!preferencia) {
@@ -66,7 +67,6 @@ export async function POST(request: Request) {
       ? preferencia.sandbox_init_point
       : preferencia.init_point
 
-    if (promocion) await registrarUsoCupon(promocion)
 
     return NextResponse.json({
       exito: true,

@@ -26,7 +26,7 @@ import { PanelEstilos } from './panel-estilos'
 import { PanelExperiencia } from './panel-experiencia'
 import { PanelDatos } from './panel-datos'
 import { BotonCerrar } from './ui'
-import { ArrowLeft, Eye, LayoutList, Loader2, Monitor, Palette, PencilLine, Plus, RotateCcw, Send, Smartphone, Sparkles, X } from 'lucide-react'
+import { ArrowLeft, Award, Eye, LayoutList, Loader2, Monitor, Palette, PencilLine, Plus, RotateCcw, Send, Smartphone, Sparkles, X } from 'lucide-react'
 
 type Anchura = 'movil' | 'tablet' | 'escritorio'
 
@@ -383,6 +383,16 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
             <Sparkles size={15} /> Experiencia
           </button>
         </>
+      )}
+      {!evento.esPremium && (
+        <button
+          type="button"
+          onClick={() => setPagoAbierto(true)}
+          aria-label="Pasar a Premium"
+          className="min-h-10 px-3 sm:px-3.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-900 text-[13px] font-bold flex items-center gap-1.5 shrink-0 cursor-pointer hover:bg-amber-100"
+        >
+          <Award size={15} /> {!esMovil && <span>Premium</span>}
+        </button>
       )}
       <button type="button" onClick={irAInvitados} className="min-h-10 px-3.5 sm:px-4 rounded-xl bg-slate-900 text-white text-[13px] font-bold flex items-center gap-1.5 shrink-0 cursor-pointer hover:bg-slate-800">
         <Send size={15} /> <span>{esMovil ? 'Enviar' : 'Invitados y envío'}</span>

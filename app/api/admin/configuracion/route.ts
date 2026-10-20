@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath, revalidateTag } from 'next/cache'
+import { ETIQUETA_CONFIGURACION } from '@/lib/configuracion-servidor'
 import { obtenerSesionAdmin } from '@/lib/admin-auth'
 import { ServidorAlmacen } from '@/lib/server-storage'
 import { obtenerClienteSupabase } from '@/lib/supabase'
@@ -97,6 +99,14 @@ export async function POST(req: NextRequest) {
         console.error('Excepción guardando configuracion_global en Supabase:', dbErr)
       }
     }
+
+    if (supabase && !guardadoEnSupabase) {
+      return NextResponse.json({ error: 'No se pudo guardar la configuración en la base de datos. Intenta de nuevo.' }, { status: 502 })
+    }
+
+    // Las páginas que muestran precios, cupo gratis o el WhatsApp de soporte se regeneran al instante
+    revalidateTag(ETIQUETA_CONFIGURACION, { expire: 0 })
+    for (const ruta of ['/', '/contacto', '/terminos-y-condiciones']) revalidatePath(ruta)
 
     return NextResponse.json({
       ok: true,

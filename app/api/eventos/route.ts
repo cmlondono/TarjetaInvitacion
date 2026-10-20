@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { obtenerConfiguracionGlobal } from '@/lib/configuracion-servidor'
 import { ServidorAlmacen } from '@/lib/server-storage'
 import { obtenerClienteSupabase } from '@/lib/supabase'
 import { mapearEventoDesdeDb, mapearEventoAFila, limpiarEventoPublico } from '@/lib/storage'
@@ -149,8 +150,9 @@ export async function POST(req: NextRequest) {
       evento.secciones = fusionarInteracciones(evento.secciones, eventoExistente.secciones)
     } else {
       // Evento nuevo: snapshot del cupo vigente; Premium solo se activa tras un pago verificado
-      const configActual = ServidorAlmacen.obtenerConfiguracion()
-      evento.limiteGratisInvitados = configActual?.limiteGratisInvitados || 50
+      // Cupo gratis vigente según el panel de administración (base de datos, no la memoria del servidor)
+      const configActual = await obtenerConfiguracionGlobal()
+      evento.limiteGratisInvitados = configActual.limiteGratisInvitados || 50
       evento.esPremium = false
     }
 

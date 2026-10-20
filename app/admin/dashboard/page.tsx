@@ -135,13 +135,42 @@ export default function PaginaAdminDashboard() {
     } catch (err) {
       console.warn('Error cargando métricas del servidor:', err)
     }
-    cargarMetricas()
+    // Sin servidor: métricas con lo que haya en este navegador (antes se llamaba a sí misma sin fin)
+    setMetricas(AdminStorage.calcularMetricas())
+  }
+
+  // Cupones y avisos de la landing viven en la base de datos (antes solo en este navegador)
+  const cargarPromociones = async () => {
+    try {
+      const r = await (await fetch('/api/admin/promociones', { cache: 'no-store' })).json()
+      if (Array.isArray(r.promociones)) setPromociones(r.promociones)
+    } catch {}
+  }
+  const cargarPublicaciones = async () => {
+    try {
+      const r = await (await fetch('/api/admin/publicaciones', { cache: 'no-store' })).json()
+      if (Array.isArray(r.publicaciones)) setPublicaciones(r.publicaciones)
+    } catch {}
+  }
+  const pedirAdmin = async (url: string, init: RequestInit): Promise<any | null> => {
+    try {
+      const res = await fetch(url, { ...init, headers: { 'Content-Type': 'application/json' } })
+      const r = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        notificar(r.error || 'No se pudo guardar en la base de datos.')
+        return null
+      }
+      return r
+    } catch {
+      notificar('Error de conexión con el servidor.')
+      return null
+    }
   }
 
   const cargarDatos = () => {
     cargarMetricas()
-    setPromociones(AdminStorage.obtenerPromociones())
-    setPublicaciones(AdminStorage.obtenerPublicaciones())
+    cargarPromociones()
+    cargarPublicaciones()
     AdminStorage.obtenerConfiguracionAsync().then((conf) => {
       if (conf) setConfiguracion(conf)
     })
@@ -271,73 +300,63 @@ export default function PaginaAdminDashboard() {
   }
 
   // Acciones de Promociones
-  const handleCrearPromocion = (e: React.FormEvent) => {
+  const handleCrearPromocion = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!nuevoCodigo.trim()) return
 
-    const nuevaPromo: Promocion = {
-      id: `promo-${Date.now()}`,
-      codigo: nuevoCodigo.trim().toUpperCase(),
-      tipoDescuento: nuevoTipoDescuento,
-      valor: nuevoValorDescuento,
-      usosMaximos: nuevosUsosMaximos,
-      usosActuales: 0,
-      activo: true,
-      creadoEn: new Date().toISOString(),
-    }
-
-    AdminStorage.guardarPromocion(nuevaPromo)
-    setPromociones(AdminStorage.obtenerPromociones())
+    const r = await pedirAdmin('/api/admin/promociones', {
+      method: 'POST',
+      body: JSON.stringify({ codigo: nuevoCodigo, tipoDescuento: nuevoTipoDescuento, valor: nuevoValorDescuento, usosMaximos: nuevosUsosMaximos }),
+    })
+    if (!r) return
+    await cargarPromociones()
     setNuevoCodigo('')
-    notificar(`Cupón ${nuevaPromo.codigo} creado con éxito.`)
+    notificar(`Cupón ${r.promocion.codigo} creado con éxito.`)
   }
 
-  const handleEliminarPromocion = (id: string) => {
-    AdminStorage.eliminarPromocion(id)
-    setPromociones(AdminStorage.obtenerPromociones())
+  const handleEliminarPromocion = async (id: string) => {
+    if (!(await pedirAdmin(`/api/admin/promociones?id=${encodeURIComponent(id)}`, { method: 'DELETE' }))) return
+    await cargarPromociones()
     notificar('Cupón eliminado.')
   }
 
-  const handleTogglePromocion = (promo: Promocion) => {
-    const actualizada = { ...promo, activo: !promo.activo }
-    AdminStorage.guardarPromocion(actualizada)
-    setPromociones(AdminStorage.obtenerPromociones())
+  const handleTogglePromocion = async (promo: Promocion) => {
+    if (!(await pedirAdmin('/api/admin/promociones', { method: 'PATCH', body: JSON.stringify({ id: promo.id, activo: !promo.activo }) }))) return
+    await cargarPromociones()
   }
 
   // Acciones de Publicaciones
-  const handleCrearPublicacion = (e: React.FormEvent) => {
+  const handleCrearPublicacion = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!nuevoTituloPub.trim()) return
 
-    const nuevaPub: PublicacionLanding = {
-      id: `pub-${Date.now()}`,
-      tipo: 'banner_superior',
-      titulo: nuevoTituloPub.trim(),
-      contenido: nuevoContenidoPub.trim(),
-      textoBoton: nuevoBotonPub.trim() || undefined,
-      enlaceBoton: nuevoEnlacePub.trim() || undefined,
-      colorFondo: nuevoColorPub,
-      activo: true,
-      fechaCreacion: new Date().toISOString(),
-    }
-
-    AdminStorage.guardarPublicacion(nuevaPub)
-    setPublicaciones(AdminStorage.obtenerPublicaciones())
+    const r = await pedirAdmin('/api/admin/publicaciones', {
+      method: 'POST',
+      body: JSON.stringify({
+        tipo: 'banner_superior',
+        titulo: nuevoTituloPub,
+        contenido: nuevoContenidoPub,
+        textoBoton: nuevoBotonPub,
+        enlaceBoton: nuevoEnlacePub,
+        colorFondo: nuevoColorPub,
+      }),
+    })
+    if (!r) return
+    await cargarPublicaciones()
     setNuevoTituloPub('')
     setNuevoContenidoPub('')
     notificar('Aviso publicado en la landing page.')
   }
 
-  const handleEliminarPublicacion = (id: string) => {
-    AdminStorage.eliminarPublicacion(id)
-    setPublicaciones(AdminStorage.obtenerPublicaciones())
+  const handleEliminarPublicacion = async (id: string) => {
+    if (!(await pedirAdmin(`/api/admin/publicaciones?id=${encodeURIComponent(id)}`, { method: 'DELETE' }))) return
+    await cargarPublicaciones()
     notificar('Publicación eliminada.')
   }
 
-  const handleTogglePublicacion = (pub: PublicacionLanding) => {
-    const actualizada = { ...pub, activo: !pub.activo }
-    AdminStorage.guardarPublicacion(actualizada)
-    setPublicaciones(AdminStorage.obtenerPublicaciones())
+  const handleTogglePublicacion = async (pub: PublicacionLanding) => {
+    if (!(await pedirAdmin('/api/admin/publicaciones', { method: 'PATCH', body: JSON.stringify({ id: pub.id, activo: !pub.activo }) }))) return
+    await cargarPublicaciones()
   }
 
   // Acciones de Eventos
@@ -416,7 +435,7 @@ export default function PaginaAdminDashboard() {
       notificar('Configuración operativa guardada y sincronizada con éxito en el servidor y Supabase.')
     } catch (err) {
       console.error('Error guardando configuración:', err)
-      notificar('Hubo un error al guardar la configuración.')
+      notificar(err instanceof Error && err.message ? err.message : 'Hubo un error al guardar la configuración.')
     } finally {
       setGuardandoConfig(false)
     }

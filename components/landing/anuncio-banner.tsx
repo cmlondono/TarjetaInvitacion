@@ -1,22 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { AdminStorage } from '@/lib/admin-storage'
+import { useState } from 'react'
 import { PublicacionLanding } from '@/types/admin'
 import { Sparkles, ArrowRight, X } from 'lucide-react'
 import Link from 'next/link'
 
-export function LandingAnnouncementBanner() {
-  const [publicacion, setPublicacion] = useState<PublicacionLanding | null>(null)
+/** Banner superior de la landing: el aviso activo publicado en el panel (llega desde la base de datos) */
+export function LandingAnnouncementBanner({ publicacion }: { publicacion: PublicacionLanding | null }) {
   const [cerrado, setCerrado] = useState(false)
-
-  useEffect(() => {
-    const pubs = AdminStorage.obtenerPublicaciones()
-    const activa = pubs.find((p) => p.activo && p.tipo === 'banner_superior')
-    if (activa) {
-      setPublicacion(activa)
-    }
-  }, [])
 
   if (!publicacion || cerrado) return null
 

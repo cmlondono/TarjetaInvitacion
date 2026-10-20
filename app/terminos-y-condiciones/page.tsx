@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { formatearCOP, obtenerConfiguracionGlobal } from '@/lib/configuracion-servidor'
 import { ArrowLeft } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -8,7 +9,11 @@ export const metadata: Metadata = {
     'Términos y condiciones de uso, políticas de pago y reembolsos de la plataforma Tarjetón en tarjeton.online.',
 }
 
-export default function TerminosCondiciones() {
+// El precio del pase es el configurado en el panel de administración
+export const revalidate = 300
+
+export default async function TerminosCondiciones() {
+  const config = await obtenerConfiguracionGlobal()
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-serif" style={{ fontFamily: 'var(--font-roboto-slab), serif' }}>
       <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-6 text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
@@ -40,7 +45,7 @@ export default function TerminosCondiciones() {
               <strong>Plan de Cortesía (Acceso Libre):</strong> Permite confeccionar tarjetones interactivos con cupos de cortesía por evento, financiado mediante anuncios contextuales provistos por redes publicitarias autorizadas como Google AdSense.
             </p>
             <p>
-              <strong>Pase Ilimitado Protocolario (Pago Único):</strong> Para cumbres, galas o celebraciones que requieran pases nominales ilimitados, supresión total de anuncios publicitarios y soporte prioritario, se ofrece el pase premium mediante pasarelas de pago certificadas (Mercado Pago / Wompi) a una tarifa fija y transparente de $3.99 USD (~$15.900 COP / pago único).
+              <strong>Pase Ilimitado Protocolario (Pago Único):</strong> Para cumbres, galas o celebraciones que requieran pases nominales ilimitados, supresión total de anuncios publicitarios y soporte prioritario, se ofrece el pase premium mediante pasarelas de pago certificadas (Mercado Pago / Wompi) a una tarifa fija y transparente de ${config.precioPremiumUSD} USD (~{formatearCOP(config.precioPremiumCOP)} COP / pago único).
             </p>
           </div>
         </section>

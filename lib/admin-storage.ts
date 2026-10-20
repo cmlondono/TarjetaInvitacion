@@ -79,23 +79,17 @@ export const AdminStorage = {
     }
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem(KEY_CONFIGURACION, JSON.stringify(nueva))
-      try {
-        const res = await fetch('/api/admin/configuracion', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ configuracion: nueva }),
-        })
-        if (res.ok) {
-          const data = await res.json()
-          if (data?.configuracion) {
-            localStorage.setItem(KEY_CONFIGURACION, JSON.stringify(data.configuracion))
-            return data.configuracion
-          }
-        }
-      } catch (err) {
-        console.warn('Error al guardar en /api/admin/configuracion:', err)
-      }
+      // La base de datos es la fuente de verdad: si no se guarda allí, se informa el error
+      const res = await fetch('/api/admin/configuracion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ configuracion: nueva }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo guardar la configuración.')
+      const guardada = data?.configuracion || nueva
+      localStorage.setItem(KEY_CONFIGURACION, JSON.stringify(guardada))
+      return guardada
     }
 
     return nueva

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { obtenerConfiguracionCacheada } from '@/lib/configuracion-servidor'
 import { RegistrarServiceWorker } from '@/components/registrar-sw'
 import { Roboto_Slab, Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
@@ -55,13 +56,15 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
   const adsenseId =
     process.env.NEXT_PUBLIC_GOOGLE_ADSENSE_CLIENT_ID || 'ca-pub-4454797114720338'
+  // «Anuncios habilitados» del panel de administración: sin él, no se carga el script de AdSense
+  const { anunciosAdsHabilitados } = await obtenerConfiguracionCacheada()
 
   return (
     <html lang="es" className="bg-white text-slate-900">
@@ -73,11 +76,13 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel:wght@400;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Dancing+Script:wght@600;700&family=Great+Vibes&family=Lora:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600;700&family=Parisienne&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Poppins:wght@400;500;600;700&family=Prata&family=Pacifico&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Fredoka:wght@400;500;600&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap"
           rel="stylesheet"
         />
-        <script
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`}
-          crossOrigin="anonymous"
-        />
+        {anunciosAdsHabilitados && (
+          <script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseId}`}
+            crossOrigin="anonymous"
+          />
+        )}
       </head>
       <body className={`${robotoSlab.variable} ${inter.variable} ${playfair.variable} antialiased font-sans`}>
         {children}

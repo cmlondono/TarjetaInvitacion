@@ -18,7 +18,15 @@ import {
   Tag,
 } from 'lucide-react'
 import { AdminStorage } from '@/lib/admin-storage'
-import { Promocion, ConfiguracionGlobal, CONFIGURACION_DEFAULT } from '@/types/admin'
+import { ConfiguracionGlobal, CONFIGURACION_DEFAULT } from '@/types/admin'
+
+/** Cupón validado por el servidor (solo lo necesario para mostrarlo) */
+interface CuponAplicado {
+  codigo: string
+  tipoDescuento: 'porcentaje' | 'precio_fijo'
+  valor: number
+  precioFinalCOP: number
+}
 
 interface ModalPagoProps {
   abierto: boolean
@@ -53,34 +61,39 @@ export function ModalPago({
   // Cupones y Promociones
   const [mostrarCampoCupon, setMostrarCampoCupon] = useState(false)
   const [codigoCupon, setCodigoCupon] = useState('')
-  const [cuponAplicado, setCuponAplicado] = useState<Promocion | null>(null)
+  const [cuponAplicado, setCuponAplicado] = useState<CuponAplicado | null>(null)
   const [errorCupon, setErrorCupon] = useState<string | null>(null)
+  const [validandoCupon, setValidandoCupon] = useState(false)
 
   if (!abierto) return null
 
   const precioBaseCOP = config.precioPremiumCOP || 15900
   const precioBaseUSD = config.precioPremiumUSD || 3.99
 
-  let precioFinalCOP = precioBaseCOP
-  if (cuponAplicado) {
-    if (cuponAplicado.tipoDescuento === 'porcentaje') {
-      precioFinalCOP = Math.max(0, Math.round(precioBaseCOP * (1 - cuponAplicado.valor / 100)))
-    } else {
-      precioFinalCOP = Math.min(precioBaseCOP, cuponAplicado.valor)
-    }
-  }
+  // Solo para mostrar: el precio que se cobra lo calcula el servidor
+  const precioFinalCOP = cuponAplicado ? cuponAplicado.precioFinalCOP : precioBaseCOP
 
-  const handleValidarCupon = () => {
+  const handleValidarCupon = async () => {
     setErrorCupon(null)
     if (!codigoCupon.trim()) return
-
-    const res = AdminStorage.validarCupon(codigoCupon.trim())
-    if (res.valido && res.promocion) {
-      setCuponAplicado(res.promocion)
-      setErrorCupon(null)
-    } else {
-      setCuponAplicado(null)
-      setErrorCupon(res.mensaje || 'Cupón inválido o expirado.')
+    setValidandoCupon(true)
+    try {
+      const res = await fetch('/api/promociones/validar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo: codigoCupon.trim() }),
+      })
+      const r = await res.json()
+      if (r.valido) {
+        setCuponAplicado({ codigo: r.codigo, tipoDescuento: r.tipoDescuento, valor: r.valor, precioFinalCOP: r.precioFinalCOP })
+      } else {
+        setCuponAplicado(null)
+        setErrorCupon(r.mensaje || 'Cupón inválido o expirado.')
+      }
+    } catch {
+      setErrorCupon('No se pudo validar el cupón. Revisa tu conexión.')
+    } finally {
+      setValidandoCupon(false)
     }
   }
 
@@ -103,21 +116,25 @@ export function ModalPago({
           eventoId,
           tituloEvento,
           emailCliente: correoCliente.trim() || undefined,
-          precioCOP: precioFinalCOP,
+          codigoCupon: cuponAplicado?.codigo,
         }),
       })
 
       const data = await res.json()
 
+      // Cupón del 100 %: el servidor ya activó el pase, no hay nada que cobrar
+      if (data.exito && data.gratis) {
+        setProcesando(false)
+        setIdComprobante('CUPON-100')
+        setPagoExitoso(true)
+        setTimeout(() => alCompletarPago(), 1500)
+        return
+      }
+
       if (!data.exito || !data.initPoint) {
         setErrorPago(data.error || 'No se pudo conectar con Mercado Pago. Revisa la configuración.')
         setProcesando(false)
         return
-      }
-
-      // Si el cupón fue aplicado, registrar su uso
-      if (cuponAplicado) {
-        AdminStorage.registrarUsoCupon(cuponAplicado.codigo)
       }
 
       // Si tenemos un enlace de Mercado Pago (producción o sandbox)
@@ -140,9 +157,6 @@ export function ModalPago({
 
   const ejecutarAprobacionSimulada = () => {
     setProcesando(true)
-    if (cuponAplicado) {
-      AdminStorage.registrarUsoCupon(cuponAplicado.codigo)
-    }
     setTimeout(() => {
       setProcesando(false)
       setIdComprobante(`MP-APROBADO-${Math.random().toString(36).substring(2, 9).toUpperCase()}`)
@@ -300,9 +314,10 @@ export function ModalPago({
                         <button
                           type="button"
                           onClick={handleValidarCupon}
-                          className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 cursor-pointer"
+                          disabled={validandoCupon}
+                          className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 cursor-pointer disabled:opacity-60"
                         >
-                          Aplicar
+                          {validandoCupon ? 'Validando…' : 'Aplicar'}
                         </button>
                       </div>
                       {errorCupon && (

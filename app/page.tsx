@@ -17,9 +17,8 @@ import {
 } from 'lucide-react'
 import { LandingAnnouncementBanner } from '@/components/landing/anuncio-banner'
 import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
-import { ServidorAlmacen } from '@/lib/server-storage'
-import { obtenerClienteSupabase } from '@/lib/supabase'
-import { CONFIGURACION_DEFAULT } from '@/types/admin'
+import { obtenerConfiguracionGlobal } from '@/lib/configuracion-servidor'
+import { obtenerBannerActivo } from '@/lib/promociones-servidor'
 import { obtenerPlantillasPublicadas } from '@/lib/estudio/plantillas-servidor'
 import { MuroPlantillas } from '@/components/plantillas/muro-plantillas'
 
@@ -52,30 +51,8 @@ export const metadata: Metadata = {
 }
 
 export default async function PaginaInicio() {
-  const plantillas = await obtenerPlantillasPublicadas()
-  let config = ServidorAlmacen.obtenerConfiguracion()
-  try {
-    const supabase = obtenerClienteSupabase()
-    if (supabase) {
-      const { data } = await supabase
-        .from('configuracion_global')
-        .select('*')
-        .eq('id', 'principal')
-        .maybeSingle()
-      if (data) {
-        config = {
-          ...config,
-          precioPremiumCOP: data.precio_premium_cop ?? config.precioPremiumCOP,
-          precioPremiumUSD: Number(data.precio_premium_usd ?? config.precioPremiumUSD),
-          limiteGratisInvitados: data.limite_gratis_invitados ?? config.limiteGratisInvitados,
-          anunciosAdsHabilitados: data.anuncios_ads_habilitados ?? config.anunciosAdsHabilitados,
-          modoMantenimiento: data.modo_mantenimiento ?? config.modoMantenimiento,
-          mensajeMantenimiento: data.mensaje_mantenimiento ?? config.mensajeMantenimiento,
-          whatsappSoporte: data.whatsapp_soporte ?? config.whatsappSoporte,
-        }
-      }
-    }
-  } catch {}
+  // Todo lo configurable desde el panel de administración sale de la base de datos
+  const [plantillas, config, banner] = await Promise.all([obtenerPlantillasPublicadas(), obtenerConfiguracionGlobal(), obtenerBannerActivo()])
 
   const jsonLdWeb = {
     '@context': 'https://schema.org',
@@ -107,7 +84,7 @@ export default async function PaginaInicio() {
       )}
 
       {/* Banner de Anuncios y Promociones Administrables */}
-      <LandingAnnouncementBanner />
+      <LandingAnnouncementBanner publicacion={banner} />
 
       {/* Navegación Superior Formal (Tema Claro y Limpio) */}
       <header className="w-full border-b border-slate-200 bg-white/95 backdrop-blur-md sticky top-0 z-40 px-6 sm:px-12 py-4 flex items-center justify-between shadow-2xs">

@@ -50,16 +50,11 @@ export async function crearPreferenciaMercadoPago({
       appUrl = `https://${appUrl}`
     }
 
-    let precio = precioCOP && precioCOP > 0 ? precioCOP : 0
+    // El precio llega calculado por el servidor (configuración del panel + cupón validado)
+    let precio = precioCOP && precioCOP > 0 ? Math.round(precioCOP) : 0
     if (!precio) {
-      try {
-        const { ServidorAlmacen } = require('@/lib/server-storage')
-        const conf = ServidorAlmacen.obtenerConfiguracion()
-        if (conf?.precioPremiumCOP) precio = conf.precioPremiumCOP
-      } catch {}
-    }
-    if (!precio) {
-      precio = parseInt(process.env.MERCADOPAGO_PRECIO_COP || '15900', 10)
+      const { obtenerConfiguracionGlobal } = await import('@/lib/configuracion-servidor')
+      precio = (await obtenerConfiguracionGlobal()).precioPremiumCOP
     }
 
     const identificador = tokenAdmin || eventoId || 'evento'

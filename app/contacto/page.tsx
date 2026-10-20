@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
+import { obtenerConfiguracionGlobal } from '@/lib/configuracion-servidor'
 import { ArrowLeft, Mail, MessageCircle, Clock, ShieldCheck, Globe } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -8,7 +9,11 @@ export const metadata: Metadata = {
     'Canales oficiales de atención al cliente, asistencia técnica y consultas de la plataforma Tarjetón en tarjeton.online.',
 }
 
-export default function PaginaContacto() {
+// El WhatsApp de soporte es el configurado en el panel de administración
+export const revalidate = 300
+
+export default async function PaginaContacto() {
+  const { whatsappSoporte } = await obtenerConfiguracionGlobal()
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 py-12 px-4 sm:px-6 lg:px-8 font-serif" style={{ fontFamily: 'var(--font-roboto-slab), serif' }}>
       <div className="max-w-3xl mx-auto bg-white dark:bg-slate-900 p-8 sm:p-12 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-8 text-slate-700 dark:text-slate-300">
@@ -63,7 +68,7 @@ export default function PaginaContacto() {
               Asistencia personalizada para anfitriones y organizadores de eventos protocolares:
             </p>
             <a
-              href="https://wa.me/573001234567"
+              href={`https://wa.me/${(whatsappSoporte || '').replace(/[^\d]/g, '')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block text-sm font-bold text-emerald-600 hover:text-emerald-700"

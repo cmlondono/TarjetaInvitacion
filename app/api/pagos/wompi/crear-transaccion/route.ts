@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { generarFirmaIntegridadWompi, ConfiguracionPagoWompi } from '@/lib/wompi'
+import { obtenerConfiguracionGlobal, formatearCOP } from '@/lib/configuracion-servidor'
 
 export async function POST(request: Request) {
   try {
@@ -11,7 +12,9 @@ export async function POST(request: Request) {
       'pub_test_Q5yDA9xoKdePzhSGeVe9HAUr1jiFdAcI'
     const integritySecret =
       process.env.WOMPI_INTEGRITY_SECRET || 'test_integrity_b8a6a8e63e12480bbcf6791e813f8903'
-    const amountInCents = parseInt(process.env.WOMPI_MONTO_CENTAVOS || '1590000', 10)
+    // Precio del panel de administración (en centavos)
+    const config = await obtenerConfiguracionGlobal()
+    const amountInCents = Math.round(config.precioPremiumCOP * 100)
     const currency = 'COP'
 
     // Prefijo y token para asociar unívocamente el pago al evento
@@ -48,8 +51,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       exito: true,
       configuracion,
-      montoFormateadoCOP: '$15.900 COP',
-      equivalenteUSD: '$3.99 USD',
+      montoFormateadoCOP: `${formatearCOP(config.precioPremiumCOP)} COP`,
+      equivalenteUSD: `${config.precioPremiumUSD} USD`,
       tituloEvento: tituloEvento || 'Pase Ilimitado Protocolario',
     })
   } catch (error) {

@@ -32,7 +32,7 @@ export default function PoliticaPrivacidad() {
             El presente sitio web <strong>Tarjetón</strong> (accesible desde el dominio oficial <span className="font-mono text-xs">https://www.tarjeton.online</span>) es operado para la confección, personalización y distribución de papelería digital interactiva para eventos y celebraciones formales.
           </p>
           <p>
-            Para cualquier consulta sobre privacidad, protección de datos personales o ejercicio de derechos ARCO, puede contactar al responsable a través del correo electrónico de soporte: <a href="mailto:carlosmariolondono8@gmail.com" className="font-semibold underline">carlosmariolondono8@gmail.com</a>.
+            Para cualquier consulta sobre privacidad, protección de datos personales o ejercicio de derechos ARCO, puede contactar al responsable a través del correo electrónico de soporte: <a href="mailto:soportetarjeton@gmail.com" className="font-semibold underline">soportetarjeton@gmail.com</a>.
           </p>
         </section>
 
@@ -128,7 +128,7 @@ export default function PoliticaPrivacidad() {
         <section className="space-y-3 font-sans">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white font-serif">6. Ejercicio de Derechos (ARCO)</h2>
           <p>
-            Usted tiene derecho en cualquier momento a solicitar el acceso, rectificación o eliminación anticipada de cualquier evento o pase registrado. Para ejercer estos derechos, remita su solicitud a <a href="mailto:carlosmariolondono8@gmail.com" className="font-semibold underline">carlosmariolondono8@gmail.com</a> indicando el token o enlace del evento, y responderemos en un plazo máximo de 48 horas hábiles.
+            Usted tiene derecho en cualquier momento a solicitar el acceso, rectificación o eliminación anticipada de cualquier evento o pase registrado. Para ejercer estos derechos, remita su solicitud a <a href="mailto:soportetarjeton@gmail.com" className="font-semibold underline">soportetarjeton@gmail.com</a> indicando el token o enlace del evento, y responderemos en un plazo máximo de 48 horas hábiles.
           </p>
         </section>
       </div>

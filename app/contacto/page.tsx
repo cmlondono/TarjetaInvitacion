@@ -48,10 +48,10 @@ export default async function PaginaContacto() {
             </p>
             <div className="space-y-1">
               <a
-                href="mailto:carlosmariolondono8@gmail.com"
+                href="mailto:soportetarjeton@gmail.com"
                 className="block text-sm font-bold text-slate-900 dark:text-white underline underline-offset-4 hover:text-slate-700 break-all"
               >
-                carlosmariolondono8@gmail.com
+                soportetarjeton@gmail.com
               </a>
             </div>
           </div>

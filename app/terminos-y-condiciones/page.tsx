@@ -70,7 +70,7 @@ export default async function TerminosCondiciones() {
               El anfitrión puede solicitar la devolución del pago dentro de los primeros 7 días calendario siguientes a la compra, siempre que el evento no se haya realizado aún.
             </li>
             <li>
-              Para gestionar un reembolso, remita su comprobante de pago a <a href="mailto:carlosmariolondono8@gmail.com" className="font-semibold underline">carlosmariolondono8@gmail.com</a>.
+              Para gestionar un reembolso, remita su comprobante de pago a <a href="mailto:soportetarjeton@gmail.com" className="font-semibold underline">soportetarjeton@gmail.com</a>.
             </li>
           </ul>
         </section>
@@ -85,7 +85,7 @@ export default async function TerminosCondiciones() {
         <section className="space-y-3 font-sans">
           <h2 className="text-lg font-bold text-slate-900 dark:text-white font-serif">6. Atención al Cliente</h2>
           <p>
-            Para cualquier consulta sobre estos términos, puede comunicarse a través de <a href="mailto:carlosmariolondono8@gmail.com" className="font-semibold underline">carlosmariolondono8@gmail.com</a> o mediante nuestra página de <Link href="/contacto" className="font-semibold underline">Contacto y Soporte</Link>.
+            Para cualquier consulta sobre estos términos, puede comunicarse a través de <a href="mailto:soportetarjeton@gmail.com" className="font-semibold underline">soportetarjeton@gmail.com</a> o mediante nuestra página de <Link href="/contacto" className="font-semibold underline">Contacto y Soporte</Link>.
           </p>
         </section>
       </div>

@@ -17,7 +17,7 @@ import { CATALOGO_SECCIONES } from '@/lib/modular-defaults'
 import { CATALOGO_ANIMACIONES } from '@/lib/editor/estilos'
 import { MuestraOrnamento } from '@/components/invitacion/ornamentos'
 import type { TemaInvitacion } from '@/components/invitacion/tema'
-import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, Plus, ShieldCheck, Sparkles, Trash2, Type } from 'lucide-react'
+import { ArrowDown, ArrowUp, Copy, Eye, EyeOff, ImageIcon, Plus, ShieldCheck, Sparkles, Trash2, Type } from 'lucide-react'
 import {
   AreaTexto,
   Campo,
@@ -44,7 +44,7 @@ export interface ActualizadoresBloque {
   /** Selecciona el título del bloque en la invitación y abre sus herramientas de letra, color, borde y sombra */
   estilizarTitulo: (sId: string) => void
   /** Texto libre nuevo dentro del bloque, o panel de fotos, stickers y formas */
-  agregarElemento: (sId: string, tipo: 'texto' | 'mas') => void
+  agregarElemento: (sId: string, tipo: 'texto' | 'foto' | 'mas') => void
 }
 
 const SIN_TITULO_VISIBLE: SeccionModular['tipo'][] = ['imagen_libre', 'separador_ornamental', 'lienzo_libre']
@@ -120,15 +120,18 @@ export function Inspector({ seccion, evento, tema, act, esPrimera, esUltima }: I
       {!sinDecoracion && (
         <div className="flex flex-col gap-1.5">
           <span className="text-[12px] font-bold uppercase tracking-wider text-slate-500">Agregar a este bloque</span>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button type="button" onClick={() => act.agregarElemento(seccion.id, 'texto')} className="min-h-11 rounded-xl bg-slate-900 text-white text-[13px] font-bold flex items-center justify-center gap-1.5 cursor-pointer hover:bg-slate-800">
               <Type size={15} /> Texto
             </button>
+            <button type="button" onClick={() => act.agregarElemento(seccion.id, 'foto')} className="min-h-11 rounded-xl bg-slate-900 text-white text-[13px] font-bold flex items-center justify-center gap-1.5 cursor-pointer hover:bg-slate-800">
+              <ImageIcon size={15} /> Foto
+            </button>
             <button type="button" onClick={() => act.agregarElemento(seccion.id, 'mas')} className="min-h-11 rounded-xl border border-slate-300 text-[13px] font-bold text-slate-800 flex items-center justify-center gap-1.5 cursor-pointer hover:bg-slate-50">
-              <Plus size={15} /> Foto, sticker o forma
+              <Plus size={15} /> Stickers
             </button>
           </div>
-          <span className="text-[12px] text-slate-500">Lo que agregues se mueve, gira y agranda donde quieras dentro del bloque.</span>
+          <span className="text-[12px] text-slate-500">Cualquier imagen (JPG, PNG, GIF, WebP…). Muévela, gírala y agrándala; si la sueltas sobre otro bloque, pasa a ese bloque.</span>
         </div>
       )}
 

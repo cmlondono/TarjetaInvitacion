@@ -63,6 +63,27 @@ export function agregarElementos(
   }))
 }
 
+/** Pasa un elemento libre a otro bloque (queda encima de los que ya tiene) con su nueva posición */
+export function moverElementoASeccion(
+  secciones: SeccionModular[],
+  desdeId: string,
+  haciaId: string,
+  elementoId: string,
+  cambios: Partial<ElementoLienzo>
+): SeccionModular[] {
+  const elemento = secciones.find((s) => s.id === desdeId)?.elementos?.find((el) => el.id === elementoId)
+  const destino = secciones.find((s) => s.id === haciaId)
+  if (!elemento || !destino || desdeId === haciaId) return secciones
+  const movido = { ...elemento, ...cambios, z: zMaximo(destino) + 1 }
+  return secciones.map((s) =>
+    s.id === desdeId
+      ? { ...s, elementos: (s.elementos || []).filter((el) => el.id !== elementoId) }
+      : s.id === haciaId
+      ? { ...s, elementos: [...(s.elementos || []), movido] }
+      : s
+  )
+}
+
 export function eliminarElemento(
   secciones: SeccionModular[],
   seccionId: string,

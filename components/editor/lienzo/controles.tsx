@@ -11,7 +11,8 @@ export function seleccionarArchivoImagen(): Promise<File | null> {
   return new Promise((resolve) => {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = 'image/jpeg,image/png,image/webp,image/gif'
+    // Cualquier imagen: el navegador decide qué puede abrir (JPG, PNG, WebP, GIF, AVIF, BMP, SVG…)
+    input.accept = 'image/*'
     input.onchange = () => resolve(input.files?.[0] || null)
     input.addEventListener('cancel', () => resolve(null))
     input.click()

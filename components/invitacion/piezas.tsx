@@ -70,6 +70,7 @@ export function MarcoBloque({
           {(
             [
               ['texto', '＋ Texto'],
+              ['foto', '＋ Foto'],
               ['mas', '＋ Más'],
             ] as const
           ).map(([tipo, texto]) => (

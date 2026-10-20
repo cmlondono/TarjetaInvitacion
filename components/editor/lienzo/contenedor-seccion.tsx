@@ -83,8 +83,10 @@ export function CapaElementos({ seccion, colorAcento, fuenteCuerpo }: CapaElemen
             key={seleccionado.id}
             elemento={seleccionado}
             capa={capa}
+            seccionId={seccion.id}
             arrastrePendiente={arrastrePendiente}
             alConfirmar={(cambios) => editor.actualizarElemento(seccion.id, seleccionado.id, cambios)}
+            alCambiarBloque={(haciaId, cambios) => editor.moverElementoASeccion(seccion.id, haciaId, seleccionado.id, cambios)}
           />
         )}
     </div>

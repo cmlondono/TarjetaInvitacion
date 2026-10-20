@@ -7,9 +7,13 @@ import type { ElementoLienzo } from '@/types/invitation'
 interface ManipuladorElementoProps {
   elemento: ElementoLienzo
   capa: HTMLDivElement
+  /** Bloque al que pertenece el elemento */
+  seccionId: string
   /** Evento de mouse con el que se presionó un elemento aún no seleccionado: arrastra sin soltar */
   arrastrePendiente: React.MutableRefObject<PointerEvent | null>
   alConfirmar: (cambios: Partial<ElementoLienzo>) => void
+  /** Se soltó encima de otro bloque: el elemento pasa a ese bloque con su posición relativa a él */
+  alCambiarBloque: (haciaId: string, cambios: Partial<ElementoLienzo>) => void
 }
 
 const redondear = (n: number) => Math.round(n * 100) / 100
@@ -21,8 +25,10 @@ const redondear = (n: number) => Math.round(n * 100) / 100
 export default function ManipuladorElemento({
   elemento,
   capa,
+  seccionId,
   arrastrePendiente,
   alConfirmar,
+  alCambiarBloque,
 }: ManipuladorElementoProps) {
   const moveableRef = useRef<Moveable | null>(null)
   const [objetivo, setObjetivo] = useState<HTMLElement | null>(null)
@@ -79,6 +85,31 @@ export default function ManipuladorElemento({
     alConfirmar(cambios)
   }
 
+  /** Si el centro del elemento quedó sobre otro bloque, lo pasa a ese bloque. Devuelve true si lo pasó. */
+  const pasarAOtroBloque = (target: HTMLElement | SVGElement): boolean => {
+    const el = target as HTMLElement
+    const caja = el.getBoundingClientRect()
+    const destino = document
+      .elementsFromPoint(caja.left + caja.width / 2, caja.top + caja.height / 2)
+      .map((n) => (n as HTMLElement).closest?.('.seccion-lienzo[data-seccion-id]') as HTMLElement | null)
+      .find((n) => n && n.dataset.seccionId !== seccionId)
+    if (!destino?.dataset.seccionId) return false
+
+    // Posición sin rotación (la de offsetLeft/Top) pasada a coordenadas del bloque de destino
+    const origen = capa.getBoundingClientRect()
+    const rect = destino.getBoundingClientRect()
+    const izquierda = origen.left + el.offsetLeft - rect.left
+    const arriba = origen.top + el.offsetTop - rect.top
+    const cambios: Partial<ElementoLienzo> = {
+      x: redondear((izquierda / rect.width) * 100),
+      y: redondear((arriba / Math.max(rect.height, 1)) * 100),
+      ancho: redondear((el.offsetWidth / rect.width) * 100),
+    }
+    if (!esTexto) cambios.alto = redondear((el.offsetHeight / rect.width) * 100)
+    alCambiarBloque(destino.dataset.seccionId, cambios)
+    return true
+  }
+
   return (
     <Moveable
       ref={moveableRef}
@@ -111,7 +142,8 @@ export default function ManipuladorElemento({
         target.style.top = `${top}px`
       }}
       onDragEnd={({ target, isDrag }) => {
-        if (isDrag) confirmarCaja(target)
+        if (!isDrag) return
+        if (!pasarAOtroBloque(target)) confirmarCaja(target)
       }}
       onResize={({ target, width, height, drag }) => {
         target.style.width = `${width}px`

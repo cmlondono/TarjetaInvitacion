@@ -20,7 +20,7 @@ export interface EdicionInvitacion {
   /** Campo del evento (fecha, dirección, anfitriones...) */
   alEvento: (campo: keyof DetalleEvento, valor: unknown) => void
   /** Agrega un texto libre (listo para escribir) o abre el panel de fotos, stickers y formas para ese bloque */
-  agregarElemento?: (seccionId: string, tipo: 'texto' | 'mas') => void
+  agregarElemento?: (seccionId: string, tipo: 'texto' | 'foto' | 'mas') => void
 }
 
 export interface ContextoInvitacionValor {

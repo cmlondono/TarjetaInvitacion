@@ -337,6 +337,10 @@ export function useEstudioLienzo({
       setTextoEnEdicion,
       actualizarElemento: (sId, eId, cambios) => aplicar((prev) => ops.actualizarElemento(prev, sId, eId, cambios)),
       actualizarEstiloTexto: (sId, campo, cambios) => aplicar((prev) => ops.actualizarEstiloTextoSeccion(prev, sId, campo, cambios)),
+      moverElementoASeccion: (desde, hacia, eId, cambios) => {
+        aplicar((prev) => ops.moverElementoASeccion(prev, desde, hacia, eId, cambios))
+        setSeleccion({ tipo: 'elemento', seccionId: hacia, elementoId: eId })
+      },
     }),
     [esEdicion, seleccion, seleccionar, textoEnEdicion, aplicar]
   )
@@ -414,10 +418,25 @@ export function useEstudioLienzo({
    * o abre el panel de fotos, stickers y formas apuntando a ese bloque.
    */
   const agregarElementoEn = useCallback(
-    (sId: string, tipo: 'texto' | 'mas') => {
+    (sId: string, tipo: 'texto' | 'foto' | 'mas') => {
       if (tipo === 'mas') {
         setSeleccion({ tipo: 'seccion', seccionId: sId })
         setPanelAgregarAbierto(true)
+        return
+      }
+      if (tipo === 'foto') {
+        // Sube la imagen y la deja en el centro del bloque, seleccionada para moverla
+        seleccionarArchivoImagen().then((archivo) => {
+          if (!archivo) return
+          conSubida(async () => {
+            const url = await subirImagen(archivo, carpetaImagenes)
+            const proporcion = await proporcionDeImagen(url)
+            const seccion = seccionesRef.current.find((s) => s.id === sId)
+            const nueva = ops.crearElemento({ tipo: 'imagen', url, proporcion }, ops.zMaximo(seccion) + 1, 45)
+            aplicar((prev) => ops.agregarElementos(prev, sId, [nueva]))
+            setSeleccion({ tipo: 'elemento', seccionId: sId, elementoId: nueva.id })
+          })
+        })
         return
       }
       const seccion = seccionesRef.current.find((s) => s.id === sId)
@@ -426,7 +445,7 @@ export function useEstudioLienzo({
       setSeleccion({ tipo: 'elemento', seccionId: sId, elementoId: nuevo.id })
       setTextoEnEdicion(nuevo.id)
     },
-    [aplicar]
+    [aplicar, conSubida, carpetaImagenes]
   )
 
   return {

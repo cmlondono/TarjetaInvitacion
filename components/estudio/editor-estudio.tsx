@@ -26,7 +26,7 @@ import { PanelEstilos } from './panel-estilos'
 import { PanelExperiencia } from './panel-experiencia'
 import { PanelDatos } from './panel-datos'
 import { BotonCerrar } from './ui'
-import { ArrowLeft, Eye, LayoutList, Monitor, Palette, PencilLine, Plus, RotateCcw, Send, Smartphone, Sparkles } from 'lucide-react'
+import { ArrowLeft, Eye, LayoutList, Loader2, Monitor, Palette, PencilLine, Plus, RotateCcw, Send, Smartphone, Sparkles, X } from 'lucide-react'
 
 type Anchura = 'movil' | 'tablet' | 'escritorio'
 
@@ -91,6 +91,12 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
     rehacer: historial.rehacer,
   })
 
+  // Al seleccionar un elemento (o soltarlo en otro bloque), el panel muestra el bloque donde quedó
+  const seccionSeleccionada = estudio.seleccion?.tipo === 'elemento' ? estudio.seleccion.seccionId : null
+  useEffect(() => {
+    if (seccionSeleccionada) setBloqueId(seccionSeleccionada)
+  }, [seccionSeleccionada])
+
   const agregarElementoEnRef = useRef(estudio.agregarElementoEn)
   agregarElementoEnRef.current = estudio.agregarElementoEn
 
@@ -133,7 +139,7 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
       alDato: (sId: string, campo: string, valor: unknown) =>
         mapear(sId, (s) => ({ ...s, datos: asignarRuta((s.datos || {}) as Record<string, unknown>, campo.split('.'), valor) as SeccionModular['datos'] })),
       alEvento: (campo: keyof DetalleEvento, valor: unknown) => setEvento((prev) => ({ ...prev, [campo]: valor })),
-      agregarElemento: (sId: string, tipo: 'texto' | 'mas') => {
+      agregarElemento: (sId: string, tipo: 'texto' | 'foto' | 'mas') => {
         setBloqueId(sId)
         setHoja(null)
         agregarElementoEnRef.current(sId, tipo)
@@ -532,6 +538,23 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
           </div>
         )}
 
+        {/* Aviso de subida de imágenes («＋ Foto» sube directo, sin abrir paneles) */}
+        {(estudio.subiendoImagen || estudio.errorImagen) && (
+          <div role="status" className="fixed left-1/2 -translate-x-1/2 top-20 z-[70] max-w-[92vw] flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-lg text-[13px] font-semibold bg-white border border-slate-200">
+            {estudio.subiendoImagen ? (
+              <>
+                <Loader2 size={15} className="animate-spin text-slate-500" /> Subiendo imagen…
+              </>
+            ) : (
+              <>
+                <span className="text-rose-700">{estudio.errorImagen}</span>
+                <button type="button" aria-label="Cerrar aviso" onClick={estudio.limpiarErrorImagen} className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center cursor-pointer">
+                  <X size={14} />
+                </button>
+              </>
+            )}
+          </div>
+        )}
         <PanelAgregar {...estudio.propsPanelAgregar} />
         <DialogoRecorte url={estudio.recorte?.url ?? null} alCancelar={estudio.cancelarRecorte} alConfirmar={estudio.confirmarRecorte} />
         <ModalPago

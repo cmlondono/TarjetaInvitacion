@@ -18,6 +18,8 @@ export interface ContextoEditorLienzo {
   setTextoEnEdicion: (clave: string | null) => void
   actualizarElemento: (seccionId: string, elementoId: string, cambios: Partial<ElementoLienzo>) => void
   actualizarEstiloTexto: (seccionId: string, campo: string, cambios: Partial<EstiloTexto> | null) => void
+  /** Pasa un elemento libre a otro bloque (al soltarlo encima de ese bloque) */
+  moverElementoASeccion: (desdeId: string, haciaId: string, elementoId: string, cambios: Partial<ElementoLienzo>) => void
 }
 
 const VALOR_LECTURA: ContextoEditorLienzo = {
@@ -28,6 +30,7 @@ const VALOR_LECTURA: ContextoEditorLienzo = {
   setTextoEnEdicion: () => {},
   actualizarElemento: () => {},
   actualizarEstiloTexto: () => {},
+  moverElementoASeccion: () => {},
 }
 
 const ContextoEditor = createContext<ContextoEditorLienzo>(VALOR_LECTURA)

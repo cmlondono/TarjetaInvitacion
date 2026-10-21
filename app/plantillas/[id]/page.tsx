@@ -4,6 +4,7 @@ import { eventoDesdePlantilla } from '@/lib/estudio/plantillas'
 import { obtenerPlantillaPublicada, obtenerPlantillasPublicadas } from '@/lib/estudio/plantillas-servidor'
 import { VistaPlantilla } from '@/components/plantillas/vista-plantilla'
 import { obtenerConfiguracionGlobal } from '@/lib/configuracion-servidor'
+import { textoPrecioCompleto } from '@/lib/precios'
 
 // Se regenera a diario para que la fecha de ejemplo siga en el futuro
 export const revalidate = 86400
@@ -40,7 +41,7 @@ export default async function PaginaPlantilla({ params }: { params: Promise<{ id
       nombre={plantilla.nombre}
       descripcion={plantilla.descripcion}
       premium={plantilla.premium}
-      precioPremium={config ? `${config.precioPremiumUSD} USD` : undefined}
+      precioPremium={config ? textoPrecioCompleto(config.precioPremiumCOP, config.precioPremiumUSD) : undefined}
     />
   )
 }

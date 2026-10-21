@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 import { AdminStorage } from '@/lib/admin-storage'
 import { ConfiguracionGlobal, CONFIGURACION_DEFAULT } from '@/types/admin'
+import { formatoUsd, usdDesdeCop } from '@/lib/precios'
 
 /** Cupón validado por el servidor (solo lo necesario para mostrarlo) */
 interface CuponAplicado {
@@ -68,10 +69,11 @@ export function ModalPago({
   if (!abierto) return null
 
   const precioBaseCOP = config.precioPremiumCOP || 15900
-  const precioBaseUSD = config.precioPremiumUSD || 3.99
 
   // Solo para mostrar: el precio que se cobra lo calcula el servidor
   const precioFinalCOP = cuponAplicado ? cuponAplicado.precioFinalCOP : precioBaseCOP
+  // Equivalente en dólares del precio final (con cupón incluido), con la tasa del día que manda el servidor
+  const precioFinalUSD = config.tasaCopPorUsd ? usdDesdeCop(precioFinalCOP, config.tasaCopPorUsd) : config.precioPremiumUSD
 
   const handleValidarCupon = async () => {
     setErrorCupon(null)
@@ -265,7 +267,7 @@ export function ModalPago({
                   </span>
                 )}
                 <span className="text-[10px] text-slate-500 block font-medium">
-                  COP (~${precioBaseUSD} USD) · Pago Único
+                  COP (≈ {formatoUsd(precioFinalUSD)}) · Pago único
                 </span>
               </div>
             </div>

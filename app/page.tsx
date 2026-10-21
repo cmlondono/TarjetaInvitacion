@@ -21,6 +21,8 @@ import { obtenerConfiguracionGlobal } from '@/lib/configuracion-servidor'
 import { obtenerBannerActivo } from '@/lib/promociones-servidor'
 import { obtenerPlantillasPublicadas } from '@/lib/estudio/plantillas-servidor'
 import { MuroPlantillas } from '@/components/plantillas/muro-plantillas'
+import { paisVisitante } from '@/lib/tasa-cambio'
+import { textoPrecio } from '@/lib/precios'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,7 +54,9 @@ export const metadata: Metadata = {
 
 export default async function PaginaInicio() {
   // Todo lo configurable desde el panel de administración sale de la base de datos
-  const [plantillas, config, banner] = await Promise.all([obtenerPlantillasPublicadas(), obtenerConfiguracionGlobal(), obtenerBannerActivo()])
+  const [plantillas, config, banner, pais] = await Promise.all([obtenerPlantillasPublicadas(), obtenerConfiguracionGlobal(), obtenerBannerActivo(), paisVisitante()])
+  // En Colombia el precio va en pesos; desde otro país, en dólares aproximados con el valor real en pesos
+  const precio = textoPrecio(config.precioPremiumCOP, config.precioPremiumUSD, pais)
 
   const jsonLdWeb = {
     '@context': 'https://schema.org',
@@ -157,7 +161,7 @@ export default async function PaginaInicio() {
           </span>
           <span className="text-amber-400">·</span>
           <span>
-            Premium ilimitado <strong>${config.precioPremiumUSD} USD</strong> pago único
+            Premium ilimitado <strong>{precio.principal}</strong> pago único
           </span>
           <span className="font-bold text-slate-900 flex items-center gap-1">
             Ver precios <ArrowRight size={12} />
@@ -243,8 +247,8 @@ export default async function PaginaInicio() {
                 </span>
                 <h3 className="text-xl font-bold mt-1 text-slate-950">Pase Ilimitado Protocolario</h3>
                 <div className="my-5">
-                  <span className="text-4xl font-extrabold text-slate-950">${config.precioPremiumUSD}</span>
-                  <span className="text-xs text-slate-500 font-medium"> USD (~${config.precioPremiumCOP.toLocaleString('es-CO')} COP / Pago único)</span>
+                  <span className="text-4xl font-extrabold text-slate-950">{precio.principal}</span>
+                  <span className="block text-xs text-slate-500 font-medium mt-1">Pago único por evento{precio.nota ? ` · ${precio.nota}` : ''}</span>
                 </div>
                 <ul className="space-y-3 text-xs text-slate-800 font-normal">
                   <li className="flex items-center gap-2.5">
@@ -266,7 +270,7 @@ export default async function PaginaInicio() {
                 href="/crear?plan=premium"
                 className="mt-8 w-full py-3.5 rounded-xl bg-slate-900 text-white text-center text-xs font-bold hover:bg-slate-800 transition-colors block shadow-sm"
               >
-                Activar Pase Premium (${config.precioPremiumUSD} USD)
+                Activar Pase Premium ({precio.principal})
               </Link>
             </div>
           </div>

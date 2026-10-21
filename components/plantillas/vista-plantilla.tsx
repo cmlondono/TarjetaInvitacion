@@ -29,7 +29,7 @@ export function VistaPlantilla({ evento, plantillaId, nombre, descripcion, premi
           {premium && (
             <p className="m-0 px-1 text-[12.5px] text-amber-200 leading-snug">
               <span className="mr-1.5 px-1.5 py-px rounded bg-amber-400 text-slate-950 text-[10px] font-extrabold uppercase align-middle">★ Premium</span>
-              Pruébala gratis: tus invitados verán «Vista previa» hasta que actives Premium{precioPremium ? ` (pago único de ${precioPremium})` : ''}.
+              Pruébala gratis: tus invitados verán «Vista previa» hasta que actives Premium{precioPremium ? `: pago único de ${precioPremium}` : ''}.
             </p>
           )}
           <div className="flex items-center gap-2 sm:gap-3">

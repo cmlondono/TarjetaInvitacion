@@ -44,6 +44,7 @@ import {
 import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
 import { GestionPlantillas } from '@/components/admin/gestion-plantillas'
 import { CampoNumero } from '@/components/ui/campo-numero'
+import { formatoCop, formatoUsd, TASA_RESPALDO_COP_POR_USD, usdDesdeCop } from '@/lib/precios'
 
 export default function PaginaAdminDashboard() {
   const router = useRouter()
@@ -1418,16 +1419,15 @@ export default function PaginaAdminDashboard() {
 
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-slate-700">
-                    Tarifa Base Premium en USD ($)
+                    Equivalente en USD (automático)
                   </label>
-                  <CampoNumero
-                    step="0.01"
-                    min={0}
-                    value={configuracion.precioPremiumUSD}
-                    onChange={(v) => setConfiguracion((c) => ({ ...c, precioPremiumUSD: v }))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-slate-900 text-sm focus:border-slate-900 focus:outline-hidden"
-                  />
-                  <span className="text-[10px] text-slate-500">Valor de referencia visual</span>
+                  {/* No se edita: se calcula con la tasa del día y es lo que ven los visitantes de fuera de Colombia */}
+                  <div className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 font-mono text-slate-700 text-sm">
+                    ≈ {formatoUsd(usdDesdeCop(configuracion.precioPremiumCOP, configuracion.tasaCopPorUsd || TASA_RESPALDO_COP_POR_USD))}
+                  </div>
+                  <span className="text-[10px] text-slate-500">
+                    Tasa de hoy: 1 USD = {formatoCop(configuracion.tasaCopPorUsd || TASA_RESPALDO_COP_POR_USD)}. En Colombia se muestra en pesos; en otros países, en dólares.
+                  </span>
                 </div>
               </div>
 

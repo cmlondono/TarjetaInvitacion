@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath, revalidateTag } from 'next/cache'
-import { ETIQUETA_CONFIGURACION } from '@/lib/configuracion-servidor'
+import { ETIQUETA_CONFIGURACION, obtenerConfiguracionGlobal } from '@/lib/configuracion-servidor'
+import { usdDesdeCop } from '@/lib/precios'
+import { obtenerTasaCopPorUsd } from '@/lib/tasa-cambio'
 import { obtenerSesionAdmin } from '@/lib/admin-auth'
 import { ServidorAlmacen } from '@/lib/server-storage'
 import { obtenerClienteSupabase } from '@/lib/supabase'
@@ -18,34 +20,8 @@ export async function GET() {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  let config = ServidorAlmacen.obtenerConfiguracion()
-
-  const supabase = obtenerClienteSupabase()
-  if (supabase) {
-    try {
-      const { data, error } = await supabase
-        .from('configuracion_global')
-        .select('*')
-        .eq('id', 'principal')
-        .maybeSingle()
-
-      if (data && !error) {
-        config = ServidorAlmacen.guardarConfiguracion({
-          precioPremiumCOP: data.precio_premium_cop ?? config.precioPremiumCOP,
-          precioPremiumUSD: Number(data.precio_premium_usd ?? config.precioPremiumUSD),
-          limiteGratisInvitados: data.limite_gratis_invitados ?? config.limiteGratisInvitados,
-          anunciosAdsHabilitados: data.anuncios_ads_habilitados ?? config.anunciosAdsHabilitados,
-          modoMantenimiento: data.modo_mantenimiento ?? config.modoMantenimiento,
-          mensajeMantenimiento: data.mensaje_mantenimiento ?? config.mensajeMantenimiento,
-          whatsappSoporte: data.whatsapp_soporte ?? config.whatsappSoporte,
-          ultimaActualizacion: data.ultima_actualizacion ?? config.ultimaActualizacion,
-        })
-      }
-    } catch (e) {
-      console.warn('Aviso en GET /api/admin/configuracion desde Supabase:', e)
-    }
-  }
-
+  // Misma fuente que el resto del sitio: base de datos y el precio en USD calculado con la tasa del día
+  const config = await obtenerConfiguracionGlobal()
   return NextResponse.json({
     ok: true,
     configuracion: config || CONFIGURACION_DEFAULT,
@@ -74,19 +50,19 @@ export async function POST(req: NextRequest) {
     // (un decimal —p. ej. «15.900» leído como 15,9— hacía fallar el guardado sin explicar por qué)
     const numero = (v: unknown) => (v === undefined || v === null || v === '' ? undefined : Number(v))
     const cop = numero(nuevaConfig.precioPremiumCOP)
-    const usd = numero(nuevaConfig.precioPremiumUSD)
     const limite = numero(nuevaConfig.limiteGratisInvitados)
     if (cop !== undefined && (!Number.isFinite(cop) || cop < 1000 || cop > 100_000_000)) {
       return NextResponse.json({ error: 'La tarifa en COP debe ser un número entre 1.000 y 100.000.000.' }, { status: 400 })
-    }
-    if (usd !== undefined && (!Number.isFinite(usd) || usd <= 0 || usd > 100_000)) {
-      return NextResponse.json({ error: 'La tarifa en USD debe ser mayor que 0.' }, { status: 400 })
     }
     if (limite !== undefined && (!Number.isFinite(limite) || limite < 1 || limite > 100_000)) {
       return NextResponse.json({ error: 'El límite gratuito de invitados debe ser un número entero mayor que 0.' }, { status: 400 })
     }
     if (cop !== undefined) nuevaConfig.precioPremiumCOP = Math.round(cop)
-    if (usd !== undefined) nuevaConfig.precioPremiumUSD = Math.round(usd * 100) / 100
+    // El precio en dólares no se edita: se calcula con la tasa del día a partir del precio en pesos
+    const tasa = await obtenerTasaCopPorUsd()
+    delete nuevaConfig.tasaCopPorUsd
+    delete nuevaConfig.paisVisitante
+    if (nuevaConfig.precioPremiumCOP !== undefined) nuevaConfig.precioPremiumUSD = usdDesdeCop(nuevaConfig.precioPremiumCOP, tasa)
     if (limite !== undefined) nuevaConfig.limiteGratisInvitados = Math.round(limite)
 
     // 1. Guardar en servidor local (Memoria + Disco JSON)
@@ -133,7 +109,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       mensaje: 'Configuración guardada exitosamente.',
-      configuracion: configGuardada,
+      configuracion: { ...configGuardada, tasaCopPorUsd: tasa },
       guardadoEnSupabase,
     })
   } catch (error: any) {

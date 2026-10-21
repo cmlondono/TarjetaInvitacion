@@ -2,6 +2,8 @@ import { unstable_cache } from 'next/cache'
 import { obtenerClienteSupabase } from '@/lib/supabase'
 import { ServidorAlmacen } from '@/lib/server-storage'
 import { CONFIGURACION_DEFAULT, type ConfiguracionGlobal } from '@/types/admin'
+import { usdDesdeCop } from '@/lib/precios'
+import { obtenerTasaCopPorUsd } from '@/lib/tasa-cambio'
 
 /**
  * Configuración global del sistema (precios, cupo gratis, anuncios, mantenimiento, WhatsApp de soporte)
@@ -9,6 +11,12 @@ import { CONFIGURACION_DEFAULT, type ConfiguracionGlobal } from '@/types/admin'
  * en lugar de valores escritos en el código. Solo para el servidor.
  */
 export async function obtenerConfiguracionGlobal(): Promise<ConfiguracionGlobal> {
+  const [base, tasa] = await Promise.all([leerConfiguracion(), obtenerTasaCopPorUsd()])
+  // El precio en dólares no se fija a mano: sale del precio en pesos con la tasa del día
+  return { ...base, precioPremiumUSD: usdDesdeCop(base.precioPremiumCOP, tasa), tasaCopPorUsd: tasa }
+}
+
+async function leerConfiguracion(): Promise<ConfiguracionGlobal> {
   const respaldo = { ...CONFIGURACION_DEFAULT, ...ServidorAlmacen.obtenerConfiguracion() }
   const supabase = obtenerClienteSupabase()
   if (!supabase) return respaldo

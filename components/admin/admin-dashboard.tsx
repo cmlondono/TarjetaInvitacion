@@ -14,6 +14,7 @@ import { ModalPago } from '@/components/checkout/modal-pago'
 import { ModalDespachoWhatsApp } from './modal-despacho-whatsapp'
 import { EditorEnlace } from './editor-enlace'
 import { CampoTelefono } from '@/components/ui/campo-telefono'
+import { textoPrecio } from '@/lib/precios'
 import { funcionesPremiumUsadas, NOMBRE_FUNCION_PREMIUM } from '@/lib/estudio/premium'
 import { construirMensajeCompartir } from '@/lib/event-utils'
 import { exportarInvitadosExcel, imprimirListaAdmision } from '@/lib/export-utils'
@@ -221,7 +222,8 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
     evento.limiteGratisInvitados ||
     (evento.configuracionVisual as any)?.limiteGratisInvitados ||
     50
-  const precioUSD = configuracion.precioPremiumUSD || 3.99
+  // En Colombia el precio va en pesos; desde otro país, en dólares aproximados
+  const precioPremium = textoPrecio(configuracion.precioPremiumCOP, configuracion.precioPremiumUSD, configuracion.paisVisitante).principal
   const cantidadInvitados = invitados.length
   const limiteAlcanzado = !evento.esPremium && cantidadInvitados >= limiteGratis
   const porcentajeUso = Math.min(100, Math.round((cantidadInvitados / limiteGratis) * 100))
@@ -592,7 +594,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
                 onClick={() => setMostrarModalUpgrade(true)}
                 className="text-amber-700 hover:text-amber-800 hover:underline font-bold flex items-center gap-1 cursor-pointer"
               >
-                <span>Habilitar Cupo Ilimitado (${precioUSD} USD)</span>
+                <span>Habilitar Cupo Ilimitado ({precioPremium})</span>
               </button>
             </div>
           </div>

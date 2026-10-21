@@ -6,6 +6,8 @@ import { MiniaturaPlantilla } from '@/components/plantillas/miniatura-plantilla'
 import { CATEGORIAS_PLANTILLAS, type CategoriaPlantilla } from '@/lib/estudio/plantillas'
 import { obtenerPlantillasPublicadas } from '@/lib/estudio/plantillas-servidor'
 import { obtenerConfiguracionGlobal } from '@/lib/configuracion-servidor'
+import { paisVisitante } from '@/lib/tasa-cambio'
+import { textoPrecio } from '@/lib/precios'
 
 const POR_PAGINA = 24
 type Plan = 'gratis' | 'premium'
@@ -22,7 +24,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function PaginaPlantillas({ searchParams }: { searchParams: Promise<{ categoria?: string; plan?: string; pagina?: string }> }) {
   const parametros = await searchParams
   // Las plantillas vienen de la base de datos (administrables en el panel); las ocultas no aparecen
-  const [PLANTILLAS, config] = await Promise.all([obtenerPlantillasPublicadas(), obtenerConfiguracionGlobal()])
+  const [PLANTILLAS, config, pais] = await Promise.all([obtenerPlantillasPublicadas(), obtenerConfiguracionGlobal(), paisVisitante()])
+  const precio = textoPrecio(config.precioPremiumCOP, config.precioPremiumUSD, pais)
   const activa = CATEGORIAS_PLANTILLAS.includes(parametros.categoria as CategoriaPlantilla) ? (parametros.categoria as CategoriaPlantilla) : null
   const plan: Plan | null = parametros.plan === 'gratis' || parametros.plan === 'premium' ? parametros.plan : null
   const delPlan = (p: (typeof PLANTILLAS)[number]) => !plan || (plan === 'premium' ? Boolean(p.premium) : !p.premium)
@@ -119,7 +122,7 @@ export default async function PaginaPlantillas({ searchParams }: { searchParams:
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-4">
           <p className="m-0 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-[13.5px] text-amber-950 leading-relaxed">
             <b>★ Las plantillas Premium</b> traen efectos en movimiento y stickers animados. Puedes probarlas y editarlas gratis, pero tus invitados verán la
-            marca «Vista previa» hasta que actives Premium: <b>pago único de ${config.precioPremiumUSD} USD</b> (~${config.precioPremiumCOP.toLocaleString('es-CO')} COP) por evento.
+            marca «Vista previa» hasta que actives Premium: <b>pago único de {precio.principal}</b>{precio.nota ? ` (${precio.nota})` : ''} por evento.
           </p>
         </div>
       )}

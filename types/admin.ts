@@ -26,7 +26,9 @@ export interface PublicacionLanding {
 
 export interface ConfiguracionGlobal {
   precioPremiumCOP: number // Default: 15900
-  precioPremiumUSD: number // Default: 3.99
+  precioPremiumUSD: number // Calculado: precio en COP ÷ tasa del día (no se edita)
+  tasaCopPorUsd?: number // Pesos por dólar usados para calcular precioPremiumUSD
+  paisVisitante?: string // País de quien consulta (solo en /api/configuracion), p. ej. «CO»
   limiteGratisInvitados: number // Default: 50
   anunciosAdsHabilitados: boolean // Default: true
   modoMantenimiento: boolean // Default: false

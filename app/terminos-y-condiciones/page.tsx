@@ -45,7 +45,7 @@ export default async function TerminosCondiciones() {
               <strong>Plan de Cortesía (Acceso Libre):</strong> Permite confeccionar tarjetones interactivos con cupos de cortesía por evento, financiado mediante anuncios contextuales provistos por redes publicitarias autorizadas como Google AdSense.
             </p>
             <p>
-              <strong>Pase Ilimitado Protocolario (Pago Único):</strong> Para cumbres, galas o celebraciones que requieran pases nominales ilimitados, supresión total de anuncios publicitarios y soporte prioritario, se ofrece el pase premium mediante la pasarela de pago Mercado Pago a una tarifa fija y transparente de ${config.precioPremiumUSD} USD (~{formatearCOP(config.precioPremiumCOP)} COP / pago único).
+              <strong>Pase Ilimitado Protocolario (Pago Único):</strong> Para cumbres, galas o celebraciones que requieran pases nominales ilimitados, supresión total de anuncios publicitarios y soporte prioritario, se ofrece el pase premium mediante la pasarela de pago Mercado Pago a una tarifa fija de {formatearCOP(config.precioPremiumCOP)} COP por evento (pago único). El cobro se hace en pesos colombianos; desde otros países el valor equivale aproximadamente a US${config.precioPremiumUSD} según la tasa de cambio del día, y el banco del comprador puede aplicar su propia conversión.
             </p>
           </div>
         </section>

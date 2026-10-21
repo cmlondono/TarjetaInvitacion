@@ -13,6 +13,7 @@ import { ConfiguracionGlobal, CONFIGURACION_DEFAULT } from '@/types/admin'
 import { ModalPago } from '@/components/checkout/modal-pago'
 import { ModalDespachoWhatsApp } from './modal-despacho-whatsapp'
 import { EditorEnlace } from './editor-enlace'
+import { CampoTelefono } from '@/components/ui/campo-telefono'
 import { funcionesPremiumUsadas, NOMBRE_FUNCION_PREMIUM } from '@/lib/estudio/premium'
 import { construirMensajeCompartir } from '@/lib/event-utils'
 import { exportarInvitadosExcel, imprimirListaAdmision } from '@/lib/export-utils'
@@ -86,49 +87,17 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
   const sincronizarInvitados = async () => {
     setSincronizando(true)
     try {
-      // 1. Cargar datos locales primero
+      // Copia local: solo se muestra si no hay conexión con el servidor (es la última lista de la base de datos)
       const locales = InvitadoRepositorio.obtenerPorEvento(evento.id)
 
-      // 2. Traer confirmaciones remotas del servidor (Supabase y caché del servidor)
+      // La lista real es la de la base de datos: se muestra tal cual, sin mezclarla con la copia local
       const res = await fetch(
         `/api/invitados?eventoId=${encodeURIComponent(evento.id)}&tokenAdmin=${encodeURIComponent(evento.tokenAdmin || '')}`
       )
       if (res.ok) {
         const data = await res.json()
         if (data.invitados && Array.isArray(data.invitados)) {
-          const mapa = new Map<string, Invitado>()
-          locales.forEach((inv) => mapa.set(inv.id, inv))
-
-          data.invitados.forEach((remoto: Invitado) => {
-            let matchId: string | null = null
-            if (mapa.has(remoto.id)) {
-              matchId = remoto.id
-            } else {
-              for (const [id, local] of mapa.entries()) {
-                if (
-                  (remoto.codigoAcceso && local.codigoAcceso === remoto.codigoAcceso) ||
-                  (remoto.nombre && local.nombre && remoto.nombre.trim().toLowerCase() === local.nombre.trim().toLowerCase())
-                ) {
-                  matchId = id
-                  break
-                }
-              }
-            }
-
-            if (matchId) {
-              const local = mapa.get(matchId)!
-              mapa.set(matchId, {
-                ...local,
-                ...remoto,
-                id: matchId,
-                eventoId: evento.id,
-              })
-            } else {
-              mapa.set(remoto.id, { ...remoto, eventoId: evento.id })
-            }
-          })
-
-          const listaActualizada = Array.from(mapa.values())
+          const listaActualizada: Invitado[] = data.invitados.map((remoto: Invitado) => ({ ...remoto, eventoId: evento.id }))
 
           // Persistir en localStorage para que PDF y Excel reflejen las confirmaciones de inmediato
           try {
@@ -275,7 +244,8 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
       return
     }
 
-    sincronizarInvitados()
+    // Se muestra de inmediato y la lista se recarga de la base de datos cuando termina de guardarse
+    setInvitados(InvitadoRepositorio.obtenerPorEvento(evento.id))
     setNombreNuevo('')
     setPasesTexto('1')
     setEsPlural(false)
@@ -284,7 +254,8 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
     setErrorGuardado(null)
     // Avisar si no llegó a la base de datos: su enlace personal no funcionaría en otros teléfonos
     resultado.guardado?.then((error) => {
-      if (error) setErrorGuardado(`«${resultado.invitado?.nombre}» no se guardó en la nube: ${error} Bórralo y agrégalo otra vez antes de enviarle su enlace.`)
+      if (error) setErrorGuardado(`«${resultado.invitado?.nombre}» no se guardó en la base de datos: ${error} Agrégalo otra vez.`)
+      sincronizarInvitados()
     })
   }
 
@@ -296,8 +267,17 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
     setErrorLimite(null)
   }
 
-  const handleEliminarInvitado = (id: string) => {
-    InvitadoRepositorio.eliminar(id)
+  const [eliminando, setEliminando] = useState<string | null>(null)
+  const handleEliminarInvitado = async (inv: Invitado) => {
+    setEliminando(inv.id)
+    setErrorGuardado(null)
+    const error = await InvitadoRepositorio.eliminarAsync(evento, inv)
+    setEliminando(null)
+    if (error) {
+      setErrorGuardado(`No se pudo eliminar a «${inv.nombre}»: ${error}`)
+      return
+    }
+    setInvitados((lista) => lista.filter((i) => i.id !== inv.id))
     sincronizarInvitados()
   }
 
@@ -633,7 +613,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
             </p>
           )}
           <form onSubmit={handleAgregarInvitado} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 text-xs">
-            <div className="sm:col-span-2 lg:col-span-5">
+            <div className="sm:col-span-2 lg:col-span-4">
               <label className="font-semibold text-slate-700 block mb-1.5">
                 Nombre del Invitado o Familia
               </label>
@@ -663,17 +643,11 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
               />
             </div>
 
-            <div className="sm:col-span-1 lg:col-span-3">
-              <label className="font-semibold text-slate-700 block mb-1.5">
+            <div className="sm:col-span-1 lg:col-span-4">
+              <label htmlFor="telefono-invitado" className="font-semibold text-slate-700 block mb-1.5">
                 WhatsApp (Opcional)
               </label>
-              <input
-                type="tel"
-                value={telefonoNuevo}
-                onChange={(e) => setTelefonoNuevo(e.target.value)}
-                placeholder="Ej: 573001234567"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-slate-900 font-mono focus:border-slate-800 focus:outline-none"
-              />
+              <CampoTelefono id="telefono-invitado" valor={telefonoNuevo} alCambiar={setTelefonoNuevo} />
             </div>
 
             <div className="sm:col-span-2 lg:col-span-2 flex items-end">
@@ -1040,8 +1014,10 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
 
                       <button
                         type="button"
-                        onClick={() => handleEliminarInvitado(inv.id)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+                        onClick={() => handleEliminarInvitado(inv)}
+                        disabled={eliminando === inv.id}
+                        aria-label={`Eliminar pase de ${inv.nombre}`}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition-colors cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-wait"
                         title="Eliminar pase"
                       >
                         <Trash2 size={15} />

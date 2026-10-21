@@ -64,19 +64,14 @@ export async function GET(req: NextRequest) {
     const codigo = searchParams.get('codigo')
 
     if (esAnfitrion(evento, tokenAdmin)) {
-      const mapaInvitados = new Map<string, Invitado>()
-      ServidorAlmacen.obtenerInvitados(evento.id).forEach((inv) => mapaInvitados.set(inv.id, inv))
+      // La base de datos manda: la memoria del servidor solo se usa si no hay base de datos.
+      // (Mezclarlas hacía reaparecer invitados ya eliminados que seguían en la memoria.)
       if (supabase) {
         const { data, error } = await supabase.from('invitados').select('*').eq('evento_id', evento.id).order('creado_en', { ascending: false })
-        if (!error && data) {
-          data.forEach((fila: any) => {
-            const invDb = mapearInvitadoDesdeDb(fila)
-            const anterior = mapaInvitados.get(invDb.id)
-            mapaInvitados.set(invDb.id, { ...invDb, ...anterior })
-          })
-        }
+        if (!error && data) return NextResponse.json({ exito: true, invitados: data.map(mapearInvitadoDesdeDb) })
+        if (error) console.error('[api/invitados] No se pudo leer la lista:', error.message)
       }
-      return NextResponse.json({ exito: true, invitados: Array.from(mapaInvitados.values()) })
+      return NextResponse.json({ exito: true, invitados: ServidorAlmacen.obtenerInvitados(evento.id) })
     }
 
     if (codigo) {
@@ -170,5 +165,41 @@ export async function POST(req: NextRequest) {
       { exito: false, error: 'Error del servidor al registrar invitados. Por favor, comuníquese con el administrador del sistema.' },
       { status: 500 }
     )
+  }
+}
+
+/**
+ * DELETE /api/invitados { eventoId, tokenAdmin, id, codigoAcceso }
+ * Elimina un pase (confirmado, rechazado o sin respuesta). Solo el anfitrión, con su tokenAdmin.
+ * Busca por id y también por código de acceso: así se borra aunque el panel lo tenga con otro id.
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const { eventoId, tokenAdmin, id, codigoAcceso } = await req.json().catch(() => ({}))
+    const evento = await resolverEvento(typeof eventoId === 'string' ? eventoId : null, null)
+    if (!evento) return NextResponse.json({ exito: false, error: 'Invitación no encontrada.' }, { status: 404 })
+    if (!esAnfitrion(evento, tokenAdmin)) return NextResponse.json({ exito: false, error: 'No autorizado.' }, { status: 401 })
+    const idTexto = typeof id === 'string' && id ? id : undefined
+    const codigo = typeof codigoAcceso === 'string' && codigoAcceso ? codigoAcceso : undefined
+    if (!idTexto && !codigo) return NextResponse.json({ exito: false, error: 'Falta el invitado.' }, { status: 400 })
+
+    const supabase = obtenerClienteSupabase()
+    let eliminados = 0
+    if (supabase) {
+      for (const [columna, valor] of [['id', idTexto], ['codigo_acceso', codigo]] as const) {
+        if (!valor) continue
+        const { data, error } = await supabase.from('invitados').delete().eq('evento_id', evento.id).eq(columna, valor).select('id')
+        if (error) {
+          console.error('[api/invitados] No se pudo eliminar el invitado:', error.message)
+          return NextResponse.json({ exito: false, error: 'No se pudo eliminar el invitado. Intenta de nuevo.' }, { status: 502 })
+        }
+        eliminados += data?.length || 0
+      }
+    }
+    ServidorAlmacen.eliminarInvitado(evento.id, idTexto, codigo)
+    return NextResponse.json({ exito: true, eliminados })
+  } catch (err: any) {
+    console.error('Error en DELETE /api/invitados:', err)
+    return NextResponse.json({ exito: false, error: 'Error del servidor al eliminar el invitado.' }, { status: 500 })
   }
 }

@@ -693,22 +693,27 @@ export const InvitadoRepositorio = {
     } catch {}
   },
 
-  eliminar(id: string): void {
-    if (typeof window !== 'undefined') {
-      const todos = this.obtenerTodos().filter((i) => i.id !== id)
-      localStorage.setItem(LOCAL_STORAGE_KEY_INVITADOS, JSON.stringify(todos))
-      window.dispatchEvent(
-        new CustomEvent('tarjeton_invitados_actualizados', {
-          detail: { idEliminado: id },
-        })
-      )
-    }
-
+  /**
+   * Elimina un pase en la base de datos (a través del servidor, que verifica el token del anfitrión)
+   * y solo si se borró allí, también de la copia local. Devuelve el error para mostrarlo, o null.
+   */
+  async eliminarAsync(evento: Pick<DetalleEvento, 'id' | 'tokenAdmin'>, invitado: Pick<Invitado, 'id' | 'codigoAcceso'>): Promise<string | null> {
     try {
-      const supabase = obtenerClienteSupabase()
-      if (supabase) {
-        supabase.from('invitados').delete().eq('id', id).then()
-      }
-    } catch {}
+      const res = await fetch('/api/invitados', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventoId: evento.id, tokenAdmin: evento.tokenAdmin, id: invitado.id, codigoAcceso: invitado.codigoAcceso }),
+      })
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok || !d.exito) return d.error || 'No se pudo eliminar el invitado.'
+    } catch {
+      return 'No se pudo eliminar el invitado. Revisa tu conexión.'
+    }
+    if (typeof window !== 'undefined') {
+      const todos = this.obtenerTodos().filter((i) => i.id !== invitado.id && !(invitado.codigoAcceso && i.codigoAcceso === invitado.codigoAcceso))
+      localStorage.setItem(LOCAL_STORAGE_KEY_INVITADOS, JSON.stringify(todos))
+      window.dispatchEvent(new CustomEvent('tarjeton_invitados_actualizados', { detail: { idEliminado: invitado.id } }))
+    }
+    return null
   },
 }

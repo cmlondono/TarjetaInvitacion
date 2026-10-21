@@ -311,6 +311,16 @@ export const ServidorAlmacen = {
     persistirInvitadosEnDisco()
   },
 
+  /** Quita un invitado de la memoria y del disco del servidor (por id o por código de acceso) */
+  eliminarInvitado(eventoId: string, id?: string, codigoAcceso?: string): void {
+    const mapa = confirmacionesCache.get(eventoId)
+    if (!mapa) return
+    for (const [clave, inv] of mapa.entries()) {
+      if ((id && (clave === id || inv.id === id)) || (codigoAcceso && inv.codigoAcceso === codigoAcceso)) mapa.delete(clave)
+    }
+    persistirInvitadosEnDisco()
+  },
+
   obtenerInvitados(eventoId: string): Invitado[] {
     if (!eventoId) return []
     let mapa = confirmacionesCache.get(eventoId)

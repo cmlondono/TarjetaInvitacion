@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react'
 import { DetalleEvento, Invitado } from '@/types/invitation'
 import { construirMensajeCompartir } from '@/lib/event-utils'
 import { InvitadoRepositorio } from '@/lib/storage'
+import { CampoTelefono, formatearTelefono } from '@/components/ui/campo-telefono'
 import {
   Send,
   X,
@@ -346,7 +347,7 @@ export function ModalDespachoWhatsApp({
                         <div className="flex items-center sm:justify-end gap-1.5">
                           <Phone size={13} className="text-slate-400" />
                           <span className="text-xs font-mono font-bold text-slate-800">
-                            {invitadoActual.telefono || 'Sin teléfono'}
+                            {formatearTelefono(invitadoActual.telefono) || 'Sin teléfono'}
                           </span>
                           <button
                             type="button"
@@ -359,14 +360,7 @@ export function ModalDespachoWhatsApp({
                         </div>
                       ) : (
                         <div className="flex items-center gap-1 mt-1">
-                          <input
-                            type="tel"
-                            value={telefonoNuevo}
-                            onChange={(e) => setTelefonoNuevo(e.target.value)}
-                            placeholder="Ej: 573001234567"
-                            className="text-xs px-2 py-1 border border-slate-300 rounded-lg w-32 font-mono bg-white"
-                            autoFocus
-                          />
+                          <CampoTelefono valor={telefonoNuevo} alCambiar={setTelefonoNuevo} compacto autoFocus />
                           <button
                             type="button"
                             onClick={handleGuardarTelefono}

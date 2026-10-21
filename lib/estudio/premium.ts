@@ -3,7 +3,7 @@ import { obtenerSticker } from '@/lib/editor/stickers'
 
 /**
  * Funciones de diseño Premium. Cualquiera puede usarlas en el editor; si el evento no ha pagado,
- * los invitados ven la invitación con la marca «Vista previa» hasta que se active Premium.
+ * no se puede publicar: enviar o compartir pide el pago y el enlace público muestra que aún no está publicada.
  * Se calcula con los datos guardados del evento (la misma regla en el editor, la invitación y el servidor).
  */
 export type FuncionPremium = 'plantilla' | 'particulas' | 'fondo_animado' | 'stickers_animados' | 'movimiento'
@@ -34,7 +34,7 @@ export function funcionesPremiumUsadas(evento: EventoParaPremium): FuncionPremiu
   return [...usadas]
 }
 
-/** Los invitados ven «Vista previa»: usa funciones Premium y el evento no ha pagado */
+/** No se puede publicar todavía: usa funciones Premium y el evento no ha pagado */
 export function requiereActivarPremium(evento: EventoParaPremium & Pick<DetalleEvento, 'esPremium'>): boolean {
   return !evento.esPremium && funcionesPremiumUsadas(evento).length > 0
 }

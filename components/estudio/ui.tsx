@@ -144,7 +144,7 @@ export function TituloGrupo({ children }: { children: React.ReactNode }) {
   return <h3 className="m-0 text-[12px] font-bold uppercase tracking-wider text-slate-500">{children}</h3>
 }
 
-/** Etiqueta de función Premium (se puede usar sin pagar; los invitados ven «Vista previa» hasta activarla) */
+/** Etiqueta de función Premium (se puede usar sin pagar; para publicar la invitación hay que activar Premium) */
 export function InsigniaPremium({ className = '' }: { className?: string }) {
   return (
     <span title="Función Premium" className={`inline-flex items-center gap-0.5 px-1.5 py-px rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-extrabold uppercase tracking-wider align-middle ${className}`}>

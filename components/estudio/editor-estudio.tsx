@@ -79,7 +79,7 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
   const [hoja, setHoja] = useState<HojaMovil>(null)
   const [pagoAbierto, setPagoAbierto] = useState(searchParams?.get('plan') === 'premium')
   const tema = useMemo(() => temaDe(visual), [visual])
-  // Funciones Premium que usa el diseño: si el evento no ha pagado, se avisa (los invitados verán «Vista previa»)
+  // Funciones Premium que usa el diseño: se puede editar libremente; para publicar hay que activar Premium
   const funcionesPremium = useMemo(() => (evento.esPremium ? [] : funcionesPremiumUsadas({ configuracionVisual: visual, secciones })), [evento.esPremium, visual, secciones])
 
   const estudio = useEstudioLienzo({
@@ -411,7 +411,7 @@ export function EditorEstudio({ eventoInicial }: { eventoInicial: DetalleEvento 
           <div role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-3 sm:px-5 py-2 bg-amber-50 border-b border-amber-200 text-[12.5px] text-amber-950">
             <span className="font-extrabold">★ Diseño Premium</span>
             <span className="flex-1 min-w-[200px]">
-              Usas {funcionesPremium.map((f) => NOMBRE_FUNCION_PREMIUM[f].toLowerCase()).join(', ')}. Tus invitados verán la invitación con la marca «Vista previa» hasta que actives Premium.
+              Usas {funcionesPremium.map((f) => NOMBRE_FUNCION_PREMIUM[f].toLowerCase()).join(', ')}. Puedes editar todo lo que quieras; para publicarla y enviarla a tus invitados deberás activar Premium.
             </span>
             <button type="button" onClick={() => setPagoAbierto(true)} className="min-h-8 px-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[12px] font-bold cursor-pointer shrink-0">
               Activar Premium

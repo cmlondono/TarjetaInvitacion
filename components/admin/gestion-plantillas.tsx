@@ -237,7 +237,7 @@ export function GestionPlantillas() {
                   type="button"
                   disabled={soloLectura || cargando}
                   onClick={() => actualizar(p.id, { datos: { premium: !p.premium } }, p.premium ? `«${p.nombre}» ahora es gratis.` : `«${p.nombre}» ahora es Premium.`)}
-                  title="Premium: se puede usar gratis, pero los invitados ven «Vista previa» hasta que el anfitrión pague"
+                  title="Premium: se edita gratis; para publicar la invitación hay que pagar"
                   className={`h-8 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 border cursor-pointer disabled:opacity-40 ${p.premium ? 'border-amber-400 text-amber-900 bg-amber-100' : 'border-slate-300 text-slate-600 bg-white'}`}
                 >
                   <Crown size={13} /> {p.premium ? 'Premium' : 'Gratis'}
@@ -394,7 +394,7 @@ function EditorPlantilla({
             <input type="checkbox" checked={premium} onChange={(e) => setPremium(e.target.checked)} className="mt-0.5 w-4 h-4 accent-amber-500" />
             <span className="text-sm">
               <b className="text-slate-900">Plantilla Premium</b>
-              <span className="block text-xs text-slate-600">Cualquiera puede usarla y editarla; sus invitados verán «Vista previa» hasta que el anfitrión active Premium.</span>
+              <span className="block text-xs text-slate-600">Cualquiera puede usarla y editarla gratis; para publicar la invitación deberá activar Premium.</span>
             </span>
           </label>
           <div className="grid grid-cols-2 gap-3">
@@ -450,7 +450,7 @@ function EditorPlantilla({
             </label>
           </div>
           <p className="m-0 text-[11px] text-slate-500">
-            ★ Efectos Premium: si la plantilla los trae, los invitados ven «Vista previa» hasta que el anfitrión pague, aunque la plantilla esté marcada como gratis.
+            ★ Efectos Premium: si la plantilla los trae, publicar la invitación pide activar Premium, aunque la plantilla esté marcada como gratis.
             {plantilla.efectos?.stickers?.length ? ` Trae ${plantilla.efectos.stickers.length} stickers animados (se conservan).` : ''}
           </p>
         </div>

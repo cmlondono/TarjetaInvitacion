@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Crown } from 'lucide-react'
 import type { Plantilla } from '@/lib/estudio/plantillas'
 import { obtenerKit, KIT_POR_DEFECTO } from '@/lib/estudio/kits'
 import { infoEvento, formatearHora } from '@/lib/estudio/eventos'
@@ -26,11 +27,10 @@ export function MiniaturaPlantilla({ plantilla }: { plantilla: Plantilla }) {
       <Link href={`/plantillas/${plantilla.id}`} aria-label={`Ver la plantilla ${plantilla.nombre}`} className="relative block p-2.5 @[15rem]:p-4 overflow-hidden" style={{ backgroundColor: kit.colores.fondo }}>
         <CapaFondoAnimado tipo={plantilla.efectos?.fondoAnimado} colores={{ fondo: kit.colores.fondo, acento: kit.colores.acento, detalle: kit.colores.detalle }} />
         <CapaEscena escena={plantilla.efectos?.escena || kit.escena} colores={{ fondo: kit.colores.fondo, acento: kit.colores.acento, detalle: kit.colores.detalle }} />
-        {/* Plan siempre visible: que nadie elija una Premium creyendo que es gratis */}
-        {plantilla.premium ? (
-          <span className="absolute top-3.5 right-3.5 z-10 px-2.5 py-1 rounded-lg bg-amber-400 text-slate-950 text-[11px] font-extrabold uppercase tracking-wider shadow-md ring-2 ring-white">★ Premium</span>
-        ) : (
-          <span className="absolute top-3.5 right-3.5 z-10 px-2 py-0.5 rounded-md bg-white/90 text-emerald-700 border border-emerald-200 text-[10px] font-extrabold uppercase tracking-wider">Gratis</span>
+        {plantilla.premium && (
+          <span title="Plantilla Premium" aria-label="Plantilla Premium" className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-amber-400 text-slate-950 shadow-md ring-2 ring-white flex items-center justify-center">
+            <Crown size={14} strokeWidth={2.5} />
+          </span>
         )}
         <div
           className="relative flex flex-col items-center justify-center gap-1.5 text-center px-3 py-6 h-[200px] @[15rem]:h-[230px] overflow-hidden"
@@ -75,11 +75,6 @@ export function MiniaturaPlantilla({ plantilla }: { plantilla: Plantilla }) {
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{plantilla.categoria}</span>
           <h3 className="m-0 text-[15px] font-bold text-slate-900">{plantilla.nombre}</h3>
           <p className="m-0 text-[13px] text-slate-600 leading-snug line-clamp-2 min-h-[2.75em]">{plantilla.descripcion}</p>
-          {plantilla.premium && (
-            <p className="m-0 mt-1 px-2.5 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-[11.5px] leading-snug text-amber-950">
-              <b>Premium:</b> pruébala gratis; tus invitados verán «Vista previa» hasta que actives Premium (pago único).
-            </p>
-          )}
         </div>
         <div className="mt-auto grid grid-cols-1 @[15rem]:grid-cols-2 gap-2">
           <Link href={`/plantillas/${plantilla.id}`} className="min-h-10 rounded-xl border border-slate-300 text-[13px] font-bold text-slate-800 flex items-center justify-center hover:bg-slate-50">
@@ -87,9 +82,9 @@ export function MiniaturaPlantilla({ plantilla }: { plantilla: Plantilla }) {
           </Link>
           <Link
             href={`/crear?plantilla=${plantilla.id}`}
-            className={`min-h-10 px-2 rounded-xl text-[13px] font-bold leading-tight text-center whitespace-nowrap flex items-center justify-center ${plantilla.premium ? 'bg-amber-400 text-slate-950 hover:bg-amber-300' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+            className="min-h-10 px-2 rounded-xl bg-slate-900 text-white text-[13px] font-bold text-center whitespace-nowrap flex items-center justify-center hover:bg-slate-800"
           >
-            {plantilla.premium ? '★ Usar Premium' : 'Usar gratis'}
+            Usar plantilla
           </Link>
         </div>
       </div>

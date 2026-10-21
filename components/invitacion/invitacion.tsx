@@ -188,6 +188,9 @@ export function Invitacion({
   const nombreBloque = (s: SeccionModular) =>
     s.tipo === 'cabecera' ? 'Inicio' : s.titulo || CATALOGO_SECCIONES.find((m) => m.tipo === s.tipo)?.nombre || 'Sección'
 
+  // Diseño Premium sin pagar: todavía no está publicada (el anfitrión la sigue viendo y editando en el editor)
+  if (modo === 'publico' && requiereActivarPremium(evento)) return <InvitacionNoPublicada titulo={evento.titulo} />
+
   return (
     <ProveedorInvitacion value={valor}>
       <div
@@ -216,7 +219,6 @@ export function Invitacion({
             <CapaParticulas config={visual.particulas} colores={{ fondo: tema.fondo, acento: tema.acento, detalle: tema.detalle }} />
           </div>
         )}
-        {modo === 'publico' && requiereActivarPremium(evento) && <MarcaVistaPrevia />}
         {recorrido === 'historias' ? (
           <div style={{ position: 'relative', zIndex: 1, height: contenida ? '100%' : '100dvh', minHeight: contenida ? 640 : undefined }}>
             <div style={{ position: 'absolute', top: 10, left: 12, right: 12, zIndex: 5, display: 'flex', gap: 4 }}>
@@ -300,23 +302,18 @@ export function Invitacion({
   )
 }
 
-/**
- * Marca de agua para invitaciones que usan funciones Premium sin haberlas activado.
- * No bloquea nada (el invitado puede leer y confirmar): solo deja claro que es una vista previa.
- */
-function MarcaVistaPrevia() {
+/** Lo que ve un invitado si la invitación usa diseño Premium y el anfitrión aún no la ha publicado (pagado) */
+function InvitacionNoPublicada({ titulo }: { titulo: string }) {
   return (
-    <div aria-hidden="true" style={{ position: 'fixed', inset: 0, zIndex: 95, pointerEvents: 'none', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: '-50%', display: 'flex', flexWrap: 'wrap', alignContent: 'center', justifyContent: 'center', gap: '64px 80px', transform: 'rotate(-30deg)', opacity: 0.09 }}>
-        {Array.from({ length: 60 }, (_, i) => (
-          <span key={i} style={{ fontFamily: 'system-ui, sans-serif', fontSize: 28, fontWeight: 900, letterSpacing: 4, color: '#0f172a', whiteSpace: 'nowrap' }}>
-            VISTA PREVIA
-          </span>
-        ))}
+    <main style={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, boxSizing: 'border-box', background: '#f8fafc', fontFamily: 'system-ui, sans-serif', color: '#0f172a' }}>
+      <div style={{ maxWidth: 380, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+        <span aria-hidden="true" style={{ fontSize: 44 }}>💌</span>
+        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800 }}>Esta invitación aún no está publicada</h1>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: '#475569' }}>
+          «{titulo}» se está terminando de preparar. Vuelve a abrir este enlace más tarde o pídele al anfitrión que te la envíe de nuevo.
+        </p>
+        <p style={{ margin: '8px 0 0', fontSize: 12.5, color: '#94a3b8' }}>Si eres el anfitrión, publícala desde tu panel de Tarjetón.</p>
       </div>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '8px 12px', textAlign: 'center', backgroundColor: 'rgba(15,23,42,0.88)', color: '#fff', fontFamily: 'system-ui, sans-serif', fontSize: 12, fontWeight: 600 }}>
-        Vista previa · El anfitrión aún no ha activado esta invitación Premium
-      </div>
-    </div>
+    </main>
   )
 }

@@ -294,6 +294,17 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
     }
   }
 
+  // Diseño Premium sin pagar: se puede editar todo, pero enviar o compartir la invitación pide activar Premium
+  const requierePagoParaPublicar = !evento.esPremium && funcionesPremiumUsadas(evento).length > 0
+  const siPuedePublicar = (accion: () => void) => {
+    if (requierePagoParaPublicar) {
+      setAlertaPago({ tipo: 'info', mensaje: 'Tu invitación usa diseño Premium. Para publicarla y enviarla a tus invitados, activa Premium.' })
+      setMostrarModalUpgrade(true)
+      return
+    }
+    accion()
+  }
+
   const enviarPorWhatsApp = (invitado: Invitado) => {
     const mensaje = construirMensajeCompartir(evento, invitado, baseUrl)
     const tel = invitado.telefono ? invitado.telefono.replace(/[^0-9]/g, '') : ''
@@ -536,12 +547,12 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
         {!evento.esPremium && funcionesPremiumUsadas(evento).length > 0 && (
           <div role="status" className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex-1 text-xs text-amber-950 leading-relaxed">
-              <p className="font-bold text-sm mb-1">★ Tu diseño usa funciones Premium</p>
-              {funcionesPremiumUsadas(evento).map((f) => NOMBRE_FUNCION_PREMIUM[f]).join(' · ')}. Tus invitados ven la invitación con la marca
-              «Vista previa» hasta que actives Premium.
+              <p className="font-bold text-sm mb-1">Tu invitación aún no está publicada</p>
+              Usa funciones Premium ({funcionesPremiumUsadas(evento).map((f) => NOMBRE_FUNCION_PREMIUM[f].toLowerCase()).join(', ')}). Puedes editarla todo lo que
+              quieras; para publicarla y enviarla a tus invitados, activa Premium.
             </div>
             <button type="button" onClick={() => setMostrarModalUpgrade(true)} className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold cursor-pointer shrink-0">
-              Activar Premium
+              Publicar con Premium
             </button>
           </div>
         )}
@@ -764,7 +775,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
             <div className="flex flex-wrap items-center gap-2 shrink-0">
               <button
                 type="button"
-                onClick={() => setMostrarModalDespacho(true)}
+                onClick={() => siPuedePublicar(() => setMostrarModalDespacho(true))}
                 disabled={invitados.length === 0}
                 className="py-2 px-3.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-slate-950 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-sm border border-emerald-500/20"
                 title="Iniciar asistente guiado continuo de envío por WhatsApp"
@@ -992,7 +1003,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
 
                       <button
                         type="button"
-                        onClick={() => copiarTexto(linkInvitado, inv.id)}
+                        onClick={() => siPuedePublicar(() => copiarTexto(linkInvitado, inv.id))}
                         className="px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                         title="Copiar enlace individual"
                       >
@@ -1002,7 +1013,7 @@ export function AdminDashboard({ evento: eventoInicial }: AdminDashboardProps) {
 
                       <button
                         type="button"
-                        onClick={() => enviarPorWhatsApp(inv)}
+                        onClick={() => siPuedePublicar(() => enviarPorWhatsApp(inv))}
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs ${
                           inv.enviadoPorWhatsApp
                             ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'

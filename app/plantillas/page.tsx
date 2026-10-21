@@ -1,13 +1,10 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { ArrowLeft, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Crown, Sparkles } from 'lucide-react'
 import { TarjetonLogo } from '@/components/ui/tarjeton-logo'
 import { MiniaturaPlantilla } from '@/components/plantillas/miniatura-plantilla'
 import { CATEGORIAS_PLANTILLAS, type CategoriaPlantilla } from '@/lib/estudio/plantillas'
 import { obtenerPlantillasPublicadas } from '@/lib/estudio/plantillas-servidor'
-import { obtenerConfiguracionGlobal } from '@/lib/configuracion-servidor'
-import { paisVisitante } from '@/lib/tasa-cambio'
-import { textoPrecio } from '@/lib/precios'
 
 const POR_PAGINA = 24
 type Plan = 'gratis' | 'premium'
@@ -24,8 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function PaginaPlantillas({ searchParams }: { searchParams: Promise<{ categoria?: string; plan?: string; pagina?: string }> }) {
   const parametros = await searchParams
   // Las plantillas vienen de la base de datos (administrables en el panel); las ocultas no aparecen
-  const [PLANTILLAS, config, pais] = await Promise.all([obtenerPlantillasPublicadas(), obtenerConfiguracionGlobal(), paisVisitante()])
-  const precio = textoPrecio(config.precioPremiumCOP, config.precioPremiumUSD, pais)
+  const PLANTILLAS = await obtenerPlantillasPublicadas()
   const activa = CATEGORIAS_PLANTILLAS.includes(parametros.categoria as CategoriaPlantilla) ? (parametros.categoria as CategoriaPlantilla) : null
   const plan: Plan | null = parametros.plan === 'gratis' || parametros.plan === 'premium' ? parametros.plan : null
   const delPlan = (p: (typeof PLANTILLAS)[number]) => !plan || (plan === 'premium' ? Boolean(p.premium) : !p.premium)
@@ -96,7 +92,7 @@ export default async function PaginaPlantillas({ searchParams }: { searchParams:
             [
               [null, 'Gratis y Premium', PLANTILLAS.length],
               ['gratis', 'Gratis', PLANTILLAS.filter((p) => !p.premium).length],
-              ['premium', '★ Premium', PLANTILLAS.filter((p) => p.premium).length],
+              ['premium', 'Premium', PLANTILLAS.filter((p) => p.premium).length],
             ] as const
           ).map(([id, nombre, cuenta]) => (
             <Link
@@ -112,20 +108,13 @@ export default async function PaginaPlantillas({ searchParams }: { searchParams:
                   : 'bg-white border-slate-200 text-slate-700 hover:border-slate-400'
               }`}
             >
+              {id === 'premium' && <Crown size={13} strokeWidth={2.5} />}
               {nombre} <span className="opacity-60">{cuenta}</span>
             </Link>
           ))}
         </div>
       </nav>
 
-      {plan !== 'gratis' && PLANTILLAS.some((p) => p.premium) && (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-4">
-          <p className="m-0 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-[13.5px] text-amber-950 leading-relaxed">
-            <b>★ Las plantillas Premium</b> traen efectos en movimiento y stickers animados. Puedes probarlas y editarlas gratis, pero tus invitados verán la
-            marca «Vista previa» hasta que actives Premium: <b>pago único de {precio.principal}</b>{precio.nota ? ` (${precio.nota})` : ''} por evento.
-          </p>
-        </div>
-      )}
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {listaPagina.map((p) => (

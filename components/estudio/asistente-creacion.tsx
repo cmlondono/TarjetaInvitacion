@@ -151,7 +151,7 @@ function Asistente({ plantillaInicial }: { plantillaInicial: Plantilla | null })
                 Usando la plantilla <b>{plantilla.nombre}</b>. Escribe tus datos y queda lista.
                 {plantilla.premium && (
                   <span className="block text-[12.5px] mt-0.5">
-                    ★ Es Premium: puedes usarla y editarla gratis; tus invitados la verán con la marca «Vista previa» hasta que actives Premium (pago único).
+                    Es una plantilla Premium: puedes editarla gratis y solo pagas cuando quieras publicarla.
                   </span>
                 )}
               </span>

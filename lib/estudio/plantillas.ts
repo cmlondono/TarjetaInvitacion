@@ -28,7 +28,7 @@ export interface Plantilla {
   extras?: TipoSeccion[]
   regalos?: string[]
   destacada?: boolean
-  /** Plantilla Premium: se puede usar gratis; los invitados ven «Vista previa» hasta activar Premium. Se marca desde el panel. */
+  /** Plantilla Premium: se edita gratis; para publicar la invitación hay que activar Premium. Se marca desde el panel. */
   premium?: boolean
   /** Efectos de movimiento que trae la plantilla (también editables desde el panel) */
   efectos?: EfectosPlantilla

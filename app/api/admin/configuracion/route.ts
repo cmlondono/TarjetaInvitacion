@@ -70,11 +70,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Configuración requerida' }, { status: 400 })
     }
 
+    // Los precios en pesos y el cupo son números enteros en la base de datos: se redondean y se validan
+    // (un decimal —p. ej. «15.900» leído como 15,9— hacía fallar el guardado sin explicar por qué)
+    const numero = (v: unknown) => (v === undefined || v === null || v === '' ? undefined : Number(v))
+    const cop = numero(nuevaConfig.precioPremiumCOP)
+    const usd = numero(nuevaConfig.precioPremiumUSD)
+    const limite = numero(nuevaConfig.limiteGratisInvitados)
+    if (cop !== undefined && (!Number.isFinite(cop) || cop < 1000 || cop > 100_000_000)) {
+      return NextResponse.json({ error: 'La tarifa en COP debe ser un número entre 1.000 y 100.000.000.' }, { status: 400 })
+    }
+    if (usd !== undefined && (!Number.isFinite(usd) || usd <= 0 || usd > 100_000)) {
+      return NextResponse.json({ error: 'La tarifa en USD debe ser mayor que 0.' }, { status: 400 })
+    }
+    if (limite !== undefined && (!Number.isFinite(limite) || limite < 1 || limite > 100_000)) {
+      return NextResponse.json({ error: 'El límite gratuito de invitados debe ser un número entero mayor que 0.' }, { status: 400 })
+    }
+    if (cop !== undefined) nuevaConfig.precioPremiumCOP = Math.round(cop)
+    if (usd !== undefined) nuevaConfig.precioPremiumUSD = Math.round(usd * 100) / 100
+    if (limite !== undefined) nuevaConfig.limiteGratisInvitados = Math.round(limite)
+
     // 1. Guardar en servidor local (Memoria + Disco JSON)
     const configGuardada = ServidorAlmacen.guardarConfiguracion(nuevaConfig)
 
     // 2. Persistir en base de datos central Supabase PostgreSQL
     let guardadoEnSupabase = false
+    let detalleError = ''
     const supabase = obtenerClienteSupabase()
     if (supabase) {
       try {
@@ -94,6 +114,7 @@ export async function POST(req: NextRequest) {
           guardadoEnSupabase = true
         } else {
           console.error('Error guardando en Supabase configuracion_global:', error)
+          detalleError = error.message
         }
       } catch (dbErr) {
         console.error('Excepción guardando configuracion_global en Supabase:', dbErr)
@@ -101,7 +122,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (supabase && !guardadoEnSupabase) {
-      return NextResponse.json({ error: 'No se pudo guardar la configuración en la base de datos. Intenta de nuevo.' }, { status: 502 })
+      // Solo lo ve el superadministrador: el detalle ayuda a saber qué valor rechazó la base de datos
+      return NextResponse.json({ error: `No se pudo guardar la configuración en la base de datos${detalleError ? ` (${detalleError})` : ''}. Intenta de nuevo.` }, { status: 502 })
     }
 
     // Las páginas que muestran precios, cupo gratis o el WhatsApp de soporte se regeneran al instante

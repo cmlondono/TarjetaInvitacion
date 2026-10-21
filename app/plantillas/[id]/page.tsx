@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { eventoDesdePlantilla } from '@/lib/estudio/plantillas'
 import { obtenerPlantillaPublicada, obtenerPlantillasPublicadas } from '@/lib/estudio/plantillas-servidor'
 import { VistaPlantilla } from '@/components/plantillas/vista-plantilla'
+import { obtenerConfiguracionGlobal } from '@/lib/configuracion-servidor'
 
 // Se regenera a diario para que la fecha de ejemplo siga en el futuro
 export const revalidate = 86400
@@ -31,5 +32,15 @@ export default async function PaginaPlantilla({ params }: { params: Promise<{ id
   // Se arma en el servidor para que la vista sea idéntica al hidratar (usa fechas e ids aleatorios)
   const evento = eventoDesdePlantilla(plantilla, {}, true)
 
-  return <VistaPlantilla evento={evento} plantillaId={plantilla.id} nombre={plantilla.nombre} descripcion={plantilla.descripcion} premium={plantilla.premium} />
+  const config = plantilla.premium ? await obtenerConfiguracionGlobal() : null
+  return (
+    <VistaPlantilla
+      evento={evento}
+      plantillaId={plantilla.id}
+      nombre={plantilla.nombre}
+      descripcion={plantilla.descripcion}
+      premium={plantilla.premium}
+      precioPremium={config ? `${config.precioPremiumUSD} USD` : undefined}
+    />
+  )
 }

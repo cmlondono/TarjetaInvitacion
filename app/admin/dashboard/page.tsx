@@ -751,6 +751,7 @@ export default function PaginaAdminDashboard() {
                     {nuevoTipoDescuento === 'porcentaje' ? 'Valor (% Descuento)' : 'Precio Final en COP'}
                   </label>
                   <CampoNumero
+                    entero
                     required
                     min={0}
                     value={nuevoValorDescuento}
@@ -766,6 +767,7 @@ export default function PaginaAdminDashboard() {
                   </label>
                   <div className="flex gap-2">
                     <CampoNumero
+                      entero
                       required
                       min={0}
                       value={nuevosUsosMaximos}
@@ -1405,6 +1407,7 @@ export default function PaginaAdminDashboard() {
                     Tarifa Base Premium en COP ($)
                   </label>
                   <CampoNumero
+                    entero
                     min={0}
                     value={configuracion.precioPremiumCOP}
                     onChange={(v) => setConfiguracion((c) => ({ ...c, precioPremiumCOP: v }))}
@@ -1434,8 +1437,8 @@ export default function PaginaAdminDashboard() {
                     Límite Gratuito de Invitados
                   </label>
                   <CampoNumero
+                    entero
                     min={0}
-                    step={1}
                     value={configuracion.limiteGratisInvitados}
                     onChange={(v) => setConfiguracion((c) => ({ ...c, limiteGratisInvitados: Math.round(v) }))}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-slate-900 text-sm focus:border-slate-900 focus:outline-hidden"
